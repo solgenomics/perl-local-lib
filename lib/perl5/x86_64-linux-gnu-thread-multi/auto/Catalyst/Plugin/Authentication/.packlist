@@ -1,0 +1,17 @@
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Authentication/Credential/NoPassword.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Authentication/Credential/Password.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Authentication/Credential/Remote.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Authentication/Realm.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Authentication/Realm/Compatibility.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Authentication/Realm/Progressive.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Authentication/Store.pod
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Authentication/Store/Minimal.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Authentication/Store/Null.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Authentication/User.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Authentication/User/Hash.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Plugin/Authentication.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Plugin/Authentication/Credential/Password.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Plugin/Authentication/Internals.pod
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Plugin/Authentication/Store/Minimal.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Plugin/Authentication/User.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Catalyst/Plugin/Authentication/User/Hash.pm

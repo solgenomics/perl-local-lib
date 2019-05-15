@@ -1,0 +1,1 @@
+{"target":"Parse::Deb::Control","pathname":"J/JK/JKUTEJ/Parse-Deb-Control-0.04.tar.gz","dist":"Parse-Deb-Control-0.04","provides":{"Parse::Deb::Control":{"file":"lib/Parse/Deb/Control.pm","version":"0.04"}},"name":"Parse::Deb::Control","version":"0.04"}

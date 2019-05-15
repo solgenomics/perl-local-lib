@@ -1,0 +1,1 @@
+{"target":"Config::JFDI","pathname":"R/RO/ROKR/Config-JFDI-0.065.tar.gz","name":"Config::JFDI","dist":"Config-JFDI-0.065","provides":{"Config::JFDI":{"file":"lib/Config/JFDI.pm","version":"0.065"},"Config::JFDI::Source::Loader":{"file":"lib/Config/JFDI/Source/Loader.pm"},"Config::JFDI::Carp":{"file":"lib/Config/JFDI/Carp.pm"}},"version":"0.065"}

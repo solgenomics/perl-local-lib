@@ -1,0 +1,41 @@
+{
+   "abstract" : "unknown",
+   "author" : [
+      "unknown"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "ExtUtils::MakeMaker version 6.30, CPAN::Meta::Converter version 2.150005",
+   "license" : [
+      "unknown"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Ima-DBI",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Class::Data::Inheritable" : "0.02",
+            "DBI" : "1.2",
+            "DBIx::ContextualFetch" : "1",
+            "Test::More" : "0.18"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "0.35",
+   "x_installdirs" : "site",
+   "x_serialization_backend" : "JSON::PP version 2.27300_01",
+   "x_version_from" : "lib/Ima/DBI.pm"
+}

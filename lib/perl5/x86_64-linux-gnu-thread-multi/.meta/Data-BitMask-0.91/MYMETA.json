@@ -1,0 +1,26 @@
+{
+   "abstract" : "bitmask manipulation",
+   "author" : [
+      "Toby Ovod-Everett, toby@ovod-everett.org"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Build version 0.4229",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Data-BitMask",
+   "prereqs" : {},
+   "provides" : {
+      "Data::BitMask" : {
+         "file" : "lib/Data/BitMask.pm",
+         "version" : "0.91"
+      }
+   },
+   "release_status" : "stable",
+   "version" : "0.91",
+   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+}

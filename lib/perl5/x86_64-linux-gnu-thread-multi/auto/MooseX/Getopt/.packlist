@@ -1,0 +1,11 @@
+/home/production/cxgn/local-lib/lib/perl5/MooseX/Getopt.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/Getopt/Basic.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/Getopt/Dashes.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/Getopt/GLD.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/Getopt/Meta/Attribute.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/Getopt/Meta/Attribute/NoGetopt.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/Getopt/Meta/Attribute/Trait.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/Getopt/Meta/Attribute/Trait/NoGetopt.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/Getopt/OptionTypeMap.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/Getopt/ProcessedArgv.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/Getopt/Strict.pm

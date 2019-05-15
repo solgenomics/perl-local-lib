@@ -1,0 +1,49 @@
+{
+   "abstract" : "Flexible text flowing and word wrapping for not just ASCII output.",
+   "author" : [
+      "Stevan Little E<lt>stevan@iinteractive.comE<gt>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Build version 0.4229",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Text-Flow",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "List::Util" : "0",
+            "Test::Exception" : "0.21",
+            "Test::LongString" : "0",
+            "Test::More" : "0.62"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Moose" : "0.21"
+         }
+      }
+   },
+   "provides" : {
+      "Text::Flow" : {
+         "file" : "lib/Text/Flow.pm",
+         "version" : "0.01"
+      },
+      "Text::Flow::Wrap" : {
+         "file" : "lib/Text/Flow/Wrap.pm",
+         "version" : "0.01"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://dev.perl.org/licenses/"
+      ]
+   },
+   "version" : "0.01",
+   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+}

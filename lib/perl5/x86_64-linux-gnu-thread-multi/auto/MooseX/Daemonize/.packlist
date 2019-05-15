@@ -1,0 +1,6 @@
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Daemonize.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Daemonize/Core.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Daemonize/Pid.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Daemonize/Pid/File.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Daemonize/WithPidFile.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Test/MooseX/Daemonize.pm

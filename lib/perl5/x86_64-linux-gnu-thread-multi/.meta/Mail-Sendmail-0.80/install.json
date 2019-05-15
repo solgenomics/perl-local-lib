@@ -1,0 +1,1 @@
+{"pathname":"N/NE/NEILB/Mail-Sendmail-0.80.tar.gz","dist":"Mail-Sendmail-0.80","target":"Mail::Sendmail","version":"0.80","provides":{"Mail::Sendmail":{"version":"0.80","file":"lib/Mail/Sendmail.pm"}},"name":"Mail::Sendmail"}

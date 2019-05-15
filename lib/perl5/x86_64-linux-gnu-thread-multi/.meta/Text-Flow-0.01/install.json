@@ -1,0 +1,1 @@
+{"target":"Text::Flow","version":"0.01","dist":"Text-Flow-0.01","name":"Text::Flow","pathname":"S/ST/STEVAN/Text-Flow-0.01.tar.gz","provides":{"Text::Flow":{"version":"0.01","file":"lib/Text/Flow.pm"},"Text::Flow::Wrap":{"version":"0.01","file":"lib/Text/Flow/Wrap.pm"}}}

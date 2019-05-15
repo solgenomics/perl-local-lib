@@ -1,0 +1,13 @@
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Inheritable.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Role.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Role/AttrContainer.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Role/AttrContainer/Inheritable.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Role/Meta/Class.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Role/Meta/Map.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Role/Meta/Method.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Role/Meta/Method/MaybeWrapped.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Role/Meta/Method/Wrapped.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Role/Meta/Role.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Role/Meta/Role/Application.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/MethodAttributes/Role/Meta/Role/Application/Summation.pm

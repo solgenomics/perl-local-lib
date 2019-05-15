@@ -1,0 +1,56 @@
+{
+   "abstract" : "Unordered collections (sets) of Perl Objects",
+   "author" : [
+      "Jean-Louis Leroy and Sam Vilain"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "ExtUtils::MakeMaker version 8.3004, CPAN::Meta::Converter version 2.150010, CPAN::Meta::Converter version 2.150005",
+   "license" : [
+      "artistic_2"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Set-Object",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "recommends" : {
+            "Moose" : "0",
+            "Test::LeakTrace" : "0"
+         },
+         "requires" : {
+            "Scalar::Util" : "0",
+            "Test::More" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://dev.perl.org/licenses/"
+      ],
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/rurban/Set-Object.git"
+      }
+   },
+   "version" : "1.39",
+   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+}

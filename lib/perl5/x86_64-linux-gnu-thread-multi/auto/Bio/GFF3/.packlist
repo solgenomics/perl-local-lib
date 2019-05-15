@@ -1,0 +1,6 @@
+/home/production/cxgn/sgn/../local-lib/bin/gff3_from_fasta
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/GFF3/LowLevel.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/GFF3/LowLevel/Parser.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/GFF3/LowLevel/Parser/1_0_backcompat.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/GFF3/Transform/FromFasta.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/GFF3/Transform/SyncDirectives.pm

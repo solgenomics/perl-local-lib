@@ -1,0 +1,56 @@
+{
+   "abstract" : "URI/Path::Class combination",
+   "author" : [
+      "Robert Krimen <rkrimen@cpan.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Install version 0.79, CPAN::Meta::Converter version 2.150005",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Path-Resource",
+   "no_index" : {
+      "directory" : [
+         "inc",
+         "t"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Class::Accessor::Fast" : "0",
+            "ExtUtils::MakeMaker" : "7.1002",
+            "Path::Abstract" : "0",
+            "Path::Class" : "0",
+            "Scalar::Util" : "0",
+            "Test::Lazy" : "0.03",
+            "Test::Most" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://dev.perl.org/licenses/"
+      ],
+      "repository" : {
+         "url" : "http://github.com/robertkrimen/path-resource/tree/master"
+      }
+   },
+   "version" : "0.072",
+   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+}

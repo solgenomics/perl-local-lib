@@ -1,0 +1,1 @@
+{"version":"0.13","pathname":"N/NE/NEILB/URI-Fetch-0.13.tar.gz","dist":"URI-Fetch-0.13","name":"URI::Fetch","provides":{"URI::Fetch::Response":{"version":"0.13","file":"lib/URI/Fetch/Response.pm"},"URI::Fetch":{"file":"lib/URI/Fetch.pm","version":"0.13"}},"target":"URI::Fetch"}

@@ -1,0 +1,7 @@
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Meta/TypeCoercion/Structured.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Meta/TypeCoercion/Structured/Optional.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Meta/TypeConstraint/Structured.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Meta/TypeConstraint/Structured/Optional.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Types/Structured.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Types/Structured/MessageStack.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Types/Structured/OverflowHandler.pm

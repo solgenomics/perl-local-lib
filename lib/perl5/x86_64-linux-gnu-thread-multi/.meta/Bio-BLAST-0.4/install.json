@@ -1,0 +1,1 @@
+{"pathname":"R/RB/RBUELS/Bio-BLAST-0.4.tar.gz","name":"Bio::BLAST","dist":"Bio-BLAST-0.4","target":"Bio::BLAST::Database","provides":{"Bio::BLAST::Database":{"version":"0.4","file":"lib/Bio/BLAST/Database.pm"},"Bio::BLAST::Database::Seq":{"file":"lib/Bio/BLAST/Database/Seq.pm","version":"0.4"}},"version":"0.4"}

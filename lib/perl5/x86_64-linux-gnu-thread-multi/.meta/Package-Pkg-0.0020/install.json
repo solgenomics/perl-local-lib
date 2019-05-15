@@ -1,0 +1,1 @@
+{"version":"0.0020","pathname":"R/RO/ROKR/Package-Pkg-0.0020.tar.gz","name":"Package::Pkg","dist":"Package-Pkg-0.0020","provides":{"Package::Pkg::Loader":{"file":"lib/Package/Pkg/Loader.pm"},"Package::Pkg":{"version":"0.0020","file":"lib/Package/Pkg.pm"},"Package::Pkg::Lexicon":{"file":"lib/Package/Pkg/Lexicon.pm"}},"target":"Package::Pkg"}

@@ -1,0 +1,57 @@
+{
+   "abstract" : "Glues object frameworks together transparently",
+   "author" : [
+      "Ken Williams <kwilliams@cpan.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Build version 0.4229",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Class-Container",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Module::Build" : "0.3601"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.30",
+            "Module::Build" : "0.3601"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "B::Deparse" : "0",
+            "Carp" : "0",
+            "Params::Validate" : "0",
+            "Scalar::Util" : "0",
+            "strict" : "0",
+            "vars" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "File::Spec" : "0",
+            "Test" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "http://github.com/kenahoo/Class-Container/issues"
+      },
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/kenahoo/Class-Container.git"
+      }
+   },
+   "version" : "0.13",
+   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+}

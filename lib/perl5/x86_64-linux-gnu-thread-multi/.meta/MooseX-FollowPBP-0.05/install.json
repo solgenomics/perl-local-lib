@@ -1,0 +1,1 @@
+{"target":"MooseX::FollowPBP","pathname":"D/DR/DROLSKY/MooseX-FollowPBP-0.05.tar.gz","provides":{"MooseX::FollowPBP":{"version":"0.05","file":"lib/MooseX/FollowPBP.pm"},"MooseX::FollowPBP::Role::Attribute":{"version":"0.05","file":"lib/MooseX/FollowPBP/Role/Attribute.pm"}},"dist":"MooseX-FollowPBP-0.05","name":"MooseX::FollowPBP","version":"0.05"}

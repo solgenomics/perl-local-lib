@@ -1,0 +1,1 @@
+{"pathname":"R/RO/ROKR/Path-Abstract-0.096.tar.gz","provides":{"Path::Abstract::Underload":{"file":"lib/Path/Abstract/Underload.pm","version":"0.096"},"Path::Abstract":{"file":"lib/Path/Abstract.pm","version":"0.096"},"Path::Abstract::Fast":{"file":"lib/Path/Abstract/Fast.pm"}},"target":"Path::Abstract","name":"Path::Abstract","dist":"Path-Abstract-0.096","version":"0.096"}

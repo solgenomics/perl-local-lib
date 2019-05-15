@@ -1,0 +1,47 @@
+{
+   "abstract" : "An object for mapping a URI to an on-disk storage directory",
+   "author" : [
+      "Adam Kennedy L<http://ali.as/>, cpan@ali.as"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Install version 0.68, CPAN::Meta::Converter version 2.150005",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "URI-ToDisk",
+   "no_index" : {
+      "directory" : [
+         "inc",
+         "t"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Clone" : "0.21",
+            "File::Spec" : "0.80",
+            "List::Util" : "1.11",
+            "Params::Util" : "0.10",
+            "Test::More" : "0.47",
+            "URI" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "1.12",
+   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+}
