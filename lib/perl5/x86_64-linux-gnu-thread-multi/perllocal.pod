@@ -10030,3 +10030,1081 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Tue Jul 30 22:52:29 2019: C<Module> L<Number::Format|Number::Format>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.75>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:52:49 2019: C<Module> L<YAML::LibYAML|YAML::LibYAML>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.79>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:53:03 2019: C<Module> L<Regexp::Assemble|Regexp::Assemble>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.38>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:53:06 2019: C<Module> L<Sub::Override|Sub::Override>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.09>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:53:14 2019: C<Module> L<Test::EOL|Test::EOL>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.00>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:53:18 2019: C<Module> L<Test::CPAN::Meta|Test::CPAN::Meta>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.25>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:53:25 2019: C<Module> L<Module::CPANfile|Module::CPANfile>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.1004>
+
+=item *
+
+C<EXE_FILES: script/cpanfile-dump script/mymeta-cpanfile>
+
+=back
+
+=head2 Tue Jul 30 22:53:27 2019: C<Module> L<ExtUtils::MakeMaker::CPANfile|ExtUtils::MakeMaker::CPANfile>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.09>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:53:31 2019: C<Module> L<Test::FailWarnings|Test::FailWarnings>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.008>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:53:34 2019: C<Module> L<Data::Binary|Data::Binary>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.01>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:53:43 2019: C<Module> L<Test::UseAllModules|Test::UseAllModules>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.17>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:53:45 2019: C<Module> L<Regexp::Trie|Regexp::Trie>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.02>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:53:53 2019: C<Module> L<CPAN::Meta|CPAN::Meta>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.150010>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:54:24 2019: C<Module> L<Perl::PrereqScanner::NotQuiteLite|Perl::PrereqScanner::NotQuiteLite>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.9906>
+
+=item *
+
+C<EXE_FILES: bin/scan-perl-prereqs-nqlite>
+
+=back
+
+=head2 Tue Jul 30 22:54:28 2019: C<Module> L<Data::Section|Data::Section>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.200007>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:54:32 2019: C<Module> L<Test::More::UTF8|Test::More::UTF8>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.05>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:54:37 2019: C<Module> L<Text::Template|Text::Template>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.56>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:54:43 2019: C<Module> L<Software::License|Software::License>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.103014>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:54:47 2019: C<Module> L<Archive::Any::Lite|Archive::Any::Lite>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.11>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:54:49 2019: C<Module> L<CPAN::DistnameInfo|CPAN::DistnameInfo>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.12>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:55:11 2019: C<Module> L<Array::Diff|Array::Diff>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.09>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:55:18 2019: C<Module> L<Module::CPANTS::Analyse|Module::CPANTS::Analyse>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.00>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:55:27 2019: C<Module> L<Test::Kwalitee|Test::Kwalitee>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.28>
+
+=item *
+
+C<EXE_FILES: script/kwalitee-metrics>
+
+=back
+
+=head2 Tue Jul 30 22:55:31 2019: C<Module> L<Devel::Symdump|Devel::Symdump>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.18>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:55:35 2019: C<Module> L<Pod::Coverage|Pod::Coverage>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.23>
+
+=item *
+
+C<EXE_FILES: bin/pod_cover>
+
+=back
+
+=head2 Tue Jul 30 22:55:38 2019: C<Module> L<Test::Pod::Coverage|Test::Pod::Coverage>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.10>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:55:43 2019: C<Module> L<Time::Duration|Time::Duration>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.21>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:55:45 2019: C<Module> L<Time::Duration::Parse|Time::Duration::Parse>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.15>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:55:49 2019: C<Module> L<File::HomeDir|File::HomeDir>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.004>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:55:55 2019: C<Module> L<MIME::Charset|MIME::Charset>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.012.2>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:56:14 2019: C<Module> L<Unicode::LineBreak|Unicode::LineBreak>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2019.001>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:56:17 2019: C<Module> L<MooX::Locale::Passthrough|MooX::Locale::Passthrough>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.001>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:56:29 2019: C<Module> L<MooX::Options|MooX::Options>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 4.103>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:56:33 2019: C<Module> L<PAUSE::Permissions|PAUSE::Permissions>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.17>
+
+=item *
+
+C<EXE_FILES: bin/pause-permissions>
+
+=back
+
+=head2 Tue Jul 30 22:56:37 2019: C<Module> L<Config::Identity|Config::Identity>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.0019>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:56:48 2019: C<Module> L<Parse::PMFile|Parse::PMFile>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.41>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:56:53 2019: C<Module> L<Parse::LocalDistribution|Parse::LocalDistribution>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.19>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:56:55 2019: C<Module> L<Test::PAUSE::Permissions|Test::PAUSE::Permissions>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.07>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:56:59 2019: C<Module> L<Pod::Eventual|Pod::Eventual>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.094001>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:57:01 2019: C<Module> L<Pod::Coverage::TrustPod|Pod::Coverage::TrustPod>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.100005>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:57:06 2019: C<Module> L<Test::NoTabs|Test::NoTabs>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.02>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:57:11 2019: C<Module> L<HTML::Scrubber|HTML::Scrubber>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.17>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:58:46 2019: C<Module> L<Net::DNS|Net::DNS>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.20>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:58:49 2019: C<Module> L<MailTools|MailTools>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.21>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:58:52 2019: C<Module> L<Email::Valid|Email::Valid>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.202>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:59:02 2019: C<Module> L<Log::Trace|Log::Trace>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.070>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:59:05 2019: C<Module> L<Test::Assertions|Test::Assertions>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.054>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 22:59:07 2019: C<Module> L<Hash::Flatten|Hash::Flatten>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.19>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Jul 30 23:05:57 2019: C<Module> L<HTML::FormFu|HTML::FormFu>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.07>
+
+=item *
+
+C<EXE_FILES: bin/html_formfu_deploy.pl bin/html_formfu_dumpconf.pl>
+
+=back
+
