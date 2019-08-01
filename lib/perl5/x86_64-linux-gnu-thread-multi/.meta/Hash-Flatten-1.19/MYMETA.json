@@ -1,0 +1,43 @@
+{
+   "abstract" : "flatten/unflatten complex data hashes",
+   "author" : [
+      "British Broadcasting Corporation"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "ExtUtils::MakeMaker version 6.56, CPAN::Meta::Converter version 2.150010",
+   "license" : [
+      "unknown"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Hash-Flatten",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Log::Trace" : "0",
+            "Test::Assertions" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "1.19",
+   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+}
