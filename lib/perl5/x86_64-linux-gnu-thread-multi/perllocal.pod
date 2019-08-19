@@ -11108,3 +11108,25 @@ C<EXE_FILES: bin/html_formfu_deploy.pl bin/html_formfu_dumpconf.pl>
 
 =back
 
+=head2 Mon Aug 19 18:07:02 2019: C<Module> L<Parallel::ForkManager|Parallel::ForkManager>
+
+=over 4
+
+=item *
+
+C<installed into: /home/vagrant/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.02>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
