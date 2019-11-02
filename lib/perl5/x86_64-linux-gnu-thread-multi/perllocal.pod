@@ -11130,3 +11130,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sat Nov  2 15:41:48 2019: C<Module> L<DateTime::Format::Duration|DateTime::Format::Duration>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.04>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
