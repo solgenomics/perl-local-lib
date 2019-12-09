@@ -11152,3 +11152,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Mon Dec  9 18:50:13 2019: C<Module> L<Email::Send::SMTP::Gmail|Email::Send::SMTP::Gmail>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.30>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
