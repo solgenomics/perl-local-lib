@@ -11174,3 +11174,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Mon Jun  8 20:50:27 2020: C<Module> L<Sort::Key|Sort::Key>
+
+=over 4
+
+=item *
+
+C<installed into: /home/vagrant/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.33>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
