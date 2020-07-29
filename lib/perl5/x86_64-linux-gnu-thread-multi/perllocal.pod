@@ -11196,3 +11196,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Wed Jul 29 00:36:49 2020: C<Module> L<JSON::Parse|JSON::Parse>
+
+=over 4
+
+=item *
+
+C<installed into: /home/vagrant/cxgn/sgn/../local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.57>
+
+=item *
+
+C<EXE_FILES: script/validjson>
+
+=back
+

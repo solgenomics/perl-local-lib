@@ -1,0 +1,1 @@
+{"pathname":"B/BK/BKB/JSON-Parse-0.57.tar.gz","dist":"JSON-Parse-0.57","target":"JSON::Parse","name":"JSON::Parse","version":"0.57","provides":{"JSON::Tokenize":{"version":"0.57","file":"lib/JSON/Tokenize.pm"},"JSON::Parse":{"file":"lib/JSON/Parse.pm","version":"0.57"}}}
