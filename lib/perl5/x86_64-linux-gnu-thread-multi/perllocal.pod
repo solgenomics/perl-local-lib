@@ -11196,13 +11196,17 @@ C<EXE_FILES: >
 
 =back
 
+
 =head2 Thu Jun 25 13:05:50 2020: C<Module> L<Math::Polygon|Math::Polygon>
+
 
 =over 4
 
 =item *
 
+
 C<installed into: /home/production/cxgn/sgn/../local-lib/lib/perl5>
+
 
 =item *
 
@@ -11210,11 +11214,13 @@ C<LINKTYPE: dynamic>
 
 =item *
 
+
 C<VERSION: 1.10>
 
 =item *
 
 C<EXE_FILES: >
+
 
 =back
 
