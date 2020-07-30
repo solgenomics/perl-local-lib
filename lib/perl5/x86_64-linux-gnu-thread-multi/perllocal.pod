@@ -11196,13 +11196,17 @@ C<EXE_FILES: >
 
 =back
 
-=head2 Wed Jul 29 00:36:49 2020: C<Module> L<JSON::Parse|JSON::Parse>
+
+=head2 Thu Jun 25 13:05:50 2020: C<Module> L<Math::Polygon|Math::Polygon>
+
 
 =over 4
 
 =item *
 
-C<installed into: /home/vagrant/cxgn/sgn/../local-lib/lib/perl5>
+
+C<installed into: /home/production/cxgn/sgn/../local-lib/lib/perl5>
+
 
 =item *
 
@@ -11210,11 +11214,13 @@ C<LINKTYPE: dynamic>
 
 =item *
 
-C<VERSION: 0.57>
+
+C<VERSION: 1.10>
 
 =item *
 
-C<EXE_FILES: script/validjson>
+C<EXE_FILES: >
+
 
 =back
 
