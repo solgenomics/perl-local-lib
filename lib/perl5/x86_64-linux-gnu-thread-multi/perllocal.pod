@@ -11224,3 +11224,69 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Tue Aug  4 03:27:58 2020: C<Module> L<Mock::Config|Mock::Config>
+
+=over 4
+
+=item *
+
+C<installed into: /home/vagrant/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.03>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue Aug  4 03:28:01 2020: C<Module> L<Devel::CheckLib|Devel::CheckLib>
+
+=over 4
+
+=item *
+
+C<installed into: /home/vagrant/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.14>
+
+=item *
+
+C<EXE_FILES: bin/use-devel-checklib>
+
+=back
+
+=head2 Tue Aug  4 03:28:11 2020: C<Module> L<DBD::mysql|DBD::mysql>
+
+=over 4
+
+=item *
+
+C<installed into: /home/vagrant/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 4.050>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
