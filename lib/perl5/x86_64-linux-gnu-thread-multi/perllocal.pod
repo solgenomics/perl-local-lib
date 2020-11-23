@@ -11290,3 +11290,25 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Mon Nov 23 12:20:52 2020: C<Module> L<Hash::Case|Hash::Case>
+
+=over 4
+
+=item *
+
+C<installed into: /home/isaak/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.05>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
