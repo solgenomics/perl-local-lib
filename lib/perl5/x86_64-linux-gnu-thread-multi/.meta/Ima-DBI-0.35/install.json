@@ -1,1 +1,1 @@
-{"pathname":"P/PE/PERRIN/Ima-DBI-0.35.tar.gz","dist":"Ima-DBI-0.35","version":"0.35","name":"Ima::DBI","target":"Ima::DBI","provides":{"Ima::DBI":{"version":"0.35","file":"lib/Ima/DBI.pm"}}}
+{"dist":"Ima-DBI-0.35","target":"Ima::DBI","provides":{"Ima::DBI":{"file":"lib/Ima/DBI.pm","version":"0.35"}},"pathname":"P/PE/PERRIN/Ima-DBI-0.35.tar.gz","version":"0.35","name":"Ima::DBI"}

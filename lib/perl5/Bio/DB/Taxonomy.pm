@@ -77,7 +77,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::DB::Taxonomy;
-$Bio::DB::Taxonomy::VERSION = '1.7.5';
 use vars qw($DefaultSource $TAXON_IIDS);
 use strict;
 use Bio::Tree::Tree;

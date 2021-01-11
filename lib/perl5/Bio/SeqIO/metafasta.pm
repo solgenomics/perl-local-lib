@@ -93,7 +93,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::SeqIO::metafasta;
-$Bio::SeqIO::metafasta::VERSION = '1.7.5';
 use vars qw($WIDTH);
 use strict;
 

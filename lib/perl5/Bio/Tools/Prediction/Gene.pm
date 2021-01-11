@@ -80,7 +80,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Tools::Prediction::Gene;
-$Bio::Tools::Prediction::Gene::VERSION = '1.7.5';
 use strict;
 
 

@@ -3,7 +3,7 @@ package File::Slurp;
 use strict;
 use warnings ;
 
-our $VERSION = '9999.27';
+our $VERSION = '9999.32';
 $VERSION = eval $VERSION;
 
 use Carp ;
@@ -102,7 +102,7 @@ sub read_file {
 	my $buf_ref = $opts->{buf_ref} || \$buf;
 	${$buf_ref} = '';
 	my $blk_size = $opts->{blk_size} || 1024 * 1024;
-	if (my $size = -s $fh) {
+	if (my $size = -f $fh && -s _) {
 		$blk_size = $size if $size < $blk_size;
 		my ($pos, $read) = 0;
 		do {
@@ -119,7 +119,7 @@ sub read_file {
 	seek($fh, $opts->{_data_tell}, SEEK_SET) if $opts->{_is_data} && $opts->{_data_tell};
 
 	# line endings if we're on Windows
-	${$buf_ref} =~ s/\015\012/\012/g if $is_win32 && !$opts->{binmode};
+	${$buf_ref} =~ s/\015\012/\012/g if ${$buf_ref} && $is_win32 && !$opts->{binmode};
 
 	# we now have a buffer filled with the file content. Figure out how to
 	# return it to the user
@@ -281,7 +281,7 @@ sub write_file {
 			# exist). This is slower, but safer.
 			{
 				local $^W = 0; # AYFKM
-				(undef, $file_name) = tempfile('tempXXXXX', DIR => $dir, OPEN => 0);
+				(undef, $file_name) = tempfile('.tempXXXXX', DIR => $dir, OPEN => 0);
 			}
 		}
 		$fh = local *FH;
@@ -671,7 +671,7 @@ L<File::Slurp> implements the following functions.
 
 =head2 append_file
 
-	use File::Spec qw(append_file write_file);
+	use File::Slurp qw(append_file write_file);
 	my $res = append_file('/path/file', "Some text");
 	# same as
 	my $res = write_file('/path/file', {append => 1}, "Some text");
@@ -761,7 +761,7 @@ function.
 
 =head2 overwrite_file
 
-	use File::Spec qw(overwrite_file);
+	use File::Slurp qw(overwrite_file);
 	my $res = overwrite_file('/path/file', "Some text");
 
 The C<overwrite_file> function is simply a synonym for the
@@ -798,7 +798,7 @@ a consistent file.
 
 =head2 read_dir
 
-	use File::Spec qw(read_dir);
+	use File::Slurp qw(read_dir);
 	my @files = read_dir('/path/to/dir');
 	# all files, even the dots
 	my @files = read_dir('/path/to/dir', keep_dot_dot => 1);
@@ -947,7 +947,7 @@ copy of the file to return.
 
 =head2 rf
 
-	use File::Spec qw(rf);
+	use File::Slurp qw(rf);
 	my $text = rf('/path/file');
 
 The C<rf> function is simply a synonym for the L<File::Slurp/"read_file">
@@ -955,7 +955,7 @@ function.
 
 =head2 slurp
 
-	use File::Spec qw(slurp);
+	use File::Slurp qw(slurp);
 	my $text = slurp('/path/file');
 
 The C<slurp> function is simply a synonym for the L<File::Slurp/"read_file">
@@ -963,7 +963,7 @@ function.
 
 =head2 wf
 
-	use File::Spec qw(wf);
+	use File::Slurp qw(wf);
 	my $res = wf('/path/file', "Some text");
 
 
@@ -1092,6 +1092,27 @@ These are exported with
 You can get all subs in the module exported with
 
 	use File::Slurp qw(:all);
+
+=head1 SEE ALSO
+
+=over
+
+=item *
+
+L<File::Slurper> - Provides a straightforward set of functions for the most
+common tasks of reading/writing text and binary files.
+
+=item *
+
+L<Path::Tiny> - Lightweight and comprehensive file handling, including simple
+methods for reading, writing, and editing text and binary files.
+
+=item *
+
+L<Mojo::File> - Similar to Path::Tiny for the L<Mojo> toolkit, always works in
+bytes.
+
+=back
 
 =head1 AUTHOR
 

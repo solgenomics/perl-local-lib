@@ -1,6 +1,6 @@
 package JavaScript::Minifier::XS;
 
-use 5.6.0;
+use 5.8.1;
 use strict;
 use warnings;
 
@@ -9,11 +9,13 @@ require DynaLoader;
 our @ISA = qw(Exporter DynaLoader);
 our @EXPORT_OK = qw(minify);
 
-our $VERSION = '0.11';
+our $VERSION = '0.13';
 
 bootstrap JavaScript::Minifier::XS $VERSION;
 
 1;
+
+=for stopwords minifies minified minifier minification tokenizing EOL
 
 =head1 NAME
 
@@ -22,12 +24,13 @@ JavaScript::Minifier::XS - XS based JavaScript minifier
 =head1 SYNOPSIS
 
   use JavaScript::Minifier::XS qw(minify);
-  $minified = minify($js);
+  my $js       = '...';
+  my $minified = minify($js);
 
 =head1 DESCRIPTION
 
 C<JavaScript::Minifier::XS> is a JavaScript "minifier"; its designed to remove
-un-necessary whitespace and comments from JavaScript files, which also B<not>
+unnecessary whitespace and comments from JavaScript files, which also B<not>
 breaking the JavaScript.
 
 C<JavaScript::Minifier::XS> is similar in function to C<JavaScript::Minifier>,
@@ -46,7 +49,7 @@ caller.
 
 =head1 HOW IT WORKS
 
-C<JavaScript::Minifier::XS> minifies the JavaScript by removing un-necessary
+C<JavaScript::Minifier::XS> minifies the JavaScript by removing unnecessary
 whitespace from JavaScript documents.  Comments (both block and line) are also
 removed, I<except> when (a) they contain the word "copyright" in them, or (b)
 they're needed to implement "IE Conditional Compilation".
@@ -80,7 +83,7 @@ result is the first whitespace character in the run.
 
 =head2 Pass 3: Pruning
 
-We then go back through the token list and prune and remove un-necessary
+We then go back through the token list and prune and remove unnecessary
 tokens.
 
 =over
@@ -112,15 +115,9 @@ single JavaScript string, which is then returned back to the caller.
 
 Graham TerMarsch (cpan@howlingfrog.com)
 
-=head1 REPORTING BUGS
-
-Please report bugs via RT
-(L<http://rt.cpan.org/Dist/Display.html?Queue=JavaScript::Minifier::XS>),
-and be sure to include the JavaScript that you're having troubles minifying.
-
 =head1 COPYRIGHT
 
-Copyright (C) 2007-2008, Graham TerMarsch.  All Rights Reserved.
+Copyright (C) 2007-, Graham TerMarsch.  All Rights Reserved.
 
 This is free software; you can redistribute it and/or modify it under the same
 license as Perl itself.

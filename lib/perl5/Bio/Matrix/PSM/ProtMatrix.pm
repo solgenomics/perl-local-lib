@@ -187,7 +187,6 @@ Email tex@biosysadmin.com
 
 # Let the code begin...
 package Bio::Matrix::PSM::ProtMatrix;
-$Bio::Matrix::PSM::ProtMatrix::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::Root Bio::Matrix::PSM::SiteMatrixI);

@@ -4,13 +4,13 @@
       "Randy J. Ray <rjray@blackperl.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Module::Build version 0.421, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Module::Build version 0.421, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Image-Size",
    "prereqs" : {
@@ -55,5 +55,5 @@
       }
    },
    "version" : "3.300",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001"
 }

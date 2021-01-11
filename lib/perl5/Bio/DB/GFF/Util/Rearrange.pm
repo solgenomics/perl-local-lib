@@ -54,13 +54,14 @@ it under the same terms as Perl itself.
 =cut
 
 package Bio::DB::GFF::Util::Rearrange;
-$Bio::DB::GFF::Util::Rearrange::VERSION = '1.7.5';
+
 use strict;
 require Exporter;
 use vars qw(@EXPORT @EXPORT_OK);
 use base qw(Exporter);
 @EXPORT_OK = qw(rearrange);
 @EXPORT = qw(rearrange);
+use Bio::Root::Version;
 
 # default export
 sub rearrange {

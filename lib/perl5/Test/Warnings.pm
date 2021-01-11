@@ -1,11 +1,11 @@
 use strict;
 use warnings;
-package Test::Warnings; # git description: v0.025-4-g6413c0f
+package Test::Warnings; # git description: v0.029-2-g97d1c9f
+# vim: set ts=8 sts=4 sw=4 tw=115 et :
 # ABSTRACT: Test for warnings and the lack of them
 # KEYWORDS: testing tests warnings
-# vim: set ts=8 sts=4 sw=4 tw=115 et :
 
-our $VERSION = '0.026';
+our $VERSION = '0.030';
 
 use parent 'Exporter';
 use Test::Builder;
@@ -21,14 +21,24 @@ my $warnings_allowed;
 my $forbidden_warnings_found;
 my $done_testing_called;
 my $no_end_test;
+my $fail_on_warning;
+my $report_warnings;
+my @collected_warnings;
 
 sub import
 {
-    # END block will check for this status
-    my @symbols = grep { $_ ne ':no_end_test' } @_;
-    $no_end_test = (@symbols != @_);
+    my $class = shift @_;
 
-    __PACKAGE__->export_to_level(1, @symbols);
+    my %names; @names{@_} = ();
+    # END block will check for this status
+    $no_end_test = exists $names{':no_end_test'};
+    # __WARN__ handler will check for this status
+    $fail_on_warning = exists $names{':fail_on_warning'};
+    # Collect and report warnings at the end
+    $report_warnings = exists $names{':report_warnings'};
+
+    delete @names{qw(:no_end_test :fail_on_warning :report_warnings)};
+    __PACKAGE__->export_to_level(1, $class, keys %names);
 }
 
 # for testing this module only!
@@ -53,6 +63,7 @@ $SIG{__WARN__} = sub {
     else
     {
         $forbidden_warnings_found++;
+        push @collected_warnings, $_[0] if $report_warnings;
 
         # TODO: this doesn't handle blessed coderefs... does anyone care?
         goto &$_orig_warn_handler if $_orig_warn_handler
@@ -67,11 +78,18 @@ $SIG{__WARN__} = sub {
             require Carp;
             Carp::carp($_[0]);
         }
+        _builder->ok(0, 'unexpected warning') if $fail_on_warning;
     }
 };
 
-sub warnings(&)
+sub warnings(;&)
 {
+    # if someone manually does warnings->import in the same namespace this is
+    # imported into, this sub will be called.  in that case, just return the
+    # string "warnings" so it calls the correct method.
+    if (!@_) {
+        return 'warnings';
+    }
     my $code = shift;
     my @warnings;
     local $SIG{__WARN__} = sub {
@@ -138,6 +156,12 @@ sub allowing_warnings() { $warnings_allowed }
 sub had_no_warnings(;$)
 {
     _builder->ok(!$forbidden_warnings_found, shift || 'no (unexpected) warnings');
+    if ($report_warnings and $forbidden_warnings_found) {
+        _builder->diag("Got the following unexpected warnings:");
+        for my $i (1 .. @collected_warnings) {
+            _builder->diag("  $i: $collected_warnings[ $i - 1 ]");
+        }
+    }
 }
 
 1;
@@ -154,7 +178,7 @@ Test::Warnings - Test for warnings and the lack of them
 
 =head1 VERSION
 
-version 0.026
+version 0.030
 
 =head1 SYNOPSIS
 
@@ -329,6 +353,21 @@ Imports all functions listed above
 Disables the addition of a C<had_no_warnings> test
 via C<END> or C<done_testing>
 
+=head2 C<:fail_on_warning>
+
+=for stopwords unexempted
+
+When used, fail immediately when an unexempted warning is generated (as opposed to waiting until
+L</had_no_warnings> or C<done_testing> is called).
+
+I recommend you only turn this option on when debugging a test, to see where a surprise warning is coming from,
+and rely on the end-of-tests check otherwise.
+
+=head2 C<:report_warnings>
+
+When used, C<had_no_warnings()> will print all the unexempted warning content, in case it had been suppressed
+earlier by other captures (such as L<Test::Output/stderr_like> or L<Capture::Tiny/capture>).
+
 =head1 CAVEATS
 
 =for stopwords smartmatch TODO irc
@@ -405,9 +444,7 @@ L<blogs.perl.org: YANWT (Yet Another No-Warnings Tester)|http://blogs.perl.org/u
 
 =item *
 
-L<strictures> - which makes all warnings fatal in tests, hence lessening
-
-the need for special warning testing
+L<strictures> - which makes all warnings fatal in tests, hence lessening the need for special warning testing
 
 =item *
 
@@ -428,7 +465,7 @@ There is also a mailing list available for users of this distribution, at
 L<http://lists.perl.org/list/perl-qa.html>.
 
 There is also an irc channel available for users of this distribution, at
-L<irc://irc.perl.org/#perl-qa>.
+L<C<#perl> on C<irc.perl.org>|irc://irc.perl.org/#perl-qa>.
 
 I am also usually active on irc, as 'ether' at C<irc.perl.org>.
 
@@ -436,11 +473,29 @@ I am also usually active on irc, as 'ether' at C<irc.perl.org>.
 
 Karen Etheridge <ether@cpan.org>
 
-=head1 CONTRIBUTOR
+=head1 CONTRIBUTORS
 
-=for stopwords A. Sinan Unur
+=for stopwords Graham Knop A. Sinan Unur Leon Timmermans Tina Mueller
+
+=over 4
+
+=item *
+
+Graham Knop <haarg@haarg.org>
+
+=item *
 
 A. Sinan Unur <nanis@cpan.org>
+
+=item *
+
+Leon Timmermans <fawaka@gmail.com>
+
+=item *
+
+Tina Mueller <cpan2@tinita.de>
+
+=back
 
 =head1 COPYRIGHT AND LICENCE
 

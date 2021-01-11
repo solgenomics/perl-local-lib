@@ -83,7 +83,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Tree::TreeI;
-$Bio::Tree::TreeI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::RootI);

@@ -75,7 +75,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Search::Result::ResultFactory;
-$Bio::Search::Result::ResultFactory::VERSION = '1.7.5';
 use vars qw($DEFAULT_TYPE);
 use strict;
 

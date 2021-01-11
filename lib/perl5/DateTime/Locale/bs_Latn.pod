@@ -477,23 +477,23 @@ Bosnian Latin locale.
    1995-12-22T09:05:02 = pet, 22. decembar
   -0010-09-15T04:44:23 = sub, 15. septembar
 
-=head3 MMMMW-count-few (W. 'sedmica' 'u' MMMM)
+=head3 MMMMW-count-few (W. 'sedmica' 'mjesec' MMMM)
 
-   2008-02-05T18:30:30 = 1. sedmica u februar
-   1995-12-22T09:05:02 = 3. sedmica u decembar
-  -0010-09-15T04:44:23 = 2. sedmica u septembar
+   2008-02-05T18:30:30 = 1. sedmica mjesec februar
+   1995-12-22T09:05:02 = 3. sedmica mjesec decembar
+  -0010-09-15T04:44:23 = 2. sedmica mjesec septembar
 
-=head3 MMMMW-count-one (W. 'sedmica' 'u' MMMM)
+=head3 MMMMW-count-one (W. 'sedmica' 'mjesec' MMMM)
 
-   2008-02-05T18:30:30 = 1. sedmica u februar
-   1995-12-22T09:05:02 = 3. sedmica u decembar
-  -0010-09-15T04:44:23 = 2. sedmica u septembar
+   2008-02-05T18:30:30 = 1. sedmica mjesec februar
+   1995-12-22T09:05:02 = 3. sedmica mjesec decembar
+  -0010-09-15T04:44:23 = 2. sedmica mjesec septembar
 
-=head3 MMMMW-count-other (W. 'sedmica' 'u' MMMM)
+=head3 MMMMW-count-other (W. 'sedmica' 'mjesec' MMMM)
 
-   2008-02-05T18:30:30 = 1. sedmica u februar
-   1995-12-22T09:05:02 = 3. sedmica u decembar
-  -0010-09-15T04:44:23 = 2. sedmica u septembar
+   2008-02-05T18:30:30 = 1. sedmica mjesec februar
+   1995-12-22T09:05:02 = 3. sedmica mjesec decembar
+  -0010-09-15T04:44:23 = 2. sedmica mjesec septembar
 
 =head3 MMMMd (d. MMMM)
 
@@ -655,6 +655,26 @@ Yes
 =head3 Local first day of the week
 
 1 (ponedjeljak)
+
+=head2 Strftime Patterns
+
+=head3 %c (%a %b %e %H:%M:%S %Y) - date time format
+
+   2008-02-05T18:30:30 = uto feb  5 18:30:30 2008
+   1995-12-22T09:05:02 = pet dec 22 09:05:02 1995
+  -0010-09-15T04:44:23 = sub sep 15 04:44:23 -10
+
+=head3 %x (%m/%d/%y) - date format
+
+   2008-02-05T18:30:30 = 02/05/08
+   1995-12-22T09:05:02 = 12/22/95
+  -0010-09-15T04:44:23 = 09/15/10
+
+=head3 %X (%H:%M:%S) - time format
+
+   2008-02-05T18:30:30 = 18:30:30
+   1995-12-22T09:05:02 = 09:05:02
+  -0010-09-15T04:44:23 = 04:44:23
 
 =head1 SUPPORT
 

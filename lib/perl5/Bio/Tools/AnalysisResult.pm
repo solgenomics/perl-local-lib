@@ -104,7 +104,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Tools::AnalysisResult;
-$Bio::Tools::AnalysisResult::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::Root Bio::SeqAnalysisParserI Bio::AnalysisResultI Bio::Root::IO);

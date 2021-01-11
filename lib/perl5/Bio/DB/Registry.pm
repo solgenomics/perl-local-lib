@@ -68,7 +68,7 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::DB::Registry;
-$Bio::DB::Registry::VERSION = '1.7.5';
+
 use vars qw($OBDA_SPEC_VERSION $OBDA_SEARCH_PATH
 			   $HOME $PRIVATE_DIR $PUBLIC_DIR $REGISTRY
 			   $FALLBACK_REGISTRY);

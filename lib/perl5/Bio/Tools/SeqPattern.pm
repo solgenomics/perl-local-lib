@@ -206,7 +206,7 @@ modify it under the same terms as Perl itself.
 
 
 package Bio::Tools::SeqPattern;
-$Bio::Tools::SeqPattern::VERSION = '1.7.5';
+
 use base qw(Bio::Root::Root);
 use strict;
 use vars qw ($ID);

@@ -77,7 +77,7 @@ particular purpose.
 =cut
 
 package Bio::SeqIO::mbsout;
-$Bio::SeqIO::mbsout::VERSION = '1.7.5';
+
 use version;
 our $API_VERSION = qv('1.1.3');
 

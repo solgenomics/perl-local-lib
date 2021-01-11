@@ -1,5 +1,5 @@
-/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Singleton.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Singleton/Role/Meta/Class.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Singleton/Role/Meta/Instance.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Singleton/Role/Meta/Method/Constructor.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/MooseX/Singleton/Role/Object.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/MooseX/Singleton.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/MooseX/Singleton/Role/Meta/Class.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/MooseX/Singleton/Role/Meta/Instance.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/MooseX/Singleton/Role/Meta/Method/Constructor.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/MooseX/Singleton/Role/Object.pm

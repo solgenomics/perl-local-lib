@@ -1,10 +1,5 @@
 package Bio::Root::Version;
-$Bio::Root::Version::VERSION = '1.7.5';
 use strict;
-
-=head1 NAME
-
-Bio::Root::Version - don't use, get version from each module
 
 =head1 SYNOPSIS
 
@@ -41,6 +36,8 @@ variable set if it's not already.
 
 =cut
 
+our $VERSION = '1.007002';
+
 sub import {
     # try to handle multiple levels of inheritance:
     my $i = 0;
@@ -50,7 +47,7 @@ sub import {
         if (    $pkg =~ m/^Bio::/o
             and not defined ${$pkg . "::VERSION"}
             ) {
-            ${$pkg . "::VERSION"} = $Bio::Root::Version::VERSION;
+            ${$pkg . "::VERSION"} = $VERSION;
         }
         $pkg = caller(++$i);
     }

@@ -82,7 +82,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Seq::LargePrimarySeq;
-$Bio::Seq::LargePrimarySeq::VERSION = '1.7.5';
 use vars qw($AUTOLOAD);
 use strict;
 

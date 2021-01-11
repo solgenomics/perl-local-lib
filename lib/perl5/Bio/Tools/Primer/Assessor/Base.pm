@@ -73,7 +73,7 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Tools::Primer::Assessor::Base;
-$Bio::Tools::Primer::Assessor::Base::VERSION = '1.7.5';
+
 use base qw(Bio::Root::Root);
 
 sub new {

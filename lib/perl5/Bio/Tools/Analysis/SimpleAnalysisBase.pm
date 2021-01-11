@@ -81,7 +81,7 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Tools::Analysis::SimpleAnalysisBase;
-$Bio::Tools::Analysis::SimpleAnalysisBase::VERSION = '1.7.5';
+
 use strict;
 use Data::Dumper;
 

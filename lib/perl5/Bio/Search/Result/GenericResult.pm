@@ -136,7 +136,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Search::Result::GenericResult;
-$Bio::Search::Result::GenericResult::VERSION = '1.7.5';
 use strict;
 
 use Bio::Search::GenericStatistics;

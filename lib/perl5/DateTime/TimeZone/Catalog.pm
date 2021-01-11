@@ -11,7 +11,7 @@ use strict;
 use warnings;
 use namespace::autoclean;
 
-our $VERSION = '2.35';
+our $VERSION = '2.46';
 
 our @ALL =
 qw(
@@ -83,7 +83,6 @@ qw(
   America/Fort_Nelson
   America/Fortaleza
   America/Glace_Bay
-  America/Godthab
   America/Goose_Bay
   America/Grand_Turk
   America/Guatemala
@@ -131,6 +130,7 @@ qw(
   America/North_Dakota/Beulah
   America/North_Dakota/Center
   America/North_Dakota/New_Salem
+  America/Nuuk
   America/Ojinaga
   America/Panama
   America/Pangnirtung
@@ -264,7 +264,6 @@ qw(
   Australia/Adelaide
   Australia/Brisbane
   Australia/Broken_Hill
-  Australia/Currie
   Australia/Darwin
   Australia/Eucla
   Australia/Hobart
@@ -463,7 +462,6 @@ El_Salvador
 Fort_Nelson
 Fortaleza
 Glace_Bay
-Godthab
 Goose_Bay
 Grand_Turk
 Guatemala
@@ -511,6 +509,7 @@ Noronha
 North_Dakota/Beulah
 North_Dakota/Center
 North_Dakota/New_Salem
+Nuuk
 Ojinaga
 Panama
 Pangnirtung
@@ -652,7 +651,6 @@ Stanley
 Adelaide
 Brisbane
 Broken_Hill
-Currie
 Darwin
 Eucla
 Hobart
@@ -823,7 +821,6 @@ Europe/Vienna
 Australia/Lord_Howe
 Antarctica/Macquarie
 Australia/Hobart
-Australia/Currie
 Australia/Melbourne
 Australia/Sydney
 Australia/Broken_Hill
@@ -944,9 +941,9 @@ America/Inuvik
 America/Creston
 America/Dawson_Creek
 America/Fort_Nelson
-America/Vancouver
 America/Whitehorse
 America/Dawson
+America/Vancouver
 ) ],
   'cc' => [ qw(
 Indian/Cocos
@@ -1095,7 +1092,7 @@ Africa/Accra
 Europe/Gibraltar
 ) ],
   'gl' => [ qw(
-America/Godthab
+America/Nuuk
 America/Danmarkshavn
 America/Scoresbysund
 America/Thule
@@ -1450,10 +1447,9 @@ Europe/Belgrade
   'ru' => [ qw(
 Europe/Kaliningrad
 Europe/Moscow
-Europe/Simferopol
 Europe/Kirov
-Europe/Astrakhan
 Europe/Volgograd
+Europe/Astrakhan
 Europe/Saratov
 Europe/Ulyanovsk
 Europe/Samara
@@ -1591,6 +1587,7 @@ Asia/Taipei
 Africa/Dar_es_Salaam
 ) ],
   'ua' => [ qw(
+Europe/Simferopol
 Europe/Kiev
 Europe/Uzhgorod
 Europe/Zaporozhye
@@ -1738,6 +1735,7 @@ our %LINKS =
   'America/Dominica' => 'America/Port_of_Spain',
   'America/Ensenada' => 'America/Tijuana',
   'America/Fort_Wayne' => 'America/Indiana/Indianapolis',
+  'America/Godthab' => 'America/Nuuk',
   'America/Grenada' => 'America/Port_of_Spain',
   'America/Guadeloupe' => 'America/Port_of_Spain',
   'America/Indianapolis' => 'America/Indiana/Indianapolis',
@@ -1791,6 +1789,7 @@ our %LINKS =
   'Atlantic/St_Helena' => 'Africa/Abidjan',
   'Australia/ACT' => 'Australia/Sydney',
   'Australia/Canberra' => 'Australia/Sydney',
+  'Australia/Currie' => 'Australia/Hobart',
   'Australia/LHI' => 'Australia/Lord_Howe',
   'Australia/NSW' => 'Australia/Sydney',
   'Australia/North' => 'Australia/Darwin',
@@ -1891,7 +1890,6 @@ our %LINKS =
   'US/Michigan' => 'America/Detroit',
   'US/Mountain' => 'America/Denver',
   'US/Pacific' => 'America/Los_Angeles',
-  'US/Pacific-New' => 'America/Los_Angeles',
   'US/Samoa' => 'Pacific/Pago_Pago',
   'Universal' => 'UTC',
   'W-SU' => 'Europe/Moscow',
@@ -1900,7 +1898,7 @@ our %LINKS =
 
 ;
 
-sub OlsonVersion { '2019a' }
+sub OlsonVersion { '2020e' }
 
 
 1;
@@ -1990,7 +1988,7 @@ so that applications can easily present a list of timezones.
   America/Santiago
   America/Sao_Paulo
   America/Danmarkshavn
-  America/Godthab
+  America/Nuuk
   America/Scoresbysund
   America/Thule
   America/Adak
@@ -2188,7 +2186,6 @@ so that applications can easily present a list of timezones.
   Australia/Adelaide
   Australia/Brisbane
   Australia/Broken_Hill
-  Australia/Currie
   Australia/Darwin
   Australia/Eucla
   Australia/Hobart
@@ -2249,10 +2246,10 @@ so that applications can easily present a list of timezones.
 
 =head3 Indian
 
+  Indian/Kerguelen
   Indian/Mahe
   Indian/Mauritius
   Indian/Reunion
-  Indian/Kerguelen
   Indian/Christmas
   Indian/Cocos
   Indian/Chagos
@@ -2375,8 +2372,7 @@ so that applications can easily present a list of timezones.
 
   Australia/Lord_Howe - Lord Howe Island
   Antarctica/Macquarie - Macquarie Island
-  Australia/Hobart - Tasmania (most areas)
-  Australia/Currie - Tasmania (King Island)
+  Australia/Hobart - Tasmania
   Australia/Melbourne - Victoria
   Australia/Sydney - New South Wales (most areas)
   Australia/Broken_Hill - New South Wales (Yancowinna)
@@ -2529,9 +2525,9 @@ so that applications can easily present a list of timezones.
   America/Creston - MST - BC (Creston)
   America/Dawson_Creek - MST - BC (Dawson Cr, Ft St John)
   America/Fort_Nelson - MST - BC (Ft Nelson)
+  America/Whitehorse - MST - Yukon (east)
+  America/Dawson - MST - Yukon (west)
   America/Vancouver - Pacific - BC (most areas)
-  America/Whitehorse - Pacific - Yukon (south)
-  America/Dawson - Pacific - Yukon (north)
 
 =head3 Cayman Islands (KY)
 
@@ -2728,7 +2724,7 @@ so that applications can easily present a list of timezones.
 
 =head3 Greenland (GL)
 
-  America/Godthab - Greenland (most areas)
+  America/Nuuk - Greenland (most areas)
   America/Danmarkshavn - National Park (east coast)
   America/Scoresbysund - Scoresbysund/Ittoqqortoormiit
   America/Thule - Thule/Pituffik
@@ -2916,10 +2912,6 @@ so that applications can easily present a list of timezones.
 
   Asia/Macau
 
-=head3 Macedonia, The former Yugoslav Republic of (MK)
-
-  Europe/Skopje
-
 =head3 Madagascar (MG)
 
   Indian/Antananarivo
@@ -3065,6 +3057,10 @@ so that applications can easily present a list of timezones.
 
   Pacific/Norfolk
 
+=head3 North Macedonia (MK)
+
+  Europe/Skopje
+
 =head3 Northern Mariana Islands (MP)
 
   Pacific/Saipan
@@ -3145,10 +3141,9 @@ so that applications can easily present a list of timezones.
 
   Europe/Kaliningrad - MSK-01 - Kaliningrad
   Europe/Moscow - MSK+00 - Moscow area
-  Europe/Simferopol - MSK+00 - Crimea
   Europe/Kirov - MSK+00 - Kirov
+  Europe/Volgograd - MSK+00 - Volgograd
   Europe/Astrakhan - MSK+01 - Astrakhan
-  Europe/Volgograd - MSK+01 - Volgograd
   Europe/Saratov - MSK+01 - Saratov
   Europe/Ulyanovsk - MSK+01 - Ulyanovsk
   Europe/Samara - MSK+01 - Samara, Udmurtia
@@ -3313,7 +3308,7 @@ so that applications can easily present a list of timezones.
 
   Asia/Dushanbe
 
-=head3 Tanzania, United Republic of (TZ)
+=head3 Tanzania, the United Republic of (TZ)
 
   Africa/Dar_es_Salaam
 
@@ -3367,9 +3362,10 @@ so that applications can easily present a list of timezones.
 
 =head3 Ukraine (UA)
 
+  Europe/Simferopol - Crimea
   Europe/Kiev - Ukraine (most areas)
-  Europe/Uzhgorod - Ruthenia
-  Europe/Zaporozhye - Zaporozh'ye/Zaporizhia; Lugansk/Luhansk (east)
+  Europe/Uzhgorod - Transcarpathia
+  Europe/Zaporozhye - Zaporozhye and east Lugansk
 
 =head3 United Arab Emirates (AE)
 
@@ -3517,6 +3513,7 @@ A linked zone is an alias from one name to another.
   America/Dominica => America/Port_of_Spain
   America/Ensenada => America/Tijuana
   America/Fort_Wayne => America/Indiana/Indianapolis
+  America/Godthab => America/Nuuk
   America/Grenada => America/Port_of_Spain
   America/Guadeloupe => America/Port_of_Spain
   America/Indianapolis => America/Indiana/Indianapolis
@@ -3570,6 +3567,7 @@ A linked zone is an alias from one name to another.
   Atlantic/St_Helena => Africa/Abidjan
   Australia/ACT => Australia/Sydney
   Australia/Canberra => Australia/Sydney
+  Australia/Currie => Australia/Hobart
   Australia/LHI => Australia/Lord_Howe
   Australia/NSW => Australia/Sydney
   Australia/North => Australia/Darwin
@@ -3670,7 +3668,6 @@ A linked zone is an alias from one name to another.
   US/Michigan => America/Detroit
   US/Mountain => America/Denver
   US/Pacific => America/Los_Angeles
-  US/Pacific-New => America/Los_Angeles
   US/Samoa => Pacific/Pago_Pago
   Universal => UTC
   W-SU => Europe/Moscow

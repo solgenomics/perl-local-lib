@@ -197,7 +197,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::SeqIO::swiss;
-$Bio::SeqIO::swiss::VERSION = '1.7.5';
 use vars qw(@Unknown_names @Unknown_genus);
 use strict;
 use Bio::SeqIO::FTHelper;

@@ -65,7 +65,7 @@ Email - lstein@cshl.org
 =cut
 
 package Bio::DB::Flat::BDB::fasta;
-$Bio::DB::Flat::BDB::fasta::VERSION = '1.7.5';
+
 use strict;
 
 use base qw(Bio::DB::Flat::BDB);

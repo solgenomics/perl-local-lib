@@ -2,13 +2,14 @@ package Alien::Build::Plugin::Probe::CommandLine;
 
 use strict;
 use warnings;
+use 5.008004;
 use Alien::Build::Plugin;
 use Carp ();
 use Capture::Tiny qw( capture );
 use File::Which ();
 
 # ABSTRACT: Probe for tools or commands already available
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 has '+command' => sub { Carp::croak "@{[ __PACKAGE__ ]} requires command property" };
@@ -34,7 +35,7 @@ has 'version_stderr' => undef;
 sub init
 {
   my($self, $meta) = @_;
-  
+
   my $check = sub {
     my($build) = @_;
 
@@ -71,7 +72,7 @@ sub init
     $build->runtime_prop->{command} = $self->command;
     'system';
   };
-  
+
   if($self->secondary)
   {
     $meta->around_hook(
@@ -106,7 +107,7 @@ Alien::Build::Plugin::Probe::CommandLine - Probe for tools or commands already a
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -134,7 +135,7 @@ The arguments to pass to the command.
 
 =head2 secondary
 
-If you are using another probe plugin (such as L<Alien::Build::Plugin::Probe::CBuilder> or 
+If you are using another probe plugin (such as L<Alien::Build::Plugin::Probe::CBuilder> or
 L<Alien::Build::Plugin::PkgConfig::Negotiate>) to detect the existence of a library, but
 also need a program to exist, then you should set secondary to a true value.  For example
 when you need both:
@@ -185,7 +186,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -235,9 +236,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -65,7 +65,7 @@ Email - lstein@cshl.org
 =cut
 
 package Bio::DB::Flat::BDB::swiss;
-$Bio::DB::Flat::BDB::swiss::VERSION = '1.7.5';
+
 use strict;
 
 use base qw(Bio::DB::Flat::BDB);

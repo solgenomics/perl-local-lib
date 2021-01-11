@@ -1,1 +1,1 @@
-{"pathname":"J/JR/JROCKWAY/Test-TableDriven-0.02.tar.gz","target":"Test::TableDriven","provides":{"Test::TableDriven":{"version":"0.02","file":"lib/Test/TableDriven.pm"}},"dist":"Test-TableDriven-0.02","version":"0.02","name":"Test::TableDriven"}
+{"provides":{"Test::TableDriven":{"version":"0.02","file":"lib/Test/TableDriven.pm"}},"dist":"Test-TableDriven-0.02","pathname":"J/JR/JROCKWAY/Test-TableDriven-0.02.tar.gz","target":"Test::TableDriven","version":"0.02","name":"Test::TableDriven"}

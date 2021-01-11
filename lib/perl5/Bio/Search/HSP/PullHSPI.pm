@@ -121,7 +121,7 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Search::HSP::PullHSPI;
-$Bio::Search::HSP::PullHSPI::VERSION = '1.7.5';
+
 
 use strict;
 

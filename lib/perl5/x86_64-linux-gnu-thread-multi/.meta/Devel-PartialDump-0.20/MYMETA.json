@@ -4,7 +4,7 @@
       "יובל קוג'מן (Yuval Kogman) <nothingmuch@woobling.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 6.009, CPAN::Meta::Converter version 2.150010, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Dist::Zilla version 6.009, CPAN::Meta::Converter version 2.150010",
    "keywords" : [
       "development",
       "debugging",
@@ -20,7 +20,7 @@
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Devel-PartialDump",
    "no_index" : {
@@ -1218,7 +1218,7 @@
       "David Golden <dagolden@cpan.org>",
       "Paul Howarth <paul@city-fan.org>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.27300_01",
+   "x_serialization_backend" : "JSON::PP version 2.97001",
    "x_static_install" : 1,
    "x_use_unsafe_inc" : 0
 }

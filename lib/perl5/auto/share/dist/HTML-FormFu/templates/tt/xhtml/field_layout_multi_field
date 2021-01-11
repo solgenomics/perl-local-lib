@@ -1,3 +1,0 @@
-<span[% process_attrs(self.attributes) %]>
-[% FOREACH element = self.elements %][% INCLUDE $element.layout_parser_filename self=element layout=element.multi_layout %]
-[% END %]</span>

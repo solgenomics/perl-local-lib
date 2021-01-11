@@ -145,7 +145,6 @@ The rest of the documentation details each of the object methods.
 =cut
 
 package Bio::Tree::Compatible;
-$Bio::Tree::Compatible::VERSION = '1.7.5';
 use strict;
 
 # Object preamble - inherits from Bio::Root::Root

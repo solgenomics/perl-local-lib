@@ -109,7 +109,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::CodonUsage::Table;
-$Bio::CodonUsage::Table::VERSION = '1.7.5';
 use strict;
 use vars qw(%STRICTAA @AA);
 use Bio::SeqUtils;

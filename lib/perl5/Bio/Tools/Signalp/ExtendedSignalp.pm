@@ -102,7 +102,7 @@ the web:
 =cut
 
 package Bio::Tools::Signalp::ExtendedSignalp;
-$Bio::Tools::Signalp::ExtendedSignalp::VERSION = '1.7.5';
+
 use strict;
 use Data::Dumper;
 use Bio::SeqFeature::Generic;

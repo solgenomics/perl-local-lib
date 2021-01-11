@@ -134,7 +134,6 @@ Internal methods are usually preceded with a _
 =cut
 
 package Bio::AnalysisParserI;
-$Bio::AnalysisParserI::VERSION = '1.7.5';
 use strict;
 
 

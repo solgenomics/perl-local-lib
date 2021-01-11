@@ -122,7 +122,7 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Index::Fasta;
-$Bio::Index::Fasta::VERSION = '1.7.5';
+
 use strict;
 use warnings;
 

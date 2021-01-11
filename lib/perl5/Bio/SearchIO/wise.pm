@@ -75,7 +75,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SearchIO::wise;
-$Bio::SearchIO::wise::VERSION = '1.7.5';
 use vars qw(%MAPPING %MODEMAP $DEFAULT_WRITER_CLASS);
 use strict;
 

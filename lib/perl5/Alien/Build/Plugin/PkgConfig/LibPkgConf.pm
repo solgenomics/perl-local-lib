@@ -2,11 +2,12 @@ package Alien::Build::Plugin::PkgConfig::LibPkgConf;
 
 use strict;
 use warnings;
+use 5.008004;
 use Alien::Build::Plugin;
 use Carp ();
 
 # ABSTRACT: Probe system and determine library or tool properties using PkgConfig::LibPkgConf
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 has '+pkg_name' => sub {
@@ -72,6 +73,9 @@ sub init
       my($build) = @_;
       $build->runtime_prop->{legacy}->{name} ||= $pkg_name;
 
+      $build->hook_prop->{probe_class} = __PACKAGE__;
+      $build->hook_prop->{probe_instance_id} = $self->instance_id;
+
       require PkgConfig::LibPkgConf::Client;
       my $client = PkgConfig::LibPkgConf::Client->new;
       my $pkg = $client->find($pkg_name);
@@ -83,7 +87,7 @@ sub init
       if($atleast_version)
       {
         require PkgConfig::LibPkgConf::Util;
-        if(PkgConfig::LibPkgConf::Util::compare_version($pkg->version, $atleast_version) == -1)
+        if(PkgConfig::LibPkgConf::Util::compare_version($pkg->version, $atleast_version) < 0)
         {
           die "package $pkg_name is version @{[ $pkg->version ]}, but at least $atleast_version is required.";
         }
@@ -101,7 +105,7 @@ sub init
       if($self->max_version)
       {
         require PkgConfig::LibPkgConf::Util;
-        if(PkgConfig::LibPkgConf::Util::compare_version($pkg->version, $self->max_version) == 1)
+        if(PkgConfig::LibPkgConf::Util::compare_version($pkg->version, $self->max_version) > 0)
         {
           die "package $pkg_name is version @{[ $pkg->version ]}, but max @{[ $self->max_version ]} is required.";
         }
@@ -120,6 +124,10 @@ sub init
   $meta->register_hook(
     $_ => sub {
       my($build) = @_;
+
+      return if $build->hook_prop->{name} eq 'gather_system'
+      &&        ($build->install_prop->{system_probe_instance_id} || '') ne $self->instance_id;
+
       require PkgConfig::LibPkgConf::Client;
       my $client = PkgConfig::LibPkgConf::Client->new;
 
@@ -166,7 +174,7 @@ Alien::Build::Plugin::PkgConfig::LibPkgConf - Probe system and determine library
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -177,7 +185,7 @@ version 1.69
 
 =head1 DESCRIPTION
 
-Note: in most case you will want to use L<Alien::Build::Plugin::Download::Negotiate>
+Note: in most case you will want to use L<Alien::Build::Plugin::PkgConfig::Negotiate>
 instead.  It picks the appropriate fetch plugin based on your platform and environment.
 In some cases you may need to use this plugin directly instead.
 
@@ -231,7 +239,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -281,9 +289,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

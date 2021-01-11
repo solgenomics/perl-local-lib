@@ -1,1 +1,1 @@
-{"provides":{"Test::Fork":{"version":"0.02","file":"lib/Test/Fork.pm"}},"pathname":"M/MS/MSCHWERN/Test-Fork-0.02.tar.gz","name":"Test::Fork","dist":"Test-Fork-0.02","version":"0.02","target":"Test::Fork"}
+{"name":"Test::Fork","target":"Test::Fork","pathname":"M/MS/MSCHWERN/Test-Fork-0.02.tar.gz","version":"0.02","dist":"Test-Fork-0.02","provides":{"Test::Fork":{"version":"0.02","file":"lib/Test/Fork.pm"}}}

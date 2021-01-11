@@ -79,7 +79,7 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Tools::Primer::Pair;
-$Bio::Tools::Primer::Pair::VERSION = '1.7.5';
+
 use base qw(Bio::Root::Root);
 
 sub new {

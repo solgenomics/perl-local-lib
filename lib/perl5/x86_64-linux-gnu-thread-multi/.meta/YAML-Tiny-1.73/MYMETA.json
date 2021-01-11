@@ -4,7 +4,7 @@
       "Adam Kennedy <adamk@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 6.011, CPAN::Meta::Converter version 2.150010, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Dist::Zilla version 6.011, CPAN::Meta::Converter version 2.150010",
    "keywords" : [
       "YAML",
       "markup",
@@ -19,7 +19,7 @@
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "YAML-Tiny",
    "no_index" : {
@@ -1207,6 +1207,6 @@
       "Tim Bunce <Tim.Bunce@pobox.com>",
       "Craig A. Berry <craigberry@mac.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.27300_01",
+   "x_serialization_backend" : "JSON::PP version 2.97001",
    "x_use_unsafe_inc" : 0
 }

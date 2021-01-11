@@ -2,7 +2,7 @@ package Test2::Plugin::Times;
 use strict;
 use warnings;
 
-use Test2::Util::Times qw/render_bench/;
+use Test2::Util::Times qw/render_bench render_duration/;
 
 use Test2::API qw{
     test2_add_callback_exit
@@ -10,27 +10,44 @@ use Test2::API qw{
 
 use Time::HiRes qw/time/;
 
-our $VERSION = '0.000121';
+our $VERSION = '0.000139';
 
+my $ADDED_HOOK = 0;
+my $START;
 sub import {
-    my $start = time;
+    return if $ADDED_HOOK++;
 
-    test2_add_callback_exit(
-        sub {
-            my ($ctx, $real, $new) = @_;
-            my $stop  = time;
-            my @times = times();
+    $START = time;
+    test2_add_callback_exit(\&send_time_event);
+}
 
-            $ctx->send_event(
-                'Times',
-                start => $start,
-                stop  => $stop,
-                user  => $times[0],
-                sys   => $times[1],
-                cuser => $times[2],
-                csys  => $times[3],
-            );
-        }
+sub send_time_event {
+    my ($ctx, $real, $new) = @_;
+    my $stop  = time;
+    my @times = times();
+
+    my $summary  = render_bench($START, $stop, @times);
+    my $duration = render_duration($START, $stop);
+
+    my $e = $ctx->send_ev2(
+        about => {package => __PACKAGE__, details => $summary},
+        info  => [{tag => 'TIME', details => $summary}],
+        times => {
+            details => $summary,
+            start  => $START,
+            stop   => $stop,
+            user   => $times[0],
+            sys    => $times[1],
+            cuser  => $times[2],
+            csys   => $times[3],
+        },
+        harness_job_fields => [
+            {name => "time_duration", details => $duration},
+            {name => "time_user",     details => $times[0]},
+            {name => "time_sys",      details => $times[1]},
+            {name => "time_cuser",    details => $times[2]},
+            {name => "time_csys",     details => $times[3]},
+        ],
     );
 }
 
@@ -45,6 +62,13 @@ __END__
 =head1 NAME
 
 Test2::Plugin::Times - Output timing data at the end of the test.
+
+=head1 CAVEAT
+
+It is important to note that this timing data does not include global
+destruction. This data is only collected up until the point done_testing() is
+called. If your program takes time for END blocks, garbage collection, and
+similar, then this timing data will fall short of reality.
 
 =head1 DESCRIPTION
 

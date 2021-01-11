@@ -4,7 +4,7 @@
       "Karen Etheridge <ether@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 6.005, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Dist::Zilla version 6.005, CPAN::Meta::Converter version 2.150005, CPAN::Meta::Converter version 2.150010",
    "keywords" : [
       "conflicts",
       "breaks",
@@ -17,7 +17,7 @@
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Module-Runtime-Conflicts",
    "no_index" : {
@@ -1157,6 +1157,6 @@
       }
    },
    "x_authority" : "cpan:ETHER",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01",
+   "x_serialization_backend" : "JSON::PP version 2.97001",
    "x_static_install" : 0
 }

@@ -6,8 +6,11 @@ use strict;
 use warnings;
 use namespace::autoclean;
 
-our $VERSION = '2.35';
+our $VERSION = '2.46';
 
+# Note that while we make use of DateTime::Duration in this module if we
+# actually try to load it here all hell breaks loose with circular
+# dependencies.
 use DateTime::TimeZone::Catalog;
 use DateTime::TimeZone::Floating;
 use DateTime::TimeZone::Local;
@@ -73,6 +76,18 @@ my %SpecialName = map { $_ => 1 }
             }
 
             return DateTime::TimeZone::OffsetOnly->new( offset => $p{name} );
+        }
+
+        if ( $p{name} =~ m{Etc/(?:GMT|UTC)(\+|-)(\d{1,2})}i ) {
+
+            # Etc/GMT+4 is actually UTC-4. For more info, see
+            # https://data.iana.org/time-zones/tzdb/etcetera
+            my $sign  = $1 eq '-' ? '+' : '-';
+            my $hours = $2;
+            die "The timezone '$p{name}' is an invalid name.\n"
+                unless $hours <= 14;
+            return DateTime::TimeZone::OffsetOnly->new(
+                offset => "${sign}${hours}:00" );
         }
 
         my $subclass = $p{name};
@@ -429,7 +444,7 @@ sub is_utc {0}
 
 sub has_dst_changes {0}
 
-sub name { $_[0]->{name} }
+sub name     { $_[0]->{name} }
 sub category { ( split /\//, $_[0]->{name}, 2 )[0] }
 
 sub is_valid_name {
@@ -497,7 +512,7 @@ sub offset_as_seconds {
         return undef;
     }
 
-    $sign = '+' unless defined $sign;
+    $sign = '+'  unless defined $sign;
     return undef unless $hours >= 0   && $hours <= 99;
     return undef unless $minutes >= 0 && $minutes <= 59;
     return undef
@@ -505,7 +520,7 @@ sub offset_as_seconds {
 
     my $total = $hours * 3600 + $minutes * 60;
     $total += $seconds if $seconds;
-    $total *= -1 if $sign eq '-';
+    $total *= -1       if $sign eq '-';
 
     return $total;
 }
@@ -517,6 +532,7 @@ sub offset_as_string {
         local $SIG{__DIE__};
         $offset->isa('DateTime::TimeZone');
     };
+    my $sep = shift || q{};
 
     return undef unless defined $offset;
     return undef unless $offset >= -359999 && $offset <= 359999;
@@ -533,8 +549,10 @@ sub offset_as_string {
 
     return (
         $secs
-        ? sprintf( '%s%02d%02d%02d', $sign, $hours, $mins, $secs )
-        : sprintf( '%s%02d%02d',     $sign, $hours, $mins )
+        ? sprintf(
+            '%s%02d%s%02d%s%02d', $sign, $hours, $sep, $mins, $sep, $secs
+            )
+        : sprintf( '%s%02d%s%02d', $sign, $hours, $sep, $mins )
     );
 }
 
@@ -602,7 +620,7 @@ DateTime::TimeZone - Time zone object base class and factory
 
 =head1 VERSION
 
-version 2.35
+version 2.46
 
 =head1 SYNOPSIS
 
@@ -807,8 +825,10 @@ Returns a sorted list of all the valid country codes (in lower-case)
 which can be passed to C<names_in_country()>. In scalar context, it
 returns an array reference, while in list context it returns an array.
 
-If you need to convert country codes to names or vice versa you can
-use C<Locale::Country> to do so.
+If you need to convert country codes to names or vice versa you can use
+C<Locale::Country> to do so. Note that one of the codes returned is "uk",
+which is an alias for the country code "gb", and is not a valid ISO country
+code.
 
 =head2 DateTime::TimeZone->names_in_country( $country_code )
 
@@ -836,10 +856,13 @@ these, C<undef> will be returned.
 This means that if you want to specify hours as a single digit, then
 each element of the offset must be separated by a colon (:).
 
-=head2 DateTime::TimeZone->offset_as_string( $offset )
+=head2 DateTime::TimeZone->offset_as_string( $offset, $sep )
 
 Given an offset as a number, this returns the offset as a string.
 Returns C<undef> if $offset is not in the range C<-359999> to C<359999>.
+
+You can also provide an optional separator which will go between the hours,
+minutes, and seconds (if applicable) portions of the offset.
 
 =head2 Storable Hooks
 
@@ -907,7 +930,7 @@ software much more, unless I get so many donations that I can consider working
 on free software full time (let's all have a chuckle at that together).
 
 To donate, log into PayPal and send money to autarch@urth.org, or use the
-button at L<http://www.urth.org/~autarch/fs-donation.html>.
+button at L<https://www.urth.org/fs-donation.html>.
 
 =head1 AUTHOR
 
@@ -915,7 +938,7 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 CONTRIBUTORS
 
-=for stopwords Alexey Molchanov Alfie John Andrew Paprocki Bron Gondwana Daisuke Maki David Pinkowitz Iain Truskett Jakub Wilk James E Keenan Joshua Hoblitt Karen Etheridge karupanerura Mohammad S Anwar Olaf Alders Peter Rabbitson Tom Wyant
+=for stopwords Alexey Molchanov Alfie John Andrew Paprocki Bron Gondwana Daisuke Maki David Pinkowitz Iain Truskett Jakub Wilk James E Keenan Joshua Hoblitt Karen Etheridge karupanerura kclaggett Matthew Horsfall Mohammad S Anwar Olaf Alders Peter Rabbitson Tom Wyant
 
 =over 4
 
@@ -969,6 +992,14 @@ karupanerura <karupa@cpan.org>
 
 =item *
 
+kclaggett <kclaggett@proofpoint.com>
+
+=item *
+
+Matthew Horsfall <wolfsage@gmail.com>
+
+=item *
+
 Mohammad S Anwar <mohammad.anwar@yahoo.com>
 
 =item *
@@ -987,7 +1018,7 @@ Tom Wyant <wyant@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2019 by Dave Rolsky.
+This software is copyright (c) 2020 by Dave Rolsky.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

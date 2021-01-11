@@ -2,19 +2,33 @@ package Test2::Plugin::UTF8;
 use strict;
 use warnings;
 
-our $VERSION = '0.000121';
+our $VERSION = '0.000139';
+
+use Carp qw/croak/;
 
 use Test2::API qw{
     test2_add_callback_post_load
     test2_stack
 };
 
+my $LOADED = 0;
+
 sub import {
     my $class = shift;
 
+    my $import_utf8 = 1;
+    while ( my $arg = shift @_ ) {
+        croak "Unsupported import argument '$arg'" unless $arg eq 'encoding_only';
+        $import_utf8 = 0;
+    }
+
     # Load and import UTF8 into the caller.
-    require utf8;
-    utf8->import;
+    if ( $import_utf8 ) {
+        require utf8;
+        utf8->import;
+    }
+
+    return if $LOADED++; # do not add multiple hooks
 
     # Set the output formatters to use utf8
     test2_add_callback_post_load(sub {
@@ -65,11 +79,22 @@ This is similar to:
         Test2::Tools::Encoding::set_encoding('utf8');
     }
 
+You can also disable the utf8 import by using 'encoding_only' to only enable
+utf8 encoding on the output format.
+
+    use Test2::Plugin::UTF8 qw(encoding_only);
+
+=head1 import options
+
+=head2 encoding_only
+
+Does not import utf8 in your test and only enables the encoding mode on the output.
+
 =head1 NOTES
 
 This module currently sets output handles to have the ':utf8' output
 layer. Some might prefer ':encoding(utf-8)' which is more strict about
-verifying characters.  There is a debate about weather or not encoding
+verifying characters.  There is a debate about whether or not encoding
 to utf8 from perl internals can ever fail, so it may not matter. This
 was also chosen because the alternative causes threads to segfault,
 see L<perlbug 31923|https://rt.perl.org/Public/Bug/Display.html?id=31923>.

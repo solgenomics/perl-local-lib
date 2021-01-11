@@ -5,13 +5,13 @@
       "Tomas Doran <bobtfish@bobtfish.net>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 5.036, CPAN::Meta::Converter version 2.150001, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Dist::Zilla version 5.036, CPAN::Meta::Converter version 2.150001, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Class-C3-Adopt-NEXT",
    "no_index" : {
@@ -1051,5 +1051,5 @@
       "Karen Etheridge <ether@cpan.org>"
    ],
    "x_permissions_from_module" : "Class::C3::Adopt::NEXT",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001"
 }

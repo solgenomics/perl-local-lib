@@ -83,7 +83,6 @@ preceded with a _
 # Let the code begin...
 
 package Bio::DB::GenericWebAgent;
-$Bio::DB::GenericWebAgent::VERSION = '1.7.5';
 use strict;
 use warnings;
 use base qw(Bio::Root::Root);

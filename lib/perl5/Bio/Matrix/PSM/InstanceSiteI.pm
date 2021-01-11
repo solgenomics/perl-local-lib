@@ -77,7 +77,6 @@ L<Bio::Matrix::PSM::SiteMatrix>, L<Bio::Matrix::PSM::Psm>, L<Bio::Matrix::PSM::I
 
 # Let the code begin...
 package Bio::Matrix::PSM::InstanceSiteI;
-$Bio::Matrix::PSM::InstanceSiteI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::RootI);

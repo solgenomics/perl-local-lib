@@ -79,7 +79,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Tools::Genewise;
-$Bio::Tools::Genewise::VERSION = '1.7.5';
 use vars qw($Srctag);
 use strict;
 use Symbol;

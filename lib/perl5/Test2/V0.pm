@@ -4,7 +4,7 @@ use warnings;
 
 use Importer;
 
-our $VERSION = '0.000121';
+our $VERSION = '0.000139';
 
 use Carp qw/croak/;
 
@@ -28,7 +28,7 @@ use Test2::Tools::Basic qw{
 use Test2::Tools::Compare qw{
     is like isnt unlike
     match mismatch validator
-    hash array bag object meta meta_check number float rounded within string subset bool
+    hash array bag object meta meta_check number float rounded within string subset bool check_isa
     in_set not_in_set check_set
     item field call call_list call_hash prop check all_items all_keys all_vals all_values
     etc end filter_items
@@ -78,7 +78,7 @@ our @EXPORT = qw{
 
     is like isnt unlike
     match mismatch validator
-    hash array bag object meta meta_check number float rounded within string subset bool
+    hash array bag object meta meta_check number float rounded within string subset bool check_isa
     in_set not_in_set check_set
     item field call call_list call_hash prop check all_items all_keys all_vals all_values
     etc end filter_items
@@ -100,13 +100,16 @@ sub import {
 
     # SRand handling
     my $srand    = delete $options{'-srand'};
-    my $no_srand = delete $options{'-no_srand'};
+
+    my $no_srand = exists $options{'-no_srand'};
+    delete $options{'-no_srand'} if $no_srand;
 
     croak "Cannot combine '-srand' and '-no_srand' options"
         if $no_srand && defined($srand);
 
-    Test2::Plugin::SRand->import($srand ? $srand : ())
-        if $srand || !($no_srand || $SRAND++);
+    if ( !$no_srand ) {
+        Test2::Plugin::SRand->import($srand ? $srand : ()) if defined($srand) || !$SRAND++;
+    }
 
     # Pragmas
     my $no_pragmas  = delete $options{'-no_pragmas'};
@@ -159,7 +162,7 @@ tools and plugins you use directly in your metadata.
 
 =head1 SYNOPSIS
 
-    use Test2::V0
+    use Test2::V0;
 
     ok(1, "pass");
 
@@ -297,6 +300,13 @@ not provide a target then C<$CLASS> and C<CLASS()> will not be imported.
     print $CLASS;  # My::Class
     print CLASS(); # My::Class
 
+Or you can specify names:
+
+    use Test2::V0 -target => { pkg => 'Some::Package' };
+
+    pkg()->xxx; # Call 'xxx' on Some::Package
+    $pkg->xxx;  # Same
+
 =over 4
 
 =item $CLASS
@@ -329,9 +339,15 @@ See L<Test2::Tools::Basic>.
 
 =item ok($bool, $name)
 
+=item ok($bool, $name, @diag)
+
 =item pass($name)
 
+=item pass($name, @diag)
+
 =item fail($name)
+
+=item fail($name, @diag)
 
 =item diag($message)
 
@@ -386,6 +402,8 @@ See L<Test2::Tools::Compare>.
 =item $check = number($num)
 
 =item $check = string($str)
+
+=item $check = check_isa($class_name)
 
 =item $check = in_set(@things)
 

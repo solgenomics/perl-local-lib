@@ -108,7 +108,7 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Search::Hit::HitI;
-$Bio::Search::Hit::HitI::VERSION = '1.7.5';
+
 
 use strict;
 

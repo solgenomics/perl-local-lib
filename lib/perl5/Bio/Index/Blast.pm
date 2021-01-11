@@ -105,7 +105,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Index::Blast;
-$Bio::Index::Blast::VERSION = '1.7.5';
 use strict;
 
 use IO::String;
@@ -113,7 +112,7 @@ use Bio::SearchIO;
 use base qw(Bio::Index::Abstract Bio::Root::Root);
 
 sub _version {
-    return $Bio::Index::Blast::VERSION;
+	return ${Bio::Root::Version::VERSION};
 }
 
 =head2 new

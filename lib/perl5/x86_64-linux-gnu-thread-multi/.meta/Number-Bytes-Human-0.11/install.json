@@ -1,1 +1,1 @@
-{"target":"Number::Bytes::Human","dist":"Number-Bytes-Human-0.11","pathname":"F/FE/FERREIRA/Number-Bytes-Human-0.11.tar.gz","name":"Number::Bytes::Human","provides":{"Number::Bytes::Human":{"version":"0.11","file":"Human.pm"}},"version":"0.11"}
+{"provides":{"Number::Bytes::Human":{"file":"Human.pm","version":"0.11"}},"version":"0.11","dist":"Number-Bytes-Human-0.11","target":"Number::Bytes::Human","name":"Number::Bytes::Human","pathname":"F/FE/FERREIRA/Number-Bytes-Human-0.11.tar.gz"}

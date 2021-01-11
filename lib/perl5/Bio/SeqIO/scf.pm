@@ -76,7 +76,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::SeqIO::scf;
-$Bio::SeqIO::scf::VERSION = '1.7.5';
 use vars qw($DEFAULT_QUALITY);
 use strict;
 use Bio::Seq::SeqFactory;

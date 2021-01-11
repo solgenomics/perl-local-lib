@@ -2,6 +2,7 @@ package Alien::Base;
 
 use strict;
 use warnings;
+use 5.008004;
 use Carp;
 use Path::Tiny ();
 use Scalar::Util qw/blessed/;
@@ -9,7 +10,7 @@ use Capture::Tiny 0.17 qw/capture_stdout/;
 use Text::ParseWords qw/shellwords/;
 
 # ABSTRACT: Base classes for Alien:: modules
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 sub import {
@@ -38,7 +39,7 @@ sub import {
 
   my @libs = $class->split_flags( $class->libs );
 
-  my @L = grep { s/^-L// } @libs;
+  my @L = grep { s/^-L// } map { "$_" } @libs;  ## no critic (ControlStructures::ProhibitMutatingListFunctions)
   my @l = grep { /^-l/ } @libs;
 
   unshift @DynaLoader::dl_library_path, @L;
@@ -68,10 +69,10 @@ sub import {
 sub _dist_dir ($)
 {
   my($dist_name) = @_;
-  
+
   my @pm = split /-/, $dist_name;
   $pm[-1] .= ".pm";
-  
+
   foreach my $inc (@INC)
   {
     my $pm = Path::Tiny->new($inc, @pm);
@@ -94,7 +95,7 @@ sub dist_dir {
   my $dist = blessed $class || $class;
   $dist =~ s/::/-/g;
 
-  my $dist_dir = 
+  my $dist_dir =
     $class->config('finished_installing')
       ? _dist_dir $dist
       : $class->config('working_directory');
@@ -123,9 +124,10 @@ sub _flags
   if($prefix ne $distdir)
   {
     $flags = join ' ', map {
-      s/^(-I|-L|-LIBPATH:)?\Q$prefix\E/$1$distdir/;
-      s/(\s)/\\$1/g;
-      $_;
+      my $flag = $_;
+      $flag =~ s/^(-I|-L|-LIBPATH:)?\Q$prefix\E/$1$distdir/;
+      $flag =~ s/(\s)/\\$1/g;
+      $flag;
     } $class->split_flags($flags);
   }
 
@@ -216,7 +218,7 @@ sub version_cmp {
       # Numerical comparison
       return $x <=> $y if $x != $y;
     }
-    elsif(!$x_isnum and !$y_isnum) {
+    elsif(!$x_isnum && !$y_isnum) {
       # Alphabetic comparison
       return $x cmp $y if $x ne $y;
     }
@@ -282,9 +284,10 @@ sub _pkgconfig_keyword {
     $dist_dir =~ s{\\}{/}g if $^O eq 'MSWin32';
     my $old = quotemeta $self->config('original_prefix');
     @strings = map {
-      s{^(-I|-L|-LIBPATH:)?($old)}{$1.$dist_dir}e;
-      s/(\s)/\\$1/g;
-      $_;
+      my $flag = $_;
+      $flag =~ s{^(-I|-L|-LIBPATH:)?($old)}{$1.$dist_dir}e;
+      $flag =~ s/(\s)/\\$1/g;
+      $flag;
     } map { $self->split_flags($_) } @strings;
   }
 
@@ -311,7 +314,9 @@ sub _pkgconfig {
   # Run through all pkgconfig objects and ensure that their modules are loaded:
   for my $pkg_obj (values %all) {
     my $perl_module_name = blessed $pkg_obj;
-    eval "require $perl_module_name";
+    my $pm = "$perl_module_name.pm";
+    $pm =~ s/::/\//g;
+    eval { require $pm };
   }
 
   return @all{@_} if @_;
@@ -406,6 +411,7 @@ sub dynamic_libs {
     unless(defined $name)
     {
       $name = $class->config('name');
+      $name = '' unless defined $name;
       # strip leading lib from things like libarchive or libffi
       $name =~ s/^lib//;
       # strip trailing version numbers
@@ -460,13 +466,28 @@ sub bin_dir {
   if($class->install_type('system'))
   {
     my $prop = $class->runtime_prop;
-    return unless defined $prop;
-    return unless defined $prop->{system_bin_dir};
+    return () unless defined $prop;
+    return () unless defined $prop->{system_bin_dir};
     return ref $prop->{system_bin_dir} ? @{ $prop->{system_bin_dir} } : ($prop->{system_bin_dir});
   }
   else
   {
     my $dir = Path::Tiny->new($class->dist_dir, 'bin');
+    return -d $dir ? ("$dir") : ();
+  }
+}
+
+
+
+sub dynamic_dir {
+  my ($class) = @_;
+  if($class->install_type('system'))
+  {
+    return ();
+  }
+  else
+  {
+    my $dir = Path::Tiny->new($class->dist_dir, 'dynamic');
     return -d $dir ? ("$dir") : ();
   }
 }
@@ -485,6 +506,7 @@ sub inline_auto_include {
 
 sub Inline {
   my ($class, $language) = @_;
+  return unless defined $language;
   return if $language !~ /^(C|CPP)$/;
   my $config = {
     # INC should arguably be for -I flags only, but
@@ -604,17 +626,17 @@ Alien::Base - Base classes for Alien:: modules
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
  package Alien::MyLibrary;
-
+ 
  use strict;
  use warnings;
-
+ 
  use parent 'Alien::Base';
-
+ 
  1;
 
 (for details on the C<Makefile.PL> or C<Build.PL> and L<alienfile>
@@ -658,7 +680,7 @@ Or if you are using L<ExtUtils::Depends>:
    $eud->get_makefile_vars
  );
 
-If you are using L<Alien:Base::ModuleBuild> instead of the recommended L<Alien::Build>
+If you are using L<Alien::Base::ModuleBuild> instead of the recommended L<Alien::Build>
 and L<alienfile>, then in your C<MyLibrary::XS> module, you may need something like
 this in your main C<.pm> file IF your library uses dynamic libraries:
 
@@ -748,7 +770,7 @@ unnecessary.
 =head2 cflags
 
  my $cflags = Alien::MyLibrary->cflags;
-
+ 
  use Text::ParseWords qw( shellwords );
  my @cflags = shellwords( Alien::MyLibrary->cflags );
 
@@ -768,7 +790,7 @@ if they are different.
 =head2 libs
 
  my $libs = Alien::MyLibrary->libs;
-
+ 
  use Text::ParseWords qw( shellwords );
  my @cflags = shellwords( Alien::MyLibrary->libs );
 
@@ -874,7 +896,22 @@ Example usage:
 
  use Env qw( @PATH );
  
- unshft @PATH, Alien::MyLibrary->bin_dir;
+ unshift @PATH, Alien::MyLibrary->bin_dir;
+
+=head2 dynamic_dir
+
+ my(@dir) = Alien::MyLibrary->dynamic_dir
+
+Returns the dynamic dir for a dynamic build (if the main
+build is static).  For a C<share> install this will be a
+directory under C<dist_dir> named C<dynamic> if it exists.
+System builds return an empty list.
+
+Example usage:
+
+ use Env qw( @PATH );
+ 
+ unshift @PATH, Alien::MyLibrary->dynamic_dir;
 
 =head2 alien_helper
 
@@ -930,7 +967,7 @@ need it.  From the L<alienfile> of C<Alien::nasm>:
    ...
    plugin 'Extract' => 'tar.gz';
    plugin 'Build::MSYS';
-   
+ 
    build [
      'sh configure --prefix=%{alien.install.prefix}',
      '%{gmake}',
@@ -1022,7 +1059,7 @@ If you find a bug, please report it on the projects issue tracker on GitHub:
 
 =over 4
 
-=item L<https://github.com/Perl5-Alien/Alien-Base/issues>
+=item L<https://github.com/PerlAlien/Alien-Base/issues>
 
 =back
 
@@ -1041,7 +1078,7 @@ request.
 
 =over 4
 
-=item L<https://github.com/Perl5-Alien/Alien-Base/pulls>
+=item L<https://github.com/PerlAlien/Alien-Base/pulls>
 
 =back
 
@@ -1103,7 +1140,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -1153,9 +1190,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

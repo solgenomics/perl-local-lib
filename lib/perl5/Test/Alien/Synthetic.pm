@@ -2,10 +2,11 @@ package Test::Alien::Synthetic;
 
 use strict;
 use warnings;
+use 5.008004;
 use Test2::API qw( context );
 
 # ABSTRACT: A mock alien object for testing
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 sub _def ($) { my($val) = @_; defined $val ? $val : '' }
@@ -58,7 +59,7 @@ Test::Alien::Synthetic - A mock alien object for testing
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -71,7 +72,7 @@ version 1.69
  };
  
  alien_ok $alien;
-
+ 
  done_testing;
 
 =head1 DESCRIPTION
@@ -153,7 +154,7 @@ based L<Alien> distribution.
    like $ptr, qr{^[0-9]+$};
    $free->($ptr);
  };
-
+ 
  done_testing;
  
  __DATA__
@@ -194,7 +195,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -244,9 +245,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

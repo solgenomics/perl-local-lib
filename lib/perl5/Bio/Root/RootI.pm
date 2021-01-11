@@ -1,11 +1,6 @@
 package Bio::Root::RootI;
-$Bio::Root::RootI::VERSION = '1.7.5';
 use strict;
 use Carp 'confess','carp';
-
-=head1 NAME
-
-Bio::Root::RootI - base interface for all BioPerl classes
 
 =head1 SYNOPSIS
 
@@ -179,35 +174,45 @@ sub warn {
  Returns : none
  Args    : Message string to print to STDERR
            Version of BioPerl where use of the method results in an exception
+ Notes   : The method can be called two ways, either by positional arguments:
 
- Notes   : This is deprecated.  Use Carp::carp to warn about a
-           deprecated method.  Just remove the method when it comes to
-           error.  If you really want to throw an error insyead of
-           removing, use Carp::croak.
+           $obj->deprecated('This module is deprecated', 1.006);
 
-           The irony of deprecating deprecated() is not lost on us.
-           We hope you also find it more funny that frustrating.
+           or by named arguments:
+
+           $obj->deprecated(
+                -message => 'use of the method foo() is deprecated, use bar() instead',
+                -version => 1.006  # throw if $VERSION is >= this version
+                );
+
+           or timed to go off at a certain point:
+
+           $obj->deprecated(
+                -message => 'use of the method foo() is deprecated, use bar() instead',
+                -warn_version    => 1.006 # warn if $VERSION is >= this version
+                -throw_version   => 1.007 # throw if $VERSION is >= this version
+                );
+
+           Using the last two named argument versions is suggested and will
+           likely be the only supported way of calling this method in the future
+           Yes, we see the irony of deprecating that particular usage of
+           deprecated().
+
+           The main difference between usage of the two named argument versions
+           is that by designating a 'warn_version' one indicates the
+           functionality is officially deprecated beginning in a future version
+           of BioPerl (so warnings are issued only after that point), whereas
+           setting either 'version' or 'throw_version' (synonyms) converts the
+           deprecation warning to an exception.
+
+           For proper comparisons one must use a version in lines with the
+           current versioning scheme for Perl and BioPerl, (i.e. where 1.006000
+           indicates v1.6.0, 5.010000 for v5.10.0, etc.).
 
 =cut
 
 sub deprecated{
     my ($self) = shift;
-
-    carp "deprecated() is deprecated.  Just use Carp::carp to warn.";
-
-    my ($msg, $version, $warn_version, $throw_version) =
-        $self->_rearrange([qw(MESSAGE VERSION WARN_VERSION THROW_VERSION)], @_);
-    # below default insinuates we're deprecating a method and not a full module
-    # but it's the most common use case
-    $msg ||= "Use of ".(caller(1))[3]."() is deprecated.";
-
-    ## Never documented, but if there is no version information, just
-    ## give a warning.
-    if (! defined($version) && ! defined($warn_version)
-        && ! defined($throw_version)) {
-        carp($msg);
-        return;
-    }
 
     my $class = ref $self || $self;
     my $class_version = do {
@@ -219,17 +224,24 @@ sub deprecated{
         $class_version = 0.0001;
     }
 
+    my ($msg, $version, $warn_version, $throw_version) =
+        $self->_rearrange([qw(MESSAGE VERSION WARN_VERSION THROW_VERSION)], @_);
+
     $throw_version ||= $version;
     $warn_version  ||= $class_version;
-
+    
     $throw_version =~ s/_//g;
     $warn_version =~ s/_//g;
-
+    
     for my $v ( $warn_version, $throw_version) {
         no warnings 'numeric';
         $self->throw("Version must be numerical, such as 1.006000 for v1.6.0, not $v")
             unless !defined $v || $v + 0 == $v;
     }
+
+    # below default insinuates we're deprecating a method and not a full module
+    # but it's the most common use case
+    $msg ||= "Use of ".(caller(1))[3]."() is deprecated.";
 
     if( $throw_version && $class_version && $class_version >= $throw_version ) {
         $self->throw($msg)

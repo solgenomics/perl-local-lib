@@ -1,1 +1,0 @@
-[% WRAPPER field %][% INCLUDE $self.layout_parser_filename layout=self.layout %][% END %]

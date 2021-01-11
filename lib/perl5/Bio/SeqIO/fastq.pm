@@ -1,7 +1,6 @@
 # POD at __END__, let the code begin...
 
 package Bio::SeqIO::fastq;
-$Bio::SeqIO::fastq::VERSION = '1.7.5';
 use strict;
 
 use Bio::Seq::SeqFactory;

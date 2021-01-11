@@ -54,7 +54,6 @@ Juguang Xiao, juguang@tll.org.sg
 # Let the code begin...
 
 package Bio::Tools::PrositeScan;
-$Bio::Tools::PrositeScan::VERSION = '1.7.5';
 use vars qw(@FORMATS);
 use strict;
 use Bio::Seq;

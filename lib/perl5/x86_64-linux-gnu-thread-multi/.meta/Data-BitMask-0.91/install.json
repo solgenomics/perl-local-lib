@@ -1,1 +1,1 @@
-{"provides":{"Data::BitMask":{"file":"lib/Data/BitMask.pm","version":"0.91"}},"pathname":"T/TE/TEVERETT/Data-BitMask-0.91.tar.gz","dist":"Data-BitMask-0.91","name":"Data::BitMask","target":"Data::BitMask","version":"0.91"}
+{"name":"Data::BitMask","target":"Data::BitMask","pathname":"T/TE/TEVERETT/Data-BitMask-0.91.tar.gz","provides":{"Data::BitMask":{"file":"lib/Data/BitMask.pm","version":"0.91"}},"version":"0.91","dist":"Data-BitMask-0.91"}

@@ -4,13 +4,13 @@
       "unknown"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Module::Build version 0.4229",
+   "generated_by" : "Module::Build version 0.4231",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Catalyst-DispatchType-Regex",
    "prereqs" : {
@@ -65,7 +65,7 @@
       }
    },
    "version" : "5.90035",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01",
+   "x_serialization_backend" : "JSON::PP version 2.97001",
    "x_test_requires" : {
       "Data::Dumper" : "0",
       "MRO::Compat" : "0",

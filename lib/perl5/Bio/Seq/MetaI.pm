@@ -160,7 +160,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Seq::MetaI;
-$Bio::Seq::MetaI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::RootI);

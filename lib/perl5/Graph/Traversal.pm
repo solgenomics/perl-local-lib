@@ -1,34 +1,28 @@
 package Graph::Traversal;
 
 use strict;
+use warnings;
 
-# $SIG{__DIE__ } = sub { use Carp; confess };
-# $SIG{__WARN__} = sub { use Carp; confess };
-
-sub DEBUG () { 0 }
+# $SIG{__DIE__ } = \&Graph::__carp_confess;
+# $SIG{__WARN__} = \&Graph::__carp_confess;
 
 sub reset {
     my $self = shift;
-    $self->{ unseen } = { map { $_ => $_ } $self->{ graph }->vertices };
-    $self->{ seen   } = { };
+    require Set::Object;
+    $self->{ unseen } = Set::Object->new($self->{ graph }->vertices);
+    $self->{ seen   } = Set::Object->new;
     $self->{ order     } = [ ];
     $self->{ preorder  } = [ ];
     $self->{ postorder } = [ ];
     $self->{ roots     } = [ ];
-    $self->{ tree      } =
-	Graph->new( directed => $self->{ graph }->directed );
+    $self->{ tree      } = Graph->new(directed => $self->{ graph }->directed);
     delete $self->{ terminate };
 }
 
-my $see = sub {
+sub _see {
     my $self = shift;
     $self->see;
-};
-
-my $see_active = sub {
-    my $self = shift;
-    delete @{ $self->{ active } }{ $self->see };
-};
+}
 
 sub has_a_cycle {
     my ($u, $v, $t, $s) = @_;
@@ -52,120 +46,57 @@ sub find_a_cycle {
     $t->terminate;
 }
 
-sub configure {
-    my ($self, %attr) = @_;
-    $self->{ pre  } = $attr{ pre }  if exists $attr{ pre  };
-    $self->{ post } = $attr{ post } if exists $attr{ post };
-    $self->{ pre_vertex  } = $attr{ pre_vertex }  if exists $attr{ pre_vertex  };
-    $self->{ post_vertex } = $attr{ post_vertex } if exists $attr{ post_vertex };
-    $self->{ pre_edge  } = $attr{ pre_edge  } if exists $attr{ pre_edge  };
-    $self->{ post_edge } = $attr{ post_edge } if exists $attr{ post_edge };
-    if (exists $attr{ successor }) { # Graph 0.201 compatibility.
-	$self->{ tree_edge } = $self->{ non_tree_edge } = $attr{ successor };
-    }
-    if (exists $attr{ unseen_successor }) {
-	if (exists $self->{ tree_edge }) { # Graph 0.201 compatibility.
-	    my $old_tree_edge = $self->{ tree_edge };
-	    $self->{ tree_edge } = sub {
-		$old_tree_edge->( @_ );
-		$attr{ unseen_successor }->( @_ );
-	    };
-	} else {
-	    $self->{ tree_edge } = $attr{ unseen_successor };
-	}
-    }
-    if ($self->graph->multiedged || $self->graph->countedged) {
-	$self->{ seen_edge } = $attr{ seen_edge } if exists $attr{ seen_edge };
-	if (exists $attr{ seen_successor }) { # Graph 0.201 compatibility.
-	    $self->{ seen_edge } = $attr{ seen_edge };
-	}
-    }
-    $self->{ non_tree_edge } = $attr{ non_tree_edge } if exists $attr{ non_tree_edge };
-    $self->{ pre_edge  } = $attr{ tree_edge } if exists $attr{ tree_edge };
-    $self->{ back_edge } = $attr{ back_edge } if exists $attr{ back_edge };
-    $self->{ down_edge } = $attr{ down_edge } if exists $attr{ down_edge };
-    $self->{ cross_edge } = $attr{ cross_edge } if exists $attr{ cross_edge };
-    if (exists $attr{ start }) {
-	$attr{ first_root } = $attr{ start };
-	$attr{ next_root  } = undef;
-    }
-    if (exists $attr{ get_next_root }) {
-	$attr{ next_root  } = $attr{ get_next_root }; # Graph 0.201 compat.
-    }
-    $self->{ next_root } =
-	exists $attr{ next_root } ?
-	    $attr{ next_root } :
-		$attr{ next_alphabetic } ?
-		    \&Graph::_next_alphabetic :
-			$attr{ next_numeric } ?
-			    \&Graph::_next_numeric :
-				\&Graph::_next_random;
-    $self->{ first_root } =
-	exists $attr{ first_root } ?
-	    $attr{ first_root } :
-		exists $attr{ next_root } ?
-		    $attr{ next_root } :
-			$attr{ next_alphabetic } ?
-			    \&Graph::_next_alphabetic :
-				$attr{ next_numeric } ?
-				    \&Graph::_next_numeric :
-					\&Graph::_next_random;
-    $self->{ next_successor } =
-	exists $attr{ next_successor } ?
-	    $attr{ next_successor } :
-		$attr{ next_alphabetic } ?
-		    \&Graph::_next_alphabetic :
-			$attr{ next_numeric } ?
-			    \&Graph::_next_numeric :
-				\&Graph::_next_random;
-    if (exists $attr{ has_a_cycle }) {
-	my $has_a_cycle =
-	    ref $attr{ has_a_cycle } eq 'CODE' ?
-		$attr{ has_a_cycle } : \&has_a_cycle;
-	$self->{ back_edge } = $has_a_cycle;
-	if ($self->{ graph }->is_undirected) {
-	    $self->{ down_edge } = $has_a_cycle;
-	}
-    }
-    if (exists $attr{ find_a_cycle }) {
-	my $find_a_cycle =
-	    ref $attr{ find_a_cycle } eq 'CODE' ?
-		$attr{ find_a_cycle } : \&find_a_cycle;
-	$self->{ back_edge } = $find_a_cycle;
-	if ($self->{ graph }->is_undirected) {
-	    $self->{ down_edge } = $find_a_cycle;
-	}
-    }
-    $self->{ add } = \&add_order;
-    $self->{ see } = $see;
-    delete @attr{ qw(
-		     pre post pre_edge post_edge
-		     successor unseen_successor seen_successor
-		     tree_edge non_tree_edge
-		     back_edge down_edge cross_edge seen_edge
-		     start get_next_root
-		     next_root next_alphabetic next_numeric next_random next_successor
-		     first_root
-		     has_a_cycle find_a_cycle
-		    ) };
-    if (keys %attr) {
-	require Carp;
-	my @attr = sort keys %attr;
-	Carp::croak(sprintf "Graph::Traversal: unknown attribute%s @{[map { qq['$_'] } @attr]}\n", @attr == 1 ? '' : 's');
-    }
-}
+my @KNOWN_CONFIG = qw(
+     tree_edge seen_edge
+     next_alphabetic next_numeric next_random
+     has_a_cycle find_a_cycle
+);
+my @EXTRACT_CONFIG = qw(
+    pre post pre_vertex post_vertex
+    pre_edge post_edge back_edge down_edge cross_edge non_tree_edge
+    first_root next_root next_successor
+);
 
 sub new {
-    my $class = shift;
-    my $g = shift;
-    unless (ref $g && $g->isa('Graph')) {
-	require Carp;
-	Carp::croak("Graph::Traversal: first argument is not a Graph");
-    }
-    my $self = { graph => $g, state => { } };
-    bless $self, $class;
+    my ($class, $g, %attr) = @_;
+    Graph::__carp_confess("Graph::Traversal: first argument is not a Graph")
+	unless ref $g && $g->isa('Graph');
+    my $self = bless { graph => $g, state => { } }, $class;
     $self->reset;
-    $self->configure( @_ );
+    if (exists $attr{ start }) {
+	$attr{ first_root } = delete $attr{ start };
+	$attr{ next_root  } = undef;
+    }
+    my @found_known = grep exists $attr{$_}, @EXTRACT_CONFIG;
+    @$self{@found_known} = delete @attr{@found_known};
+    $self->{ seen_edge } = $attr{ seen_edge }
+	if exists $attr{ seen_edge } and ($g->multiedged || $g->countedged);
+    $self->{ pre_edge } = $attr{ tree_edge } if exists $attr{ tree_edge };
+    my $default_next =
+	$attr{ next_alphabetic } ? \&Graph::_next_alphabetic :
+	$attr{ next_numeric } ? \&Graph::_next_numeric :
+	\&Graph::_next_random;
+    $self->{ next_root } = $default_next if !exists $self->{ next_root };
+    $self->{ first_root } =
+	exists $self->{ next_root } ? $self->{ next_root } : $default_next
+	if !exists $self->{ first_root };
+    $self->{ next_successor } = $default_next if !exists $self->{ next_successor };
+    if (exists $attr{ has_a_cycle }) {
+	$self->{ back_edge } = my $has_a_cycle =
+	    ref $attr{ has_a_cycle } eq 'CODE' ?
+		$attr{ has_a_cycle } : \&has_a_cycle;
+	$self->{ down_edge } = $has_a_cycle if $g->is_undirected;
+    }
+    if (exists $attr{ find_a_cycle }) {
+	$self->{ back_edge } = my $find_a_cycle =
+	    ref $attr{ find_a_cycle } eq 'CODE' ?
+		$attr{ find_a_cycle } : \&find_a_cycle;
+	$self->{ down_edge } = $find_a_cycle if $g->is_undirected;
+    }
+    $self->{ add } = \&add_order;
+    $self->{ see } = \&_see;
+    delete @attr{@KNOWN_CONFIG};
+    Graph::_opt_unknown(\%attr);
     return $self;
 }
 
@@ -181,27 +112,17 @@ sub add_order {
 
 sub visit {
     my ($self, @next) = @_;
-    delete @{ $self->{ unseen } }{ @next };
-    print "unseen = @{[sort keys %{$self->{unseen}}]}\n" if DEBUG;
-    @{ $self->{ seen } }{ @next } = @next;
-    print "seen = @{[sort keys %{$self->{seen}}]}\n" if DEBUG;
+    $self->{ unseen }->remove(@next);
+    $self->{ seen }->insert(@next);
     $self->{ add }->( $self, @next );
-    print "order = @{$self->{order}}\n" if DEBUG;
-    if (exists $self->{ pre }) {
-	my $p = $self->{ pre };
-	for my $v (@next) {
-	    $p->( $v, $self );
-	}
-    }
+    return unless my $p = $self->{ pre };
+    $p->( $_, $self ) for @next;
 }
 
 sub visit_preorder {
     my ($self, @next) = @_;
     push @{ $self->{ preorder } }, @next;
-    for my $v (@next) {
-	$self->{ preordern }->{ $v } = $self->{ preorderi }++;
-    }
-    print "preorder = @{$self->{preorder}}\n" if DEBUG;
+    $self->{ preordern }->{ $_ } = $self->{ preorderi }++ for @next;
     $self->visit( @next );
 }
 
@@ -209,25 +130,12 @@ sub visit_postorder {
     my ($self) = @_;
     my @post = reverse $self->{ see }->( $self );
     push @{ $self->{ postorder } }, @post;
-    for my $v (@post) {
-	$self->{ postordern }->{ $v } = $self->{ postorderi }++;
+    $self->{ postordern }->{ $_ } = $self->{ postorderi }++ for @post;
+    if (my $p = $self->{ post }) {
+	$p->( $_, $self ) for @post;
     }
-    print "postorder = @{$self->{postorder}}\n" if DEBUG;
-    if (exists $self->{ post }) {
-	my $p = $self->{ post };
-	for my $v (@post) {
-	    $p->( $v, $self ) ;
-	}
-    }
-    if (exists $self->{ post_edge }) {
-	my $p = $self->{ post_edge };
-	my $u = $self->current;
-	if (defined $u) {
-	    for my $v (@post) {
-		$p->( $u, $v, $self, $self->{ state });
-	    }
-	}
-    }
+    return unless (my $p = $self->{ post_edge }) and defined(my $u = $self->current);
+    $p->( $u, $_, $self, $self->{ state }) for @post;
 }
 
 sub _callbacks {
@@ -239,39 +147,32 @@ sub _callbacks {
     my $cross    = $self->{ cross_edge };
     my $seen     = $self->{ seen_edge };
     my $bdc = defined $back || defined $down || defined $cross;
-    if (defined $nontree || $bdc || defined $seen) {
-	my $u = $current;
-	my $preu  = $self->{ preordern  }->{ $u };
-	my $postu = $self->{ postordern }->{ $u };
-	for my $v ( @all ) {
-	    my $e = $self->{ tree }->has_edge( $u, $v );
-	    if ( !$e && (defined $nontree || $bdc) ) {
-		if ( exists $self->{ seen }->{ $v }) {
-		    $nontree->( $u, $v, $self, $self->{ state })
-			if $nontree;
-		    if ($bdc) {
-			my $postv = $self->{ postordern }->{ $v };
-			if ($back &&
-			    (!defined $postv || $postv >= $postu)) {
-			    $back ->( $u, $v, $self, $self->{ state });
-			} else {
-			    my $prev = $self->{ preordern }->{ $v };
-			    if ($down && $prev > $preu) {
-				$down ->( $u, $v, $self, $self->{ state });
-			    } elsif ($cross && $prev < $preu) {
-				$cross->( $u, $v, $self, $self->{ state });
-			    }
-			}
+    return unless (defined $nontree || $bdc || defined $seen);
+    my $u = $current;
+    my $preu  = $self->{ preordern  }->{ $u };
+    my $postu = $self->{ postordern }->{ $u };
+    for my $v ( @all ) {
+	if (!$self->{tree}->has_edge($u, $v) && (defined $nontree || $bdc) &&
+		exists $self->{ seen }->{ $v }) {
+	    $nontree->( $u, $v, $self, $self->{ state }) if $nontree;
+	    if ($bdc) {
+		my $postv = $self->{ postordern }->{ $v };
+		if ($back &&
+		    (!defined $postv || $postv >= $postu)) {
+		    $back ->( $u, $v, $self, $self->{ state });
+		} else {
+		    my $prev = $self->{ preordern }->{ $v };
+		    if ($down && $prev > $preu) {
+			$down ->( $u, $v, $self, $self->{ state });
+		    } elsif ($cross && $prev < $preu) {
+			$cross->( $u, $v, $self, $self->{ state });
 		    }
 		}
 	    }
-	    if ($seen) {
-		my $c = $self->graph->get_edge_count($u, $v);
-		while ($c-- > 1) {
-		    $seen->( $u, $v, $self, $self->{ state } );
-		}
-	    }
 	}
+	next if !$seen;
+	my $c = $self->graph->get_edge_count($u, $v);
+	$seen->( $u, $v, $self, $self->{ state } ) while $c-- > 1;
     }
 }
 
@@ -281,32 +182,14 @@ sub next {
     my @next;
     while ($self->seeing) {
 	my $current = $self->current;
-	print "current = $current\n" if DEBUG;
-	@next = $self->{ graph }->successors( $current );
-	print "next.0 - @next\n" if DEBUG;
-	my %next; @next{ @next } = @next;
-	print "next.1 - @next\n" if DEBUG;
-	@next = values %next;
-	my @all = @next;
-	print "all = @all\n" if DEBUG;
-	for my $s (keys %next) {
-	    delete $next{$s} if exists $self->{seen}->{$s};
-	}
-	@next = values %next;
-	print "next.2 - @next\n" if DEBUG;
-	if (@next) {
-	    @next = $self->{ next_successor }->( $self, \%next );
-	    print "next.3 - @next\n" if DEBUG;
-	    for my $v (@next) {
-		$self->{ tree }->add_edge( $current, $v );
-	    }
-	    if (exists $self->{ pre_edge }) {
-		my $p = $self->{ pre_edge };
-		my $u = $self->current;
-		for my $v (@next) {
-		    $p->( $u, $v, $self, $self->{ state });
-		}
-	    }
+	my $next = Set::Object->new($self->{ graph }->successors($current));
+	my @all = $next->members;
+	$next = $next->difference($self->{seen});
+	if ($next->size) {
+	    @next = $self->{ next_successor }->( $self, { map +($_=>$_), $next->members } );
+	    $self->{ tree }->add_edges(map [$current, $_], @next);
+	    last unless my $p = $self->{ pre_edge };
+	    $p->($current, $_, $self, $self->{ state }) for @next;
 	    last;
 	} else {
 	    $self->visit_postorder;
@@ -314,43 +197,25 @@ sub next {
 	return undef if $self->{ terminate };
 	$self->_callbacks($current, @all);
     }
-    print "next.4 - @next\n" if DEBUG;
     unless (@next) {
-	unless ( @{ $self->{ roots } } ) {
-	    my $first = $self->{ first_root };
-	    if (defined $first) {
-		@next =
-		    ref $first eq 'CODE' ? 
-			$self->{ first_root }->( $self, $self->{ unseen } ) :
-			$first;
-		return unless @next;
-	    }
+	if (!@{ $self->{ roots } } and defined(my $first = $self->{ first_root })) {
+	    return unless @next = ref $first eq 'CODE'
+		? $first->( $self, { map +($_=>$_), $self->unseen } )
+		: $first;
 	}
-	unless (@next) {
-	    return unless defined $self->{ next_root };
-	    return unless @next =
-		$self->{ next_root }->( $self, $self->{ unseen } );
-	}
-	return if exists $self->{ seen }->{ $next[0] }; # Sanity check.
-	print "next.5 - @next\n" if DEBUG;
+	return if !@next and !$self->{ next_root };
+	return if !@next and !(@next = $self->{ next_root }->( $self, { map +($_=>$_), $self->unseen } ));
+	return if $self->{ seen }->contains($next[0]); # Sanity check.
 	push @{ $self->{ roots } }, $next[0];
     }
-    print "next.6 - @next\n" if DEBUG;
-    if (@next) {
-	$self->visit_preorder( @next );
-    }
+    $self->visit_preorder( @next ) if @next;
     return $next[0];
 }
 
 sub _order {
     my ($self, $order) = @_;
     1 while defined $self->next;
-    my $wantarray = wantarray;
-    if ($wantarray) {
-	@{ $self->{ $order } };
-    } elsif (defined $wantarray) {
-	shift @{ $self->{ $order } };
-    }
+    @{ $self->{ $order } };
 }
 
 sub preorder {
@@ -365,12 +230,12 @@ sub postorder {
 
 sub unseen {
     my $self = shift;
-    values %{ $self->{ unseen } };
+    $self->{ unseen }->${ wantarray ? \'members' : \'size' };
 }
 
 sub seen {
     my $self = shift;
-    values %{ $self->{ seen } };
+    $self->{ seen }->${ wantarray ? \'members' : \'size' };
 }
 
 sub seeing {
@@ -577,7 +442,7 @@ The parameters C<first_root> and C<next_successor> have a 'hierarchy'
 of how they are determined: if they have been explicitly defined, use
 that value.  If not, use the value of C<next_alphabetic>, if that has
 been defined.  If not, use the value of C<next_numeric>, if that has
-been defined.  If not, the next vertex to be visited is chose randomly.
+been defined.  If not, the next vertex to be visited is chosen randomly.
 
 =head2 Methods
 
@@ -666,31 +531,6 @@ Set the state 's' attached to the traversal.
     $t->delete_state('s')
 
 Delete the state 's' from the traversal.
-
-=back
-
-=head2 Backward compatibility
-
-The following parameters are for backward compatibility to Graph 0.2xx:
-
-=over 4
-
-=item get_next_root
-
-Like C<next_root>.
-
-=item successor
-
-Identical to having C<tree_edge> both C<non_tree_edge> defined
-to be the same.
-
-=item unseen_successor
-
-Like C<tree_edge>.
-
-=item seen_successor
-
-Like C<seed_edge>.
 
 =back
 

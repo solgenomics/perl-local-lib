@@ -1,8 +1,8 @@
-/home/production/cxgn/local-lib/lib/perl5/IO/AtomicFile.pm
-/home/production/cxgn/local-lib/lib/perl5/IO/InnerFile.pm
-/home/production/cxgn/local-lib/lib/perl5/IO/Lines.pm
-/home/production/cxgn/local-lib/lib/perl5/IO/Scalar.pm
-/home/production/cxgn/local-lib/lib/perl5/IO/ScalarArray.pm
-/home/production/cxgn/local-lib/lib/perl5/IO/Stringy.pm
-/home/production/cxgn/local-lib/lib/perl5/IO/Wrap.pm
-/home/production/cxgn/local-lib/lib/perl5/IO/WrapTie.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/IO/AtomicFile.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/IO/InnerFile.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/IO/Lines.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/IO/Scalar.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/IO/ScalarArray.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/IO/Stringy.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/IO/Wrap.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/IO/WrapTie.pm

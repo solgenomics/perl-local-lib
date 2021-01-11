@@ -98,7 +98,7 @@ Internal methods are usually preceded with a _
 =cut
 
 package Bio::SeqIO::locuslink;
-$Bio::SeqIO::locuslink::VERSION = '1.7.5';
+
 use strict;
 
 use Bio::Seq::SeqFactory;

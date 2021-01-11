@@ -74,7 +74,7 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Tools::Primer::AssessorI;
-$Bio::Tools::Primer::AssessorI::VERSION = '1.7.5';
+
 
 
 use base qw(Bio::Root::RootI);

@@ -75,7 +75,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Search::Hit::HitFactory;
-$Bio::Search::Hit::HitFactory::VERSION = '1.7.5';
 use vars qw($DEFAULT_TYPE);
 use strict;
 

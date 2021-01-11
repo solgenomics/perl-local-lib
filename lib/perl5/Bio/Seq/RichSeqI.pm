@@ -79,7 +79,6 @@ methods are usually preceded with a _
 
 
 package Bio::Seq::RichSeqI;
-$Bio::Seq::RichSeqI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::SeqI);

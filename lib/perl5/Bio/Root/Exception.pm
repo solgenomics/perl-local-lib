@@ -1,10 +1,5 @@
 package Bio::Root::Exception;
-$Bio::Root::Exception::VERSION = '1.7.5';
 use strict;
-
-=head1 NAME
-
-Bio::Root::Exception - BioPerl exceptions
 
 =head1 SYNOPSIS
 

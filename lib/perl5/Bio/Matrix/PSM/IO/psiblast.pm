@@ -54,7 +54,6 @@ Email tex@biosysadmin.com
 
 # Let the code begin...
 package Bio::Matrix::PSM::IO::psiblast;
-$Bio::Matrix::PSM::IO::psiblast::VERSION = '1.7.5';
 use Bio::Matrix::PSM::Psm;
 use Bio::Matrix::PSM::ProtMatrix;
 use strict;

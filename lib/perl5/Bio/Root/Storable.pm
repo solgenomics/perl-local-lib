@@ -1,14 +1,9 @@
 package Bio::Root::Storable;
-$Bio::Root::Storable::VERSION = '1.7.5';
 use strict;
 use Bio::Root::IO;
 use Data::Dumper qw( Dumper );
 use File::Spec;
 use base qw(Bio::Root::Root);
-
-=head1 NAME
-
-Bio::Root::Storable - Safely store/retrieve objects from disk
 
 =head1 SYNOPSIS
 

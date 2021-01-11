@@ -143,7 +143,7 @@ For simple access, the following methods are provided:
 
 
 package Bio::DB::Qual;
-$Bio::DB::Qual::VERSION = '1.7.5';
+
 use strict;
 use IO::File;
 use File::Spec;
@@ -401,7 +401,6 @@ sub FETCH {
 # Usage is the same as in Bio::Seq::PrimaryQual
 
 package Bio::Seq::PrimaryQual::Qual;
-$Bio::Seq::PrimaryQual::Qual::VERSION = '1.7.5';
 use overload '""' => 'display_id';
 
 use base qw(Bio::Root::Root Bio::Seq::PrimaryQual);

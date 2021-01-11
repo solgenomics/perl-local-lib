@@ -5,7 +5,36 @@ use vars qw/$VERSION/;
 use Scalar::Util qw/reftype weaken/;
 use Carp;
 use SUPER;
-$VERSION = '0.170.0';
+$VERSION = '0.176.0';
+
+sub import {
+    my ( $class, @args ) = @_;
+
+    # default if no args
+    $^H{'Test::MockModule/STRICT_MODE'} = 0;
+
+    foreach my $arg (@args) {
+        if ( $arg eq 'strict' ) {
+            $^H{'Test::MockModule/STRICT_MODE'} = 1;
+        } elsif ( $arg eq 'nostrict' ) {
+            $^H{'Test::MockModule/STRICT_MODE'} = 0;
+        } else {
+            warn "Test::MockModule unknown import option '$arg'";
+        }
+    }
+    return;
+}
+
+sub _strict_mode {
+    my $depth = 0;
+    while(my @fields = caller($depth++)) {
+        my $hints = $fields[10];
+        if($hints && grep { /^Test::MockModule\// } keys %{$hints}) {
+            return $hints->{'Test::MockModule/STRICT_MODE'};
+        }
+    }
+    return 0;
+}
 
 my %mocked;
 sub new {
@@ -21,7 +50,7 @@ sub new {
 		croak "Invalid package name $package";
 	}
 
-	unless ($args{no_auto} || ${"$package\::VERSION"}) {
+	unless ($package eq "CORE::GLOBAL" || $package eq 'main' || $args{no_auto} || ${"$package\::VERSION"}) {
 		(my $load_package = "$package.pm") =~ s{::}{/}g;
 		TRACE("$package is empty, loading $load_package");
 		require $load_package;
@@ -57,8 +86,7 @@ sub redefine {
 
 		if ( $sub_name =~ qr{^(.+)::([^:]+)$} ) {
 			my ( $pkg, $sub ) = ( $1, $2 );
-			my $object = bless {}, $pkg;
-			next if $object->can( $sub );
+			next if $pkg->can( $sub );
 		}
 
 		if ('CODE' ne ref $coderef) {
@@ -66,10 +94,33 @@ sub redefine {
 		}
 	}
 
-	return $self->mock(@_);
+	return $self->_mock(@_);
+}
+
+sub define {
+	my ($self, @mocks) = (shift, @_);
+
+	while ( my ($name, $value) = splice @mocks, 0, 2 ) {
+		my $sub_name = $self->_full_name($name);
+		my $coderef = *{$sub_name}{'CODE'};
+
+		if ('CODE' eq ref $coderef) {
+			croak "$sub_name exists!";
+		}
+	}
+
+	return $self->_mock(@_);
 }
 
 sub mock {
+	my ($self, @mocks) = (shift, @_);
+
+	croak "mock is not allowed in strict mode. Please use define or redefine" if($self->_strict_mode());
+
+	return $self->_mock(@mocks);
+}
+
+sub _mock {
 	my $self = shift;
 
 	while (my ($name, $value) = splice @_, 0, 2) {
@@ -95,11 +146,18 @@ sub mock {
 		TRACE("Installing mocked $sub_name");
 		_replace_sub($sub_name, $code);
 	}
+
+	return $self;
 }
 
 sub noop {
     my $self = shift;
-    $self->mock($_,1) for @_;
+
+    croak "noop is not allowed in strict mode. Please use define or redefine" if($self->_strict_mode());
+
+    $self->_mock($_,1) for @_;
+
+    return;
 }
 
 sub original {
@@ -112,6 +170,7 @@ sub original {
 sub unmock {
 	my $self = shift;
 
+	carp 'Nothing to unmock' unless @_;
 	for my $name (@_) {
 		croak "Invalid subroutine name: $name" unless _valid_subname($name);
 
@@ -134,6 +193,8 @@ sub unmock_all {
 	foreach (keys %{$self->{_mocked}}) {
 		$self->unmock($_);
 	}
+
+	return;
 }
 
 sub is_mocked {
@@ -208,9 +269,21 @@ Test::MockModule - Override subroutines in a module for unit testing
 		$module->mock('subroutine', sub { ... });
 		Module::Name::subroutine(@args); # mocked
 
-		#Same effect, but this will die() if other_subroutine()
-		#doesn't already exist, which is often desirable.
+		# Same effect, but this will die() if other_subroutine()
+		# doesn't already exist, which is often desirable.
 		$module->redefine('other_subroutine', sub { ... });
+
+		# This will die() if another_subroutine() is defined.
+		$module->define('another_subroutine', sub { ... });
+	}
+
+	{
+		# you can also chain new/mock/redefine/define
+
+		Test::MockModule->new('Module::Name')
+		->mock( one_subroutine => sub { ... })
+		->redefine( other_subroutine => sub { ... } )
+		->define( a_new_sub => 1234 );
 	}
 
 	Module::Name::subroutine(@args); # original subroutine
@@ -226,6 +299,28 @@ Test::MockModule - Override subroutines in a module for unit testing
 		$foo->foo(); # prints "Foo!\n"
 	}
 
+    # If you want to prevent noop and mock from working, you can
+    # load Test::MockModule in strict mode.
+
+    use Test::MockModule qw/strict/;
+    my $module = Test::MockModule->new('Module::Name');
+
+    # Redefined the other_subroutine or dies if it's not there.
+    $module->redefine('other_subroutine', sub { ... });
+
+    # Dies since you specified you wanted strict mode.
+    $module->mock('subroutine', sub { ... });
+
+    # Turn strictness off in this lexical scope
+    {
+        use Test::MockModule 'nostrict';
+        # ->mock() works now
+        $module->mock('subroutine', sub { ... });
+    }
+
+    # Back in the strict scope, so mock() dies here
+    $module->mock('subroutine', sub { ... });
+
 =head1 DESCRIPTION
 
 C<Test::MockModule> lets you temporarily redefine subroutines in other packages
@@ -235,6 +330,53 @@ A C<Test::MockModule> object is set up to mock subroutines for a given
 module. The object remembers the original subroutine so it can be easily
 restored. This happens automatically when all MockModule objects for the given
 module go out of scope, or when you C<unmock()> the subroutine.
+
+=head1 STRICT MODE
+
+One of the weaknesses of testing using mocks is that the implementation of the
+interface that you are mocking might change, while your mocks get left alone.
+You are not now mocking what you thought you were, and your mocks might now be
+hiding bugs that will only be spotted in production. To help prevent this you
+can load Test::MockModule in 'strict' mode:
+
+    use Test::MockModule qw(strict);
+
+This will disable use of the C<mock()> method, making it a fatal runtime error.
+You should instead define mocks using C<redefine()>, which will only mock
+things that already exist and die if you try to redefine something that doesn't
+exist.
+
+Strictness is lexically scoped, so you can do this in one file:
+
+    use Test::MockModule qw(strict);
+    
+    ...->redefine(...);
+
+and this in another:
+
+    use Test::MockModule; # the default is nostrict
+
+    ...->mock(...);
+
+You can even mix n match at different places in a single file thus:
+
+    use Test::MockModule qw(strict);
+    # here mock() dies
+
+    {
+        use Test::MockModule qw(nostrict);
+        # here mock() works
+    }
+
+    # here mock() goes back to dieing
+
+    use Test::MockModule qw(nostrict);
+    # and from here on mock() works again
+
+NB that strictness must be defined at compile-time, and set using C<use>. If
+you think you're going to try and be clever by calling Test::MockModule's
+C<import()> method at runtime then what happens in undefined, with results
+differing from one version of perl to another. What larks!
 
 =head1 METHODS
 
@@ -264,6 +406,10 @@ mocked
 Temporarily replaces one or more subroutines in the mocked module. A subroutine
 can be mocked with a code reference or a scalar. A scalar will be recast as a
 subroutine that returns the scalar.
+
+Returns the current C<Test::MockModule> object, so you can chain L<new> with L<mock>.
+
+	my $mock = Test::MockModule->new->(...)->mock(...);
 
 The following statements are equivalent:
 
@@ -356,6 +502,26 @@ code path that no longer behaves consistently with the mocked behavior.
 Note that redefine is also now checking if one of the parent provides the sub
 and will not die if it's available in the chain.
 
+Returns the current C<Test::MockModule> object, so you can chain L<new> with L<redefine>.
+
+	my $mock = Test::MockModule->new->(...)->redefine(...);
+
+=item define($subroutine)
+
+The reverse of redefine, this will fail if the passed subroutine exists.
+While this use case is rare, there are times where the perl code you are
+testing is inspecting a package and adding a missing subroutine is actually
+what you want to do.
+
+By using define, you're asserting that the subroutine you want to be mocked
+should not exist in advance.
+
+Note: define does not check for inheritance like redefine.
+
+Returns the current C<Test::MockModule> object, so you can chain L<new> with L<define>.
+
+	my $mock = Test::MockModule->new->(...)->define(...);
+
 =item original($subroutine)
 
 Returns the original (unmocked) subroutine
@@ -391,7 +557,7 @@ one hardcoded argument pass to a function.
 			# only alter calls with path set to "/a/b/c/d"
 			return $mock->original("get_path_for")->("/my/custom/path");
 		} else { # preserve the original arguments
-			return $mock->original("get_path_for")->(@_);
+			return $mock->original("get_path_for")->($path, @_);
 		}
 	});
 
@@ -441,6 +607,8 @@ L<Sub::Override>
 Current Maintainer: Geoff Franks <gfranks@cpan.org>
 
 Original Author: Simon Flack E<lt>simonflk _AT_ cpan.orgE<gt>
+
+Lexical scoping of strictness: David Cantrell E<lt>david@cantrell.org.ukE<gt>
 
 =head1 COPYRIGHT
 

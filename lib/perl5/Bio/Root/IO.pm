@@ -1,5 +1,5 @@
 package Bio::Root::IO;
-$Bio::Root::IO::VERSION = '1.7.5';
+
 use strict;
 use Symbol;
 use IO::Handle;
@@ -9,10 +9,6 @@ use base qw(Bio::Root::Root);
 
 # as of 2016, worked on most systems, but will test this in a RC
 my %modes = ( 0 => 'r', 1 => 'w', 2 => 'rw' );
-
-=head1 NAME
-
-Bio::Root::IO - BioPerl base IO handling class
 
 =head1 SYNOPSIS
 
@@ -359,7 +355,7 @@ sub mode {
         if (defined $fh) {
             # use fcntl if not Windows-based
             if ($^O !~ /MSWin32/) {
-                my $m = fcntl($fh, F_GETFL, 0) || 0;
+                my $m = fcntl($fh, F_GETFL, 0);
                 $mode = exists $modes{$m & 3}  ? $modes{$m & 3} : '?';
             } else {
                 # Determine read/write status of filehandle

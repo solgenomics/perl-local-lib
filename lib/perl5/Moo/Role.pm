@@ -2,10 +2,12 @@ package Moo::Role;
 
 use Moo::_strictures;
 use Moo::_Utils qw(
+  _check_tracked
   _getglob
   _getstash
   _install_coderef
   _install_modifier
+  _install_tracked
   _load_module
   _name_coderef
   _set_loaded
@@ -23,7 +25,7 @@ BEGIN {
   );
 }
 
-our $VERSION = '2.003004';
+our $VERSION = '2.004004';
 $VERSION =~ tr/_//d;
 
 require Moo::sification;
@@ -42,12 +44,6 @@ our %APPLY_DEFAULTS;
 our %COMPOSED;
 our @ON_ROLE_CREATE;
 
-sub _install_tracked {
-  my ($target, $name, $code) = @_;
-  $INFO{$target}{exports}{$name} = $code;
-  _install_coderef "${target}::${name}" => "Moo::Role::${name}" => $code;
-}
-
 sub import {
   my $target = caller;
   if ($Moo::MAKERS{$target} and $Moo::MAKERS{$target}{is_class}) {
@@ -57,42 +53,60 @@ sub import {
   goto &Role::Tiny::import;
 }
 
+sub _accessor_maker_for {
+  my ($class, $target) = @_;
+  ($INFO{$target}{accessor_maker} ||= do {
+    require Method::Generate::Accessor;
+    Method::Generate::Accessor->new
+  });
+}
+
 sub _install_subs {
   my ($me, $target) = @_;
-  _install_tracked $target => has => sub {
-    my $name_proto = shift;
-    my @name_proto = ref $name_proto eq 'ARRAY' ? @$name_proto : $name_proto;
-    if (@_ % 2 != 0) {
-      croak("Invalid options for " . join(', ', map "'$_'", @name_proto)
-        . " attribute(s): even number of arguments expected, got " . scalar @_)
-    }
-    my %spec = @_;
-    foreach my $name (@name_proto) {
-      my $spec_ref = @name_proto > 1 ? +{%spec} : \%spec;
-      ($INFO{$target}{accessor_maker} ||= do {
-        require Method::Generate::Accessor;
-        Method::Generate::Accessor->new
-      })->generate_method($target, $name, $spec_ref);
-      push @{$INFO{$target}{attributes}||=[]}, $name, $spec_ref;
-      $me->_maybe_reset_handlemoose($target);
-    }
-  };
-  # install before/after/around subs
-  foreach my $type (qw(before after around)) {
-    _install_tracked $target => $type => sub {
-      push @{$INFO{$target}{modifiers}||=[]}, [ $type => @_ ];
-      $me->_maybe_reset_handlemoose($target);
-    };
-  }
-  _install_tracked $target => requires => sub {
-    push @{$INFO{$target}{requires}||=[]}, @_;
-    $me->_maybe_reset_handlemoose($target);
-  };
-  _install_tracked $target => with => sub {
-    $me->apply_roles_to_package($target, @_);
-    $me->_maybe_reset_handlemoose($target);
-  };
+  my %install = $me->_gen_subs($target);
+  _install_tracked $target => $_ => $install{$_}
+    for sort keys %install;
   *{_getglob("${target}::meta")} = $me->can('meta');
+  return;
+}
+
+sub _gen_subs {
+  my ($me, $target) = @_;
+  return (
+    has => sub {
+      my $name_proto = shift;
+      my @name_proto = ref $name_proto eq 'ARRAY' ? @$name_proto : $name_proto;
+      if (@_ % 2 != 0) {
+        croak("Invalid options for " . join(', ', map "'$_'", @name_proto)
+          . " attribute(s): even number of arguments expected, got " . scalar @_)
+      }
+      my %spec = @_;
+      foreach my $name (@name_proto) {
+        my $spec_ref = @name_proto > 1 ? +{%spec} : \%spec;
+        $me->_accessor_maker_for($target)
+          ->generate_method($target, $name, $spec_ref);
+        push @{$INFO{$target}{attributes}||=[]}, $name, $spec_ref;
+        $me->_maybe_reset_handlemoose($target);
+      }
+    },
+    (map {
+      my $type = $_;
+      (
+        $type => sub {
+          push @{$INFO{$target}{modifiers}||=[]}, [ $type => @_ ];
+          $me->_maybe_reset_handlemoose($target);
+        },
+      )
+    } qw(before after around)),
+    requires => sub {
+      push @{$INFO{$target}{requires}||=[]}, @_;
+      $me->_maybe_reset_handlemoose($target);
+    },
+    with => sub {
+      $me->apply_roles_to_package($target, @_);
+      $me->_maybe_reset_handlemoose($target);
+    },
+  );
 }
 
 push @ON_ROLE_CREATE, sub {
@@ -111,7 +125,7 @@ sub meta {
 
 sub unimport {
   my $target = caller;
-  _unimport_coderefs($target, $INFO{$target});
+  _unimport_coderefs($target);
 }
 
 sub _maybe_reset_handlemoose {
@@ -119,6 +133,19 @@ sub _maybe_reset_handlemoose {
   if ($INC{'Moo/HandleMoose.pm'} && !$Moo::sification::disabled) {
     Moo::HandleMoose::maybe_reinject_fake_metaclass_for($target);
   }
+}
+
+sub _non_methods {
+  my $self = shift;
+  my ($role) = @_;
+
+  my $non_methods = $self->SUPER::_non_methods(@_);
+
+  my $all_subs = $self->_all_subs($role);
+  $non_methods->{$_} = $all_subs->{$_}
+    for _check_tracked($role, [ keys %$all_subs ]);
+
+  return $non_methods;
 }
 
 sub methods_provided_by {
@@ -330,12 +357,12 @@ sub apply_roles_to_object {
   my $class = ref $new;
   _set_loaded($class, (caller)[1]);
 
-  my $apply_defaults = exists $APPLY_DEFAULTS{$class} ? $APPLY_DEFAULTS{$class}
-    : $APPLY_DEFAULTS{$class} = do {
-    my %attrs = map { @{$INFO{$_}{attributes}||[]} } @roles;
+  my $apply_defaults = $APPLY_DEFAULTS{$class};
+  if (!defined $apply_defaults) {
+    my $attrs = { map @{$INFO{$_}{attributes}||[]}, @roles };
 
     if ($INC{'Moo.pm'}
-        and keys %attrs
+        and keys %$attrs
         and my $con_gen = Moo->_constructor_maker_for($class)
         and my $m = Moo->_accessor_maker_for($class)) {
 
@@ -359,11 +386,11 @@ sub apply_roles_to_object {
           else {
             ();
           }
-        } sort keys %attrs ),
+        } sort keys %$attrs ),
       );
       if ($code) {
         require Sub::Quote;
-        Sub::Quote::quote_sub(
+        $apply_defaults = Sub::Quote::quote_sub(
           "${class}::_apply_defaults",
           "no warnings 'void';\n$code",
           \%captures,
@@ -373,14 +400,10 @@ sub apply_roles_to_object {
           }
         );
       }
-      else {
-        0;
-      }
     }
-    else {
-      0;
-    }
-  };
+    $APPLY_DEFAULTS{$class} = $apply_defaults ||= 0;
+  }
+
   if ($apply_defaults) {
     local $Carp::Internal{+__PACKAGE__} = 1;
     local $Carp::Internal{$class} = 1;
@@ -482,7 +505,7 @@ And elsewhere:
   use strictures 2;
 
   # bar gets imported, but not foo
-  with('My::Role');
+  with 'My::Role';
 
   sub foo { ... }
 
@@ -491,8 +514,9 @@ And elsewhere:
 =head1 DESCRIPTION
 
 C<Moo::Role> builds upon L<Role::Tiny>, so look there for most of the
-documentation on how this works.  The main addition here is extra bits to make
-the roles more "Moosey;" which is to say, it adds L</has>.
+documentation on how this works (in particular, using C<Moo::Role> also
+enables L<strict> and L<warnings>).  The main addition here is extra bits to
+make the roles more "Moosey;" which is to say, it adds L</has>.
 
 =head1 IMPORTED SUBROUTINES
 

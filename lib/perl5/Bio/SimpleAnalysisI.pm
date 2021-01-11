@@ -97,7 +97,6 @@ message.
 # Let the code begin...
 
 package Bio::SimpleAnalysisI;
-$Bio::SimpleAnalysisI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::RootI);

@@ -80,7 +80,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Factory::TreeFactoryI;
-$Bio::Factory::TreeFactoryI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::RootI);

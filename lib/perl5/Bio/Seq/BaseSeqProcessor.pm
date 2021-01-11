@@ -89,7 +89,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Seq::BaseSeqProcessor;
-$Bio::Seq::BaseSeqProcessor::VERSION = '1.7.5';
 use strict;
 
 # Object preamble - inherits from Bio::Root::Root

@@ -90,11 +90,10 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Tree::TreeFunctionsI;
-$Bio::Tree::TreeFunctionsI::VERSION = '1.7.5';
+
 use strict;
 use base qw(Bio::Tree::TreeI);
 
-use Carp;
 
 =head2 find_node
 
@@ -1093,7 +1092,8 @@ sub reroot_at_midpoint {
 
 sub findnode_by_id {
     my $tree = shift;
-    Carp::carp('use of findnode_by_id() is deprecated; use find_node()');
+    $tree->deprecated("use of findnode_by_id() is deprecated; ".
+                      "use find_node() instead");
     my $id = shift;
     my $rootnode = $tree->get_root_node;
     if ( ($rootnode->id) and ($rootnode->id eq $id) ) {

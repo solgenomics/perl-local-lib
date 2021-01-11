@@ -81,7 +81,7 @@ methods are usually preceded with an "_" (underscore).
 
 # Let the code begin...
 package Bio::DB::Flat;
-$Bio::DB::Flat::VERSION = '1.7.5';
+
 use File::Spec;
 
 use base qw(Bio::Root::Root Bio::DB::RandomAccessI);

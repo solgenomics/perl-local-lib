@@ -65,7 +65,7 @@
   datetime_format_short => "{1} {0}",
   day_format_abbreviated => [
     "Isn",
-    "Slsa",
+    "Tldo",
     "Arbc",
     "Khms",
     "Jmc",
@@ -74,7 +74,7 @@
   ],
   day_format_narrow => [
     "I",
-    "S",
+    "T",
     "A",
     "Kh",
     "J",
@@ -83,16 +83,16 @@
   ],
   day_format_wide => [
     "Isniin",
-    "Salaasa",
-    "Arbaca",
+    "Talaado",
+    "Arbaco",
     "Khamiis",
-    "Jimce",
+    "Jimco",
     "Sabti",
     "Axad",
   ],
   day_stand_alone_abbreviated => [
     "Isn",
-    "Slsa",
+    "Tldo",
     "Arbc",
     "Khms",
     "Jmc",
@@ -101,7 +101,7 @@
   ],
   day_stand_alone_narrow => [
     "I",
-    "S",
+    "T",
     "A",
     "Kh",
     "J",
@@ -110,10 +110,10 @@
   ],
   day_stand_alone_wide => [
     "Isniin",
-    "Salaasa",
-    "Arbaca",
+    "Talaado",
+    "Arbaco",
     "Khamiis",
-    "Jimce",
+    "Jimco",
     "Sabti",
     "Axad",
   ],
@@ -122,8 +122,8 @@
     "CD",
   ],
   era_narrow => [
-    "CH",
-    "CD",
+    "B",
+    "A",
   ],
   era_wide => [
     "Ciise Hortii",
@@ -133,8 +133,8 @@
   glibc_date_1_format => "%a %b %e %r %Z %Y",
   glibc_date_format => "%d.%m.%Y",
   glibc_datetime_format => "%a %d %b %Y %r %Z",
-  glibc_time_12_format => "%X %p",
-  glibc_time_format => "%l:%M:%S",
+  glibc_time_12_format => "%l:%M:%S %p",
+  glibc_time_format => "%l:%M:%S %p",
   language => "Somali",
   month_format_abbreviated => [
     "Jan",
@@ -269,5 +269,5 @@
   time_format_medium => "h:mm:ss a",
   time_format_short => "h:mm a",
   variant => undef,
-  version => 35,
+  version => 38,
 }

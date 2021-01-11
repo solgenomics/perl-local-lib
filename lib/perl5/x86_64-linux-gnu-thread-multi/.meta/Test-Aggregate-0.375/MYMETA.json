@@ -4,13 +4,13 @@
       "Curtis \"Ovid\" Poe <ovid@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Module::Build version 0.4218, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Module::Build version 0.4218, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Test-Aggregate",
    "prereqs" : {
@@ -74,5 +74,5 @@
       "Shlomi Fish <shlomif@cpan.org>",
       "Randy Stauner <rwstauner@cpan.org>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001"
 }

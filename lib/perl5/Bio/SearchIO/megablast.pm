@@ -103,7 +103,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SearchIO::megablast;
-$Bio::SearchIO::megablast::VERSION = '1.7.5';
 use strict;
 use vars qw(%MAPPING %MODEMAP $DEFAULT_BLAST_WRITER_CLASS);
 

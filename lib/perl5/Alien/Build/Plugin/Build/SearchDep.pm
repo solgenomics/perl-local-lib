@@ -2,11 +2,12 @@ package Alien::Build::Plugin::Build::SearchDep;
 
 use strict;
 use warnings;
+use 5.008004;
 use Alien::Build::Plugin;
 use Text::ParseWords qw( shellwords );
 
 # ABSTRACT: Add dependencies to library and header search path
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 has aliens => {};
@@ -18,15 +19,15 @@ has public_l => 0;
 sub init
 {
   my($self, $meta) = @_;
-  
+
   $meta->add_requires('configure' => 'Alien::Build::Plugin::Build::SearchDep' => '0.35');
   $meta->add_requires('share'     => 'Env::ShellWords' => 0.01);
-  
+
   if($self->public_I || $self->public_l)
   {
     $meta->add_requires('configure' => 'Alien::Build::Plugin::Build::SearchDep' => '0.53');
   }
-  
+
   my @aliens;
   if(ref($self->aliens) eq 'HASH')
   {
@@ -38,23 +39,23 @@ sub init
     @aliens = ref $self->aliens ? @{ $self->aliens } : ($self->aliens);
     $meta->add_requires('share' => $_ => 0) for @aliens;
   }
-  
+
   $meta->around_hook(
     build => sub {
       my($orig, $build) = @_;
-      
+
       local $ENV{CFLAGS}   = $ENV{CFLAGS};
       local $ENV{CXXFLAGS} = $ENV{CXXFLAGS};
       local $ENV{LDFLAGS}  = $ENV{LDFLAGS};
-      
+
       tie my @CFLAGS,   'Env::ShellWords', 'CFLAGS';
       tie my @CXXFLAGS, 'Env::ShellWords', 'CXXFLAGS';
       tie my @LDFLAGS,  'Env::ShellWords', 'LDFLAGS';
-      
+
       my $cflags  = $build->install_prop->{plugin_build_searchdep_cflags}  = [];
       my $ldflags = $build->install_prop->{plugin_build_searchdep_ldflags} = [];
       my $libs    = $build->install_prop->{plugin_build_searchdep_libs}    = [];
-      
+
       foreach my $other (@aliens)
       {
         my $other_cflags;
@@ -73,20 +74,20 @@ sub init
         unshift @$ldflags, grep /^-L/, shellwords($other_libs);
         unshift @$libs,    grep /^-l/, shellwords($other_libs);
       }
-      
+
       unshift @CFLAGS, @$cflags;
       unshift @CXXFLAGS, @$cflags;
       unshift @LDFLAGS, @$ldflags;
-      
+
       $orig->($build);
-      
+
     },
   );
-  
+
   $meta->after_hook(
     gather_share => sub {
       my($build) = @_;
-      
+
       $build->runtime_prop->{libs}        = '' unless defined $build->runtime_prop->{libs};
       $build->runtime_prop->{libs_static} = '' unless defined $build->runtime_prop->{libs_static};
 
@@ -95,7 +96,7 @@ sub init
         $build->runtime_prop->{$_} = join(' ', _space_escape(@{ $build->install_prop->{plugin_build_searchdep_libs} })) . ' ' . $build->runtime_prop->{$_}
           for qw( libs libs_static );
       }
-      
+
       $build->runtime_prop->{$_} = join(' ', _space_escape(@{ $build->install_prop->{plugin_build_searchdep_ldflags} })) . ' ' . $build->runtime_prop->{$_}
         for qw( libs libs_static );
 
@@ -133,7 +134,7 @@ Alien::Build::Plugin::Build::SearchDep - Add dependencies to library and header 
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -171,7 +172,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -221,9 +222,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

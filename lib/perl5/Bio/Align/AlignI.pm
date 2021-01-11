@@ -93,8 +93,8 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Align::AlignI;
-$Bio::Align::AlignI::VERSION = '1.7.5';
 use strict;
+
 
 use base qw(Bio::Root::RootI);
 
@@ -830,6 +830,40 @@ sub set_displayname_flat {
 sub set_displayname_normal {
     my ($self) = @_;
     $self->throw_not_implemented();
+}
+
+=head1 Deprecated methods
+
+=head2 no_residues
+
+ Title     : no_residues
+ Usage     : $no = $ali->no_residues
+ Function  : number of residues in total in the alignment
+ Returns   : integer
+ Argument  :
+ Note      : deprecated in favor of num_residues()
+
+=cut
+
+sub no_residues {
+    # immediate deprecation
+    shift->deprecated();
+}
+
+=head2 no_sequences
+
+ Title     : no_sequences
+ Usage     : $depth = $ali->no_sequences
+ Function  : number of sequence in the sequence alignment
+ Returns   : integer
+ Argument  : None
+ Note      : deprecated in favor of num_sequences()
+
+=cut
+
+sub no_sequences {
+    # immediate deprecation
+    shift->deprecated();
 }
 
 1;

@@ -13,7 +13,7 @@ Moose::Manual::Contributing - How to get involved in Moose
 
 =head1 VERSION
 
-version 2.2011
+version 2.2014
 
 =for comment CONTRIBUTING.pod is generated from lib/Moose/Manual/Contributing.pod
 
@@ -355,11 +355,8 @@ defend your change.
     git checkout stable/X.YY
 
     # do final changelogging, etc
-    vim dist.ini # increment version number
     git commit
     dzil release # or dzil release --trial for trial releases
-    git commit # to add the actual release date
-    git branch stable/X.YY # only for non-trial major releases
 
 =head3 Release How-To
 
@@ -498,7 +495,7 @@ for the change in that document.
 
 =item *
 
-Stevan Little <stevan.little@iinteractive.com>
+Stevan Little <stevan@cpan.org>
 
 =item *
 
@@ -506,11 +503,11 @@ Dave Rolsky <autarch@urth.org>
 
 =item *
 
-Jesse Luehrs <doy@tozt.net>
+Jesse Luehrs <doy@cpan.org>
 
 =item *
 
-Shawn M Moore <code@sartak.org>
+Shawn M Moore <sartak@cpan.org>
 
 =item *
 
@@ -526,7 +523,7 @@ Florian Ragwitz <rafl@debian.org>
 
 =item *
 
-Hans Dieter Pearcey <hdp@weftsoar.net>
+Hans Dieter Pearcey <hdp@cpan.org>
 
 =item *
 
@@ -534,7 +531,7 @@ Chris Prather <chris@prather.org>
 
 =item *
 
-Matt S Trout <mst@shadowcat.co.uk>
+Matt S Trout <mstrout@cpan.org>
 
 =back
 

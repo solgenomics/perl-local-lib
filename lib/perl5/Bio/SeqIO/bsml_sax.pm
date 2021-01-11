@@ -76,7 +76,6 @@ Email jason-at-bioperl-dot-org
 =cut
 
 package Bio::SeqIO::bsml_sax;
-$Bio::SeqIO::bsml_sax::VERSION = '1.7.5';
 use vars qw($Default_Source);
 use strict;
 

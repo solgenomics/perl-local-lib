@@ -24,7 +24,8 @@ Sendu Bala, bix@sendu.me.uk
 =cut
 
 package Bio::Search::SearchUtils;
-$Bio::Search::SearchUtils::VERSION = '1.7.5';
+use Bio::Root::Version;
+
 use strict;
 
 =head2 tile_hsps

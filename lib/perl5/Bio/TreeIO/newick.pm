@@ -13,7 +13,7 @@
 
 =head1 NAME
 
-Bio::TreeIO::newick - parsing and writing of Newick/PHYLIP/New Hampshire format
+Bio::TreeIO::newick
 
 =head1 SYNOPSIS
 
@@ -72,7 +72,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::TreeIO::newick;
-$Bio::TreeIO::newick::VERSION = '1.7.5';
 use strict;
 
 use Bio::Event::EventGeneratorI;

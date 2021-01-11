@@ -1,8 +1,8 @@
-/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/FeatureIO.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/FeatureIO/bed.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/FeatureIO/gff.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/FeatureIO/gtf.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/FeatureIO/interpro.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/FeatureIO/ptt.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/FeatureIO/vecscreen_simple.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/Bio/SeqFeature/Annotated.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/Bio/FeatureIO.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/Bio/FeatureIO/bed.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/Bio/FeatureIO/gff.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/Bio/FeatureIO/gtf.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/Bio/FeatureIO/interpro.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/Bio/FeatureIO/ptt.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/Bio/FeatureIO/vecscreen_simple.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/Bio/SeqFeature/Annotated.pm

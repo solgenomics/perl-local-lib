@@ -82,7 +82,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SearchIO::axt;
-$Bio::SearchIO::axt::VERSION = '1.7.5';
 use vars qw(%MODEMAP %MAPPING @STATES $GAPCHAR);
 use strict;
 

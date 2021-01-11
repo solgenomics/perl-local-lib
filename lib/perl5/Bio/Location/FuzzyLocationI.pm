@@ -73,7 +73,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Location::FuzzyLocationI;
-$Bio::Location::FuzzyLocationI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::LocationI);

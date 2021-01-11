@@ -86,7 +86,7 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Tools::Primer::Feature;
-$Bio::Tools::Primer::Feature::VERSION = '1.7.5';
+
 use base qw(Bio::SeqFeature::Generic);
 
 

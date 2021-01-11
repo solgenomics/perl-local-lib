@@ -1,1 +1,1 @@
-{"version":"0.013","pathname":"R/RK/RKRIMEN/Carp-Clan-Share-0.013.tar.gz","dist":"Carp-Clan-Share-0.013","name":"Carp::Clan::Share","provides":{"Carp::Clan::Share":{"file":"lib/Carp/Clan/Share.pm","version":"0.013"}},"target":"Carp::Clan::Share"}
+{"target":"Carp::Clan::Share","name":"Carp::Clan::Share","dist":"Carp-Clan-Share-0.013","pathname":"R/RK/RKRIMEN/Carp-Clan-Share-0.013.tar.gz","provides":{"Carp::Clan::Share":{"version":"0.013","file":"lib/Carp/Clan/Share.pm"}},"version":"0.013"}

@@ -1,13 +1,11 @@
 package Bio::Root::Root;
-$Bio::Root::Root::VERSION = '1.7.5';
 use strict;
 use Bio::Root::IO;
+use Bio::Root::Version;
 use Scalar::Util qw(blessed reftype);
 use base qw(Bio::Root::RootI);
 
-=head1 NAME
-
-Bio::Root::Root - implementation of Bio::Root::RootI interface
+our $VERSION = eval "$VERSION";
 
 =head1 SYNOPSIS
 

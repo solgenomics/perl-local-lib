@@ -63,7 +63,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::AlignIO::mase;
-$Bio::AlignIO::mase::VERSION = '1.7.5';
 use strict;
 
 

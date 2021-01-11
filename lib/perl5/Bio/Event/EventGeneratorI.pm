@@ -72,7 +72,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Event::EventGeneratorI;
-$Bio::Event::EventGeneratorI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::RootI);

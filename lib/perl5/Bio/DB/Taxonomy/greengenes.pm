@@ -84,7 +84,7 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::DB::Taxonomy::greengenes;
-$Bio::DB::Taxonomy::greengenes::VERSION = '1.7.5';
+
 use strict;
 use base qw(Bio::DB::Taxonomy Bio::DB::Taxonomy::list);
 

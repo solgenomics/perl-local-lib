@@ -186,7 +186,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::SeqUtils;
-$Bio::SeqUtils::VERSION = '1.7.5';
 use strict;
 use warnings;
 use Scalar::Util qw(blessed);

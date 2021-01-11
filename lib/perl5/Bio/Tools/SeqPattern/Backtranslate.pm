@@ -1,5 +1,4 @@
 package Bio::Tools::SeqPattern::Backtranslate;
-$Bio::Tools::SeqPattern::Backtranslate::VERSION = '1.7.5';
 use strict;
 use warnings;
 
@@ -8,7 +7,7 @@ use base qw(Exporter);
 
 =head1 NAME
 
-Bio::Tools::SeqPattern::Backtranslate - reverse translate protein patterns
+Bio::Tools::SeqPattern::Backtranslate
 
 =head1 DESCRIPTION
 

@@ -80,7 +80,7 @@ methods are usually preceded with an "_" (underscore).
 # Let the code begin...
 
 package Bio::DB::Flat::BDB;
-$Bio::DB::Flat::BDB::VERSION = '1.7.5';
+
 use strict;
 use DB_File;
 use IO::File;

@@ -121,7 +121,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::TreeIO::lintree;
-$Bio::TreeIO::lintree::VERSION = '1.7.5';
 use vars qw(%Defaults);
 use strict;
 

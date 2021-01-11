@@ -125,7 +125,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SearchIO::Writer::TextResultWriter;
-$Bio::SearchIO::Writer::TextResultWriter::VERSION = '1.7.5';
 use vars qw($MaxNameLen $MaxDescLen $AlignmentLineWidth 	    $DescLineLen $TextWrapLoaded);
 use strict;
 

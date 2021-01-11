@@ -1,8 +1,8 @@
 package Bio::Align::Utilities;
-$Bio::Align::Utilities::VERSION = '1.7.5';
 use strict;
 use warnings;
 use Carp;
+use Bio::Root::Version;
 
 use Exporter 'import';
 our @EXPORT_OK = qw(

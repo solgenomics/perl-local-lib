@@ -108,7 +108,6 @@ Email skirov@utk.edu
 
 # Let the code begin...
 package Bio::Matrix::PSM::IO;
-$Bio::Matrix::PSM::IO::VERSION = '1.7.5';
 use vars qw(@PSMFORMATS);
 use strict;
 

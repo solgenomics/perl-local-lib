@@ -168,9 +168,11 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Search::Tiling::MapTiling;
-$Bio::Search::Tiling::MapTiling::VERSION = '1.7.5';
 use strict;
 use warnings;
+
+# Object preamble - inherits from Bio::Root::Root
+#use lib '../../..';
 
 use Bio::Root::Root;
 use Bio::Search::Tiling::TilingI;

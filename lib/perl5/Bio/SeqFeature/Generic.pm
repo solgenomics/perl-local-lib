@@ -140,10 +140,7 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::SeqFeature::Generic;
-$Bio::SeqFeature::Generic::VERSION = '1.7.5';
 use strict;
-
-use Carp;
 
 use Bio::Annotation::Collection;
 use Bio::Location::Simple;
@@ -992,8 +989,23 @@ sub gff_string {
 =cut
 
 sub slurp_gff_file {
-    Carp::croak("Bio::SeqFeature::Generic->slurp_gff_file has been removed."
-                . " Use Bio::Tools::GFF instead.");
+    my ($f) = @_;
+    my @out;
+    if ( !defined $f ) {
+        Bio::Root::Root->throw("Must have a filehandle");
+    }
+
+    Bio::Root::Root->deprecated( -message => "deprecated method slurp_gff_file() called in Bio::SeqFeature::Generic. Use Bio::Tools::GFF instead.",
+                                 -warn_version  => '1.005',
+                                 -throw_version => '1.007',
+                               );
+
+    while(<$f>) {
+        my $sf = Bio::SeqFeature::Generic->new('-gff_string' => $_);
+        push(@out, $sf);
+    }
+
+    return @out;
 }
 
 

@@ -128,7 +128,7 @@ For simple access, the following methods are provided:
 
 
 package Bio::DB::Fasta;
-$Bio::DB::Fasta::VERSION = '1.7.5';
+
 use strict;
 use IO::File;
 use File::Spec;
@@ -355,7 +355,6 @@ sub header {
 # Bio::PrimarySeqI compatibility
 #
 package Bio::PrimarySeq::Fasta;
-$Bio::PrimarySeq::Fasta::VERSION = '1.7.5';
 use overload '""' => 'display_id';
 
 use base qw(Bio::Root::Root Bio::PrimarySeqI);

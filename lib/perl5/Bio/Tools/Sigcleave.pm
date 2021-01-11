@@ -189,7 +189,7 @@ preceded by an underscore ("_").
 #
 
 package Bio::Tools::Sigcleave;
-$Bio::Tools::Sigcleave::VERSION = '1.7.5';
+
 use Bio::PrimarySeq;
 
 use base qw(Bio::Root::Root);

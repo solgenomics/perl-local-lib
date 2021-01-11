@@ -88,7 +88,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::SearchIO::cross_match;
-$Bio::SearchIO::cross_match::VERSION = '1.7.5';
 use Bio::Search::Result::CrossMatchResult;
 use Bio::SearchIO;
 use Bio::Search::Hit::GenericHit;

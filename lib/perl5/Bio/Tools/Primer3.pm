@@ -124,7 +124,7 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Tools::Primer3;
-$Bio::Tools::Primer3::VERSION = '1.7.5';
+
 use strict;
 use Bio::Seq;
 use Bio::Seq::PrimedSeq;

@@ -82,7 +82,7 @@ Internal methods are usually preceded with a _
 =cut
 
 package Bio::Tools::Alignment::Trim;
-$Bio::Tools::Alignment::Trim::VERSION = '1.7.5';
+
 use strict;
 use Dumpvalue;
 

@@ -80,7 +80,7 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::DB::Taxonomy::flatfile;
-$Bio::DB::Taxonomy::flatfile::VERSION = '1.7.5';
+
 use vars qw($DEFAULT_INDEX_DIR $DEFAULT_NODE_INDEX $DEFAULT_NAME2ID_INDEX
             $DEFAULT_ID2NAME_INDEX $DEFAULT_PARENT_INDEX @DIVISIONS);
 

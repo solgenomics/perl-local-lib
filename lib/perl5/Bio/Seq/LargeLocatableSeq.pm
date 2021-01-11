@@ -93,7 +93,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Seq::LargeLocatableSeq;
-$Bio::Seq::LargeLocatableSeq::VERSION = '1.7.5';
 use vars qw($AUTOLOAD);
 use strict;
 

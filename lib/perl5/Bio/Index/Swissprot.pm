@@ -112,7 +112,7 @@ Internal methods are usually preceded with a _
 # Let's begin the code...
 
 package Bio::Index::Swissprot;
-$Bio::Index::Swissprot::VERSION = '1.7.5';
+
 use strict;
 
 use Bio::Seq;

@@ -184,7 +184,7 @@ L<Bio::SearchIO::Writer::ResultTableWriter>
 =cut
 
 package Bio::SearchIO::Writer::HitTableWriter;
-$Bio::SearchIO::Writer::HitTableWriter::VERSION = '1.7.5';
+
 use strict;
 
 use base qw(Bio::SearchIO::Writer::ResultTableWriter);

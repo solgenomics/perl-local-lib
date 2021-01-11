@@ -77,7 +77,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::AlignIO::mega;
-$Bio::AlignIO::mega::VERSION = '1.7.5';
 use vars qw($MEGANAMELEN %VALID_TYPES $LINELEN $BLOCKLEN);
 use strict;
 

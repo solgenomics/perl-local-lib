@@ -3,19 +3,17 @@ package PDF::API2::Page;
 use base 'PDF::API2::Basic::PDF::Pages';
 
 use strict;
-no warnings qw[ deprecated recursion uninitialized ];
+use warnings;
 
-our $VERSION = '2.033'; # VERSION
+our $VERSION = '2.038'; # VERSION
 
 use POSIX qw(floor);
-
-use PDF::API2::Content;
-use PDF::API2::Content::Text;
+use Scalar::Util qw(weaken);
 
 use PDF::API2::Basic::PDF::Utils;
+use PDF::API2::Content;
+use PDF::API2::Content::Text;
 use PDF::API2::Util;
-
-use Scalar::Util qw(weaken);
 
 =head1 NAME
 
@@ -33,16 +31,16 @@ Returns a page object (called from $pdf->page).
 
 sub new {
     my ($class, $pdf, $parent, $index) = @_;
-    my ($self) = {};
+    my $self = {};
 
-    $class = ref $class if ref $class;
+    $class = ref($class) if ref($class);
     $self = $class->SUPER::new($pdf, $parent);
     $self->{'Type'} = PDFName('Page');
     $self->proc_set(qw( PDF Text ImageB ImageC ImageI ));
     delete $self->{'Count'};
     delete $self->{'Kids'};
     $parent->add_page($self, $index);
-    $self;
+    return $self;
 }
 
 =item $page = PDF::API2::Page->coerce $pdf, $pdfpage
@@ -54,10 +52,10 @@ Returns a page object converted from $pdfpage (called from $pdf->openpage).
 sub coerce {
     my ($class, $pdf, $page) = @_;
     my $self = $page;
-    bless($self,$class);
-    $self->{' apipdf'}=$pdf;
+    bless $self, $class;
+    $self->{' apipdf'} = $pdf;
     weaken $self->{' apipdf'};
-    return($self);
+    return $self;
 }
 
 =item $page->update
@@ -69,16 +67,18 @@ Marks a page to be updated (by $pdf->update).
 sub update {
     my ($self) = @_;
     $self->{' apipdf'}->out_obj($self);
-    $self;
+    return $self;
 }
 
-=item $page->mediabox $w, $h
+=item ($llx, $lly, $urx, $ury) = $page->mediabox()
 
-=item $page->mediabox $llx, $lly, $urx, $ury
+=item $page->mediabox($w, $h)
 
-=item $page->mediabox $alias
+=item $page->mediabox($llx, $lly, $urx, $ury)
 
-Sets the mediabox.  This method supports the following aliases:
+=item $page->mediabox($alias)
+
+Get or set the mediabox.  This method supports the following aliases:
 '4A0', '2A0', 'A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6',
 '4B0', '2B0', 'B0', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6',
 'LETTER', 'BROADSHEET', 'LEDGER', 'TABLOID', 'LEGAL',
@@ -86,141 +86,137 @@ Sets the mediabox.  This method supports the following aliases:
 
 =cut
 
-sub _set_bbox {
-    my ($box, $self, @values) = @_;
-    $self->{$box} = PDFArray( map { PDFNum(float($_)) } page_size(@values) );
+sub _bounding_box {
+    my $self = shift();
+    my $type = shift();
+
+    # Get
+    unless (scalar @_) {
+        my $box = $self->find_prop($type);
+        unless ($box) {
+            # Default to letter (for historical PDF::API2 reasons, not per the
+            # PDF specification)
+            return (0, 0, 612, 792) if $type eq 'MediaBox';
+
+            # Use defaults per PDF 1.7 section 14.11.2 Page Boundaries
+            return $self->_bounding_box('MediaBox') if $type eq 'CropBox';
+            return $self->_bounding_box('CropBox');
+        }
+        return map { $_->val() } $box->elements();
+    }
+
+    # Set
+    $self->{$type} = PDFArray(map { PDFNum(float($_)) } page_size(@_));
     return $self;
 }
 
-sub _get_bbox {
-    my ($self, $box_order) = @_;
-
-    # Default to letter
-    my @media = (0, 0, 612, 792);
-
-    foreach my $mediatype (@{$box_order}) {
-        my $mediaobj = $self->find_prop($mediatype);
-        if ($mediaobj) {
-            @media = map { $_->val } $mediaobj->elementsof;
-            last;
-        }
-    }
-
-    return @media;
-}
-
-
 sub mediabox {
-    return _set_bbox('MediaBox', @_);
+    my $self = shift();
+    return $self->_bounding_box('MediaBox', @_);
 }
 
-=item ($llx, $lly, $urx, $ury) = $page->get_mediabox
-
-Gets the mediabox based on best estimates or the default.
-
-=cut
-
+# Deprecated
 sub get_mediabox {
     my $self = shift();
-    return _get_bbox($self, [qw(MediaBox CropBox BleedBox TrimBox ArtBox)]);
+    return $self->_bounding_box('MediaBox');
 }
 
-=item $page->cropbox $w, $h
+=item ($llx, $lly, $urx, $ury) = $page->cropbox()
 
-=item $page->cropbox $llx, $lly, $urx, $ury
+=item $page->cropbox($w, $h)
 
-=item $page->cropbox $alias
+=item $page->cropbox($llx, $lly, $urx, $ury)
 
-Sets the cropbox.  This method supports the same aliases as mediabox.
+=item $page->cropbox($alias)
+
+Get or set the cropbox.  This method supports the same aliases as mediabox.
+
+The cropbox defaults to the mediabox.
 
 =cut
 
 sub cropbox {
-    return _set_bbox('CropBox', @_);
+    my $self = shift();
+    return $self->_bounding_box('CropBox', @_);
 }
 
-=item ($llx, $lly, $urx, $ury) = $page->get_cropbox
-
-Gets the cropbox based on best estimates or the default.
-
-=cut
-
+# Deprecated
 sub get_cropbox {
     my $self = shift();
-    return _get_bbox($self, [qw(CropBox MediaBox BleedBox TrimBox ArtBox)]);
+    return $self->_bounding_box('CropBox');
 }
 
-=item $page->bleedbox $w, $h
+=item ($llx, $lly, $urx, $ury) = $page->bleedbox()
 
-=item $page->bleedbox $llx, $lly, $urx, $ury
+=item $page->bleedbox($w, $h)
 
-=item $page->bleedbox $alias
+=item $page->bleedbox($llx, $lly, $urx, $ury)
 
-Sets the bleedbox.  This method supports the same aliases as mediabox.
+=item $page->bleedbox($alias)
+
+Get or set the bleedbox.  This method supports the same aliases as mediabox.
+
+The bleedbox defaults to the cropbox.
 
 =cut
 
 sub bleedbox {
-    return _set_bbox('BleedBox', @_);
+    my $self = shift();
+    return $self->_bounding_box('BleedBox', @_);
 }
 
-=item ($llx, $lly, $urx, $ury) = $page->get_bleedbox
-
-Gets the bleedbox based on best estimates or the default.
-
-=cut
-
+# Deprecated
 sub get_bleedbox {
     my $self = shift();
-    return _get_bbox($self, [qw(BleedBox CropBox MediaBox TrimBox ArtBox)]);
+    return $self->_bounding_box('BleedBox');
 }
 
-=item $page->trimbox $w, $h
+=item ($llx, $lly, $urx, $ury) = $page->trimbox()
 
-=item $page->trimbox $llx, $lly, $urx, $ury
+=item $page->trimbox($w, $h)
 
-Sets the trimbox.  This method supports the same aliases as mediabox.
+=item $page->trimbox($llx, $lly, $urx, $ury)
+
+Get or set the trimbox.  This method supports the same aliases as mediabox.
+
+The trimbox defaults to the cropbox.
 
 =cut
 
 sub trimbox {
-    return _set_bbox('TrimBox', @_);
+    my $self = shift();
+    return $self->_bounding_box('TrimBox', @_);
 }
 
-=item ($llx, $lly, $urx, $ury) = $page->get_trimbox
-
-Gets the trimbox based on best estimates or the default.
-
-=cut
-
+# Deprecated
 sub get_trimbox {
     my $self = shift();
-    return _get_bbox($self, [qw(TrimBox CropBox MediaBox ArtBox BleedBox)]);
+    return $self->_bounding_box('TrimBox');
 }
 
-=item $page->artbox $w, $h
+=item ($llx, $lly, $urx, $ury) = $page->artbox()
 
-=item $page->artbox $llx, $lly, $urx, $ury
+=item $page->artbox($w, $h)
 
-=item $page->artbox $alias
+=item $page->artbox($llx, $lly, $urx, $ury)
 
-Sets the artbox.  This method supports the same aliases as mediabox.
+=item $page->artbox($alias)
+
+Get or set the artbox.  This method supports the same aliases as mediabox.
+
+The rtbox defaults to the cropbox.
 
 =cut
 
 sub artbox {
-    return _set_bbox('ArtBox', @_);
+    my $self = shift();
+    return $self->_bounding_box('ArtBox', @_);
 }
 
-=item ($llx, $lly, $urx, $ury) = $page->get_artbox
-
-Gets the artbox based on best estimates or the default.
-
-=cut
-
+# Deprecated
 sub get_artbox {
     my $self = shift();
-    return _get_bbox($self, [qw(ArtBox CropBox MediaBox TrimBox BleedBox)]);
+    return $self->_bounding_box('ArtBox');
 }
 
 =item $page->rotate $deg
@@ -250,52 +246,56 @@ will be prepended to the page description.
 =cut
 
 sub fixcontents {
-    my ($self) = @_;
+    my $self = shift();
     $self->{'Contents'} = $self->{'Contents'} || PDFArray();
-    if(ref($self->{'Contents'})=~/Objind$/) {
-        $self->{'Contents'}->realise;
+    if (ref($self->{'Contents'}) =~ /Objind$/) {
+        $self->{'Contents'}->realise();
     }
-    if(ref($self->{'Contents'})!~/Array$/) {
+    if (ref($self->{'Contents'}) !~ /Array$/) {
         $self->{'Contents'} = PDFArray($self->{'Contents'});
     }
+    return;
 }
 
 sub content {
-    my ($self,$obj,$dir) = @_;
-    if(defined($dir) && $dir>0) {
+    my ($self, $obj, $dir) = @_;
+    if (defined($dir) and $dir > 0) {
         $self->precontent($obj);
-    } else {
+    }
+    else {
         $self->addcontent($obj);
     }
-    $self->{' apipdf'}->new_obj($obj) unless($obj->is_obj($self->{' apipdf'}));
-    $obj->{' apipdf'}=$self->{' apipdf'};
-    $obj->{' api'}=$self->{' api'};
-    $obj->{' apipage'}=$self;
+    $self->{' apipdf'}->new_obj($obj) unless $obj->is_obj($self->{' apipdf'});
+    $obj->{' apipdf'} = $self->{' apipdf'};
+    $obj->{' api'} = $self->{' api'};
+    $obj->{' apipage'} = $self;
 
     weaken $obj->{' apipdf'};
     weaken $obj->{' api'};
     weaken $obj->{' apipage'};
 
-    return($obj);
+    return $obj;
 }
 
 sub addcontent {
-    my ($self,@objs) = @_;
-    $self->fixcontents;
+    my ($self, @objs) = @_;
+    $self->fixcontents();
     $self->{'Contents'}->add_elements(@objs);
+    return;
 }
 sub precontent {
-    my ($self,@objs) = @_;
-    $self->fixcontents;
-    unshift(@{$self->{'Contents'}->val},@objs);
+    my ($self, @objs) = @_;
+    $self->fixcontents();
+    unshift @{$self->{'Contents'}->val()}, @objs;
+    return;
 }
 
 sub gfx {
-    my ($self,$dir) = @_;
+    my ($self, $dir) = @_;
     my $gfx=PDF::API2::Content->new();
     $self->content($gfx,$dir);
-    $gfx->compressFlate() if($self->{' api'}->{forcecompress});
-    return($gfx);
+    $gfx->compressFlate() if $self->{' api'}->{'forcecompress'};
+    return $gfx;
 }
 
 =item $txt = $page->text $prepend
@@ -306,11 +306,11 @@ will be prepended to the page description.
 =cut
 
 sub text {
-    my ($self,$dir) = @_;
-    my $text=PDF::API2::Content::Text->new();
-    $self->content($text,$dir);
-    $text->compressFlate() if($self->{' api'}->{forcecompress});
-    return($text);
+    my ($self, $dir) = @_;
+    my $text = PDF::API2::Content::Text->new();
+    $self->content($text, $dir);
+    $text->compressFlate() if $self->{' api'}->{'forcecompress'};
+    return $text;
 }
 
 =item $ant = $page->annotation
@@ -365,50 +365,43 @@ methods.
 
 sub resource {
     my ($self, $type, $key, $obj, $force) = @_;
-    my ($dict) = $self->find_prop('Resources');
+    my $dict = $self->find_prop('Resources');
 
-    $dict = $dict || $self->{Resources} || PDFDict();
+    $dict = $dict || $self->{'Resources'} || PDFDict();
 
-    $dict->realise if(ref($dict)=~/Objind$/);
+    $dict->realise() if ref($dict) =~ /Objind$/;
 
     $dict->{$type} = $dict->{$type} || PDFDict();
-    $dict->{$type}->realise if(ref($dict->{$type})=~/Objind$/);
+    $dict->{$type}->realise if ref($dict->{$type}) =~ /Objind$/;
 
-    unless(defined $obj) {
-        return($dict->{$type}->{$key} || undef);
-    } else {
-        if($force) {
+    unless (defined $obj) {
+        return $dict->{$type}->{$key} || undef;
+    }
+    else {
+        if ($force) {
             $dict->{$type}->{$key} = $obj;
-        } else {
+        }
+        else {
             $dict->{$type}->{$key} = $dict->{$type}->{$key} || $obj;
         }
 
-        $self->{' apipdf'}->out_obj($dict) if($dict->is_obj($self->{' apipdf'}));
-        $self->{' apipdf'}->out_obj($dict->{$type}) if($dict->{$type}->is_obj($self->{' apipdf'}));
-        $self->{' apipdf'}->out_obj($obj) if($obj->is_obj($self->{' apipdf'}));
+        $self->{' apipdf'}->out_obj($dict)          if $dict->is_obj($self->{' apipdf'});
+        $self->{' apipdf'}->out_obj($dict->{$type}) if $dict->{$type}->is_obj($self->{' apipdf'});
+        $self->{' apipdf'}->out_obj($obj)           if $obj->is_obj($self->{' apipdf'});
         $self->{' apipdf'}->out_obj($self);
 
-        return($dict);
+        return $dict;
     }
 }
 
-sub ship_out
-{
+sub ship_out {
     my ($self, $pdf) = @_;
 
     $pdf->ship_out($self);
-    if (defined $self->{'Contents'})
-    { $pdf->ship_out($self->{'Contents'}->elementsof); }
-    $self;
-}
-
-sub outobjdeep {
-    my ($self, @opts) = @_;
-    foreach my $k (qw/ api apipdf /) {
-        $self->{" $k"}=undef;
-        delete($self->{" $k"});
+    if (defined $self->{'Contents'}) {
+        $pdf->ship_out($self->{'Contents'}->elements());
     }
-    $self->SUPER::outobjdeep(@opts);
+    return $self;
 }
 
 =back

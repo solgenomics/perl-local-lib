@@ -3,7 +3,7 @@ package WWW::Mechanize::Link;
 use strict;
 use warnings;
 
-our $VERSION = '1.91';
+our $VERSION = '2.03';
 
 #ABSTRACT: Link object for WWW::Mechanize
 
@@ -65,7 +65,7 @@ WWW::Mechanize::Link - Link object for WWW::Mechanize
 
 =head1 VERSION
 
-version 1.91
+version 2.03
 
 =head1 SYNOPSIS
 
@@ -115,7 +115,7 @@ Base URL to which the links are relative.
 
 =head2 $link->attrs()
 
-Returns hash ref of all the attributes and attribute values in the tag. 
+Returns hash ref of all the attributes and attribute values in the tag.
 
 =head2 $link->URI()
 
@@ -135,7 +135,7 @@ Andy Lester <andy at petdance.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2004-2016 by Andy Lester.
+This software is copyright (c) 2004 by Andy Lester.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

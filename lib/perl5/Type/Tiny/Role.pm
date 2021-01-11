@@ -6,89 +6,90 @@ use warnings;
 
 BEGIN {
 	$Type::Tiny::Role::AUTHORITY = 'cpan:TOBYINK';
-	$Type::Tiny::Role::VERSION   = '1.004004';
+	$Type::Tiny::Role::VERSION   = '1.012001';
 }
+
+$Type::Tiny::Role::VERSION =~ tr/_//d;
 
 use Scalar::Util qw< blessed weaken >;
 
 sub _croak ($;@) { require Error::TypeTiny; goto \&Error::TypeTiny::croak }
 
-require Type::Tiny;
-our @ISA = 'Type::Tiny';
+use Type::Tiny::ConstrainedObject ();
+our @ISA = 'Type::Tiny::ConstrainedObject';
+sub _short_name { 'Role' }
 
 my %cache;
 
 sub new {
 	my $proto = shift;
-	
-	my %opts = (@_==1) ? %{$_[0]} : @_;
-	_croak "Role type constraints cannot have a parent constraint passed to the constructor" if exists $opts{parent};
-	_croak "Role type constraints cannot have a constraint coderef passed to the constructor" if exists $opts{constraint};
-	_croak "Role type constraints cannot have a inlining coderef passed to the constructor" if exists $opts{inlined};
+	my %opts  = ( @_ == 1 ) ? %{ $_[0] } : @_;
 	_croak "Need to supply role name" unless exists $opts{role};
-	
-	return $proto->SUPER::new(%opts);
+	return $proto->SUPER::new( %opts );
 }
 
-sub role        { $_[0]{role} }
-sub inlined     { $_[0]{inlined} ||= $_[0]->_build_inlined }
+sub role    { $_[0]{role} }
+sub inlined { $_[0]{inlined} ||= $_[0]->_build_inlined }
 
 sub has_inlined { !!1 }
 
-sub _build_constraint
-{
+sub _is_null_constraint { 0 }
+
+sub _build_constraint {
 	my $self = shift;
 	my $role = $self->role;
-	return sub { blessed($_) and do { my $method = $_->can('DOES')||$_->can('isa'); $_->$method($role) } };
-}
+	return sub {
+		blessed( $_ ) and do {
+			my $method = $_->can( 'DOES' ) || $_->can( 'isa' );
+			$_->$method( $role );
+		}
+	};
+} #/ sub _build_constraint
 
-sub _build_inlined
-{
+sub _build_inlined {
 	my $self = shift;
 	my $role = $self->role;
 	sub {
 		my $var = $_[1];
-		qq{Scalar::Util::blessed($var) and do { my \$method = $var->can('DOES')||$var->can('isa'); $var->\$method(q[$role]) }};
+		my $code =
+			qq{Scalar::Util::blessed($var) and do { my \$method = $var->can('DOES')||$var->can('isa'); $var->\$method(q[$role]) }};
+		return qq{do { use Scalar::Util (); $code }} if $Type::Tiny::AvoidCallbacks;
+		$code;
 	};
-}
+} #/ sub _build_inlined
 
-sub _build_default_message
-{
+sub _build_default_message {
 	my $self = shift;
-	my $c = $self->role;
-	return sub { sprintf '%s did not pass type constraint (not DOES %s)', Type::Tiny::_dd($_[0]), $c } if $self->is_anon;
+	my $c    = $self->role;
+	return sub {
+		sprintf '%s did not pass type constraint (not DOES %s)',
+			Type::Tiny::_dd( $_[0] ), $c;
+		}
+		if $self->is_anon;
 	my $name = "$self";
-	return sub { sprintf '%s did not pass type constraint "%s" (not DOES %s)', Type::Tiny::_dd($_[0]), $name, $c };
-}
+	return sub {
+		sprintf '%s did not pass type constraint "%s" (not DOES %s)',
+			Type::Tiny::_dd( $_[0] ), $name, $c;
+	};
+} #/ sub _build_default_message
 
-sub has_parent
-{
-	!!1;
-}
-
-sub parent
-{
-	require Types::Standard;
-	Types::Standard::Object();
-}
-
-sub validate_explain
-{
+sub validate_explain {
 	my $self = shift;
-	my ($value, $varname) = @_;
+	my ( $value, $varname ) = @_;
 	$varname = '$_' unless defined $varname;
 	
-	return undef if $self->check($value);
-	return ["Not a blessed reference"] unless blessed($value);
-	return ["Reference provides no DOES method to check roles"] unless $value->can('DOES');
-	
-	my $display_var = $varname eq q{$_} ? '' : sprintf(' (in %s)', $varname);
+	return undef if $self->check( $value );
+	return ["Not a blessed reference"] unless blessed( $value );
+	return ["Reference provides no DOES method to check roles"]
+		unless $value->can( 'DOES' );
+		
+	my $display_var = $varname eq q{$_} ? '' : sprintf( ' (in %s)', $varname );
 	
 	return [
-		sprintf('"%s" requires that the reference does %s', $self, $self->role),
-		sprintf("The reference%s doesn't %s", $display_var, $self->role),
+		sprintf( '"%s" requires that the reference does %s', $self, $self->role ),
+		sprintf( "The reference%s doesn't %s", $display_var,        $self->role ),
 	];
-}
+} #/ sub validate_explain
 
 1;
 
@@ -138,15 +139,33 @@ Instead rely on the default.
 
 =item C<parent>
 
-Parent is always Types::Standard::Object, and cannot be passed to the
+Parent is always B<Types::Standard::Object>, and cannot be passed to the
 constructor.
+
+=back
+
+=head2 Methods
+
+=over
+
+=item C<< stringifies_to($constraint) >>
+
+See L<Type::Tiny::ConstrainedObject>.
+
+=item C<< numifies_to($constraint) >>
+
+See L<Type::Tiny::ConstrainedObject>.
+
+=item C<< with_attribute_values($attr1 => $constraint1, ...) >>
+
+See L<Type::Tiny::ConstrainedObject>.
 
 =back
 
 =head1 BUGS
 
 Please report any bugs to
-L<http://rt.cpan.org/Dist/Display.html?Queue=Type-Tiny>.
+L<https://github.com/tobyink/p5-type-tiny/issues>.
 
 =head1 SEE ALSO
 
@@ -162,7 +181,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2019 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
@@ -172,4 +191,3 @@ the same terms as the Perl 5 programming language system itself.
 THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
 WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
 MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-

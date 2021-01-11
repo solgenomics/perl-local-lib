@@ -167,7 +167,6 @@ preceded with a _
 # Let the code begin...
 
 package Bio::ParameterBaseI;
-$Bio::ParameterBaseI::VERSION = '1.7.5';
 use strict;
 use warnings;
 

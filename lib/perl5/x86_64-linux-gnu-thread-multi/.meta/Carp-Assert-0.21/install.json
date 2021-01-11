@@ -1,1 +1,1 @@
-{"dist":"Carp-Assert-0.21","target":"Carp::Assert","pathname":"N/NE/NEILB/Carp-Assert-0.21.tar.gz","provides":{"Carp::Assert":{"version":"0.21","file":"lib/Carp/Assert.pm"}},"name":"Carp::Assert","version":"0.21"}
+{"provides":{"Carp::Assert":{"file":"lib/Carp/Assert.pm","version":"0.21"}},"version":"0.21","name":"Carp::Assert","pathname":"N/NE/NEILB/Carp-Assert-0.21.tar.gz","target":"Carp::Assert","dist":"Carp-Assert-0.21"}

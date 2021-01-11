@@ -15,28 +15,33 @@ Carp::Assert::More - convenience wrappers around Carp::Assert
 
 =head1 VERSION
 
-Version 1.16
+Version 1.26
 
 =cut
 
 BEGIN {
-    $VERSION = '1.16';
+    $VERSION = '1.26';
     @ISA = qw(Exporter);
     @EXPORT = qw(
         assert_all_keys_in
+        assert_aoh
         assert_arrayref
+        assert_arrayref_nonempty
         assert_coderef
+        assert_datetime
         assert_defined
         assert_empty
         assert_exists
         assert_fail
         assert_hashref
+        assert_hashref_nonempty
         assert_in
         assert_integer
         assert_is
         assert_isa
         assert_isa_in
         assert_isnt
+        assert_keys_are
         assert_lacks
         assert_like
         assert_listref
@@ -617,11 +622,29 @@ sub assert_hashref($;$) {
     return assert_isa( $ref, 'HASH', $name );
 }
 
+=head2 assert_hashref_nonempty( $ref [,$name] )
+
+Asserts that I<$ref> is defined and is a reference to a hash with at
+least one key/value pair.
+
+=cut
+
+sub assert_hashref_nonempty($;$) {
+    my $ref = shift;
+    my $name = shift;
+
+    assert_isa( $ref, 'HASH', $name );
+
+    return assert_nonempty( $ref, $name );
+}
+
+
 =head2 assert_arrayref( $ref [, $name] )
 
 =head2 assert_listref( $ref [,$name] )
 
-Asserts that I<$ref> is defined, and is a reference to a (possibly empty) list.
+Asserts that I<$ref> is defined, and is a reference to an array, which
+may or may not be empty.
 
 B<NB:> The same caveat about objects whose underlying structure is a
 hash (see C<assert_hashref>) applies here; this method returns false
@@ -640,6 +663,48 @@ sub assert_arrayref($;$) {
 }
 *assert_listref = *assert_arrayref;
 
+
+=head2 assert_arrayref_nonempty( $ref [, $name] )
+
+Asserts that I<$ref> is reference to an array that has at least one element in it.
+
+=cut
+
+sub assert_arrayref_nonempty($;$) {
+    my $ref  = shift;
+    my $name = shift;
+
+    assert_isa( $ref, 'ARRAY', $name );
+
+    return assert_nonempty( $ref, $name );
+}
+
+
+=head2 assert_aoh( $ref [, $name ] )
+
+Verifies that C<$array> is an arrayref, and that every element is a hashref.
+
+The array C<$array> can be an empty arraref and the assertion will pass.
+
+=cut
+
+sub assert_aoh {
+    my $array = shift;
+    my $msg   = shift;
+
+    $msg = 'Is an array of hashes' unless defined($msg);
+
+    assert_arrayref( $array, "$msg: Is an array" );
+    my $i = 0;
+    for my $val ( @{$array} ) {
+        assert_hashref( $val, "$msg: Element $i is a hash" );
+        ++$i;
+    }
+
+    return;
+}
+
+
 =head2 assert_coderef( $ref [,$name] )
 
 Asserts that I<$ref> is defined, and is a reference to a closure.
@@ -652,6 +717,27 @@ sub assert_coderef($;$) {
 
     return assert_isa( $ref, 'CODE', $name );
 }
+
+
+=head1 TYPE-SPECIFIC ASSERTIONS
+
+=head2 assert_datetime( $date )
+
+Asserts that C<$date> is a DateTime object.
+
+=cut
+
+sub assert_datetime($;$) {
+    my $datetime = shift;
+    my $desc     = shift;
+
+    $desc = 'Must be a DateTime object' unless defined($desc);
+
+    assert_isa( $datetime, 'DateTime', $desc );
+
+    return;
+}
+
 
 =head1 SET AND HASH MEMBERSHIP
 
@@ -749,13 +835,13 @@ This is used to ensure that there are no extra keys in a given hash.
 
 =cut
 
-sub assert_all_keys_in {
+sub assert_all_keys_in($$;$) {
     my $hash       = shift;
     my $valid_keys = shift;
     my $name       = shift;
 
     assert_hashref( $hash );
-    assert_listref( $valid_keys );
+    assert_arrayref( $valid_keys );
 
     foreach my $key ( keys %{$hash} ) {
         assert_in( $key, $valid_keys, $name );
@@ -764,6 +850,29 @@ sub assert_all_keys_in {
     return;
 }
 
+
+=head2 assert_keys_are( \%hash, \@keys [, $name ] )
+
+Asserts that the keys for C<%hash> are exactly C<@keys>, no more and no less.
+
+=cut
+
+sub assert_keys_are($$;$) {
+    my $hash       = shift;
+    my $valid_keys = shift;
+    my $name       = shift;
+
+    assert_hashref( $hash );
+    assert_arrayref( $valid_keys );
+
+    foreach my $key ( keys %{$hash} ) {
+        assert_in( $key, $valid_keys, $name );
+    }
+
+    assert_is(scalar keys %{$hash}, scalar @{$valid_keys}, 'There are the correct number of keys');
+
+    return;
+}
 
 
 =head1 UTILITY ASSERTIONS
@@ -792,7 +901,7 @@ sub _any(&;@) {
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2005-2017 Andy Lester.
+Copyright 2005-2020 Andy Lester.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the Artistic License version 2.0.
@@ -812,4 +921,4 @@ for code and fixes.
 
 =cut
 
-"I stood on the porch in a tie."
+1;

@@ -72,7 +72,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Matrix::IO::phylip;
-$Bio::Matrix::IO::phylip::VERSION = '1.7.5';
 use vars qw($DEFAULTPROGRAM);
 use strict;
 

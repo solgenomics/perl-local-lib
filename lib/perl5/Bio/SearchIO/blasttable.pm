@@ -75,7 +75,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SearchIO::blasttable;
-$Bio::SearchIO::blasttable::VERSION = '1.7.5';
 use vars qw(%MAPPING %MODEMAP $DEFAULT_WRITER_CLASS $DefaultProgramName);
 use strict;
 use Bio::Search::Result::ResultFactory;

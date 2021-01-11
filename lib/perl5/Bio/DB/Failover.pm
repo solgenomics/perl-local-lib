@@ -57,7 +57,7 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::DB::Failover;
-$Bio::DB::Failover::VERSION = '1.7.5';
+
 use strict;
 
 use base qw(Bio::Root::Root Bio::DB::RandomAccessI);

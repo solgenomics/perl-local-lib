@@ -1,7 +1,5 @@
 #$Id$
 package Bio::Search::Tiling::MapTileUtils;
-$Bio::Search::Tiling::MapTileUtils::VERSION = '1.7.5';
-
 use strict;
 use warnings;
 use Exporter;
@@ -520,8 +518,6 @@ sub covering_groups {
 # need our own subsequencer for hsps. 
 
 package Bio::Search::HSP::HSPI;
-$Bio::Search::HSP::HSPI::VERSION = '1.7.5';
-
 
 use strict;
 use warnings;
@@ -640,8 +636,6 @@ sub matches_MT {
 1;
 
 package Bio::LocatableSeq;
-$Bio::LocatableSeq::VERSION = '1.7.5';
-
 use strict;
 use warnings;
 

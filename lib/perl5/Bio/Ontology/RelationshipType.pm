@@ -93,7 +93,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Ontology::RelationshipType;
-$Bio::Ontology::RelationshipType::VERSION = '1.7.5';
 use strict;
 
 

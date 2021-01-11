@@ -110,7 +110,7 @@ Email skirov@utk.edu
 # Let the code begin...
 
 package Bio::Matrix::PSM::SiteMatrixI;
-$Bio::Matrix::PSM::SiteMatrixI::VERSION = '1.7.5';
+
 # use strict;
 use base qw(Bio::Root::RootI);
 

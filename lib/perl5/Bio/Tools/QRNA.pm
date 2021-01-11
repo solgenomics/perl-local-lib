@@ -124,7 +124,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Tools::QRNA;
-$Bio::Tools::QRNA::VERSION = '1.7.5';
 use vars qw(@Models);
 use strict;
 

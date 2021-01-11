@@ -74,7 +74,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Search::Result::INFERNALResult;
-$Bio::Search::Result::INFERNALResult::VERSION = '1.7.5';
 use strict;
 use warnings;
 

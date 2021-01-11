@@ -1,3 +1,3 @@
-/home/production/cxgn/sgn/../local-lib/bin/start_server
-/home/production/cxgn/sgn/../local-lib/lib/perl5/Server/Starter.pm
-/home/production/cxgn/sgn/../local-lib/lib/perl5/Server/Starter/Guard.pm
+/home/nmorales/cxgn/perl-local-lib/bin/start_server
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/Server/Starter.pm
+/home/nmorales/cxgn/perl-local-lib/lib/perl5/Server/Starter/Guard.pm

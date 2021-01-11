@@ -77,7 +77,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::SearchIO::psl;
-$Bio::SearchIO::psl::VERSION = '1.7.5';
 use vars qw(%MAPPING %MODEMAP $DEFAULT_WRITER_CLASS $DefaultProgramName);
 
 use strict;

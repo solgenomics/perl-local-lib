@@ -2,10 +2,11 @@ package Alien::Build::Plugin::Prefer::SortVersions;
 
 use strict;
 use warnings;
+use 5.008004;
 use Alien::Build::Plugin;
 
 # ABSTRACT: Plugin to sort candidates by most recent first
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 has 'filter'   => undef;
@@ -16,17 +17,17 @@ has '+version' => qr/([0-9](?:[0-9\.]*[0-9])?)/;
 sub init
 {
   my($self, $meta) = @_;
-  
+
   $meta->add_requires('share' => 'Sort::Versions' => 0);
-  
+
   $meta->register_hook( prefer => sub {
     my(undef, $res) = @_;
-    
+
     my $cmp = sub {
-      my($A,$B) = map { $_ =~ $self->version } @_;
+      my($A,$B) = map { ($_ =~ $self->version)[0] } @_;
       Sort::Versions::versioncmp($B,$A);
     };
-    
+
     my @list = sort { $cmp->($a->{filename}, $b->{filename}) }
                map {
                  ($_->{version}) = $_->{filename} =~ $self->version;
@@ -34,7 +35,7 @@ sub init
                grep { $_->{filename} =~ $self->version }
                grep { defined $self->filter ? $_->{filename} =~ $self->filter : 1 }
                @{ $res->{list} };
-    
+
     return {
       type => 'list',
       list => \@list,
@@ -56,7 +57,7 @@ Alien::Build::Plugin::Prefer::SortVersions - Plugin to sort candidates by most r
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -109,7 +110,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -159,9 +160,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -1,28 +1,43 @@
 package Graph::Matrix;
 
-# $SIG{__DIE__ } = sub { use Carp; confess };
-# $SIG{__WARN__} = sub { use Carp; confess };
+# $SIG{__DIE__ } = \&Graph::__carp_confess;
+# $SIG{__WARN__} = \&Graph::__carp_confess;
 
 use strict;
+use warnings;
 
 sub new {
     my ($class, $g) = @_;
     my @V = $g->vertices;
     my $V = @V;
     my %V; @V{ @V } = 0 .. $#V;
-    bless [ [ map { [ ] } 0 .. $#V ], \%V ], $class;
+    bless [ [ map [], 0 .. $#V ], \%V ], $class;
 }
 
 sub set {
     my ($m, $u, $v, $val) = @_;
-    my ($i, $j) = map { $m->[1]->{ $_ } } ($u, $v);
+    my ($i, $j) = map $m->[1]->{ $_ }, ($u, $v);
     $m->[0]->[$i]->[$j] = $val;
 }
 
 sub get {
     my ($m, $u, $v) = @_;
-    my ($i, $j) = map { $m->[1]->{ $_ } } ($u, $v);
+    my ($i, $j) = map $m->[1]->{ $_ }, ($u, $v);
     $m->[0]->[$i]->[$j];
+}
+
+sub stringify {
+    my ($m) = @_;
+    my @V = sort keys %{ $m->[1] };
+    my $top = join ' ', map sprintf('%4s', $_), 'to:', @V;
+    my @indices = map $m->[1]{$_}, @V;
+    my @rows;
+    for my $n (@V) {
+        my $this_row = $m->[0][ $m->[1]->{$n} ];
+        my @vals = map $this_row->[ $_ ], @indices;
+        push @rows, join ' ', map sprintf('%4s', defined()?$_:''), $n, @vals;
+    }
+    join '', map "$_\n", $top, @rows;
 }
 
 1;
@@ -68,6 +83,11 @@ Return the value at the edge from $u to $v.
 =item set($u, $v, $val)
 
 Set the edge from $u to $v to value $val.
+
+=item stringify
+
+Returns a string roughly representing the matrix, with the C<$u> down
+the left-hand side, and C<$v> across the top.
 
 =back
 

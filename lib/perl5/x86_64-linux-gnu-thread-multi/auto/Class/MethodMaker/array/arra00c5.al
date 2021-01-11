@@ -3,9 +3,9 @@
 # See AutoSplit.pm.
 package Class::MethodMaker::array;
 
-#line 56335 "blib/lib/Class/MethodMaker/array.pm (autosplit into blib/lib/auto/Class/MethodMaker/array/arra00c5.al)"
+#line 40905 "blib/lib/Class/MethodMaker/array.pm (autosplit into blib/lib/auto/Class/MethodMaker/array/arra00c5.al)"
 #------------------
-# array static - store_cb - default - read_cb
+# array read_cb - store_cb - default - static
 
 sub arra00c5 {
   my $SENTINEL_CLEAR = \1;

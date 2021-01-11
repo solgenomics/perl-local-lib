@@ -94,7 +94,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Search::Tiling::TilingI;
-$Bio::Search::Tiling::TilingI::VERSION = '1.7.5';
 use strict;
 use warnings;
 

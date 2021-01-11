@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use vars qw($VERSION);
 
-$VERSION='1.30';
+$VERSION='1.35';
 require Net::SMTP;
 use Authen::SASL;
 use MIME::Base64;
@@ -72,7 +72,8 @@ sub _initsmtp{
           $port=25;
       }
   }
- print "Connecting to $smtp using $layer with $auth on port $port and timeout of $timeout\n" if $debug;
+
+  print "Connecting to $smtp using $layer with $auth on port $port and timeout of $timeout\n" if $debug;
   # Set security layer from $layer
   if($layer eq 'none')
   {
@@ -233,6 +234,9 @@ sub send
   $mail->{contenttype}='text/plain';
   $mail->{contenttype}=$properties{'-contenttype'} if defined $properties{'-contenttype'};
 
+  $mail->{sns_topic}=undef;
+  $mail->{sns_topic}=$properties{'-sns_topic'} if defined $properties{'-sns_topic'};
+
   $mail->{subject}='';
   #$mail->{subject}=$properties{'-subject'} if defined $properties{'-subject'};
   # Encode Subject to accomplish RFC
@@ -282,6 +286,7 @@ sub send
       $self->{sender}->datasend("Reply-To: " . $mail->{replyto} . "\n");
       $self->{sender}->datasend("Subject: " . $mail->{subject} . "\n");
       $self->{sender}->datasend("Date: " . email_date(). "\n");
+      $self->{sender}->datasend("X-SES-CONFIGURATION-SET: " . $mail->{sns_topic} ."\n") if (defined $mail->{sns_topic});
 
       if($mail->{attachments} ne '')
       {
@@ -336,10 +341,10 @@ sub send
            $self->{sender}->datasend("Content-Transfer-Encoding: base64\n");
            if ((defined $properties{'-disposition'}) and ('inline' eq lc($properties{'-disposition'}))) {
               $self->{sender}->datasend("Content-ID: <$fileName>\n");
-              $self->{sender}->datasend("Content-Disposition: inline; =filename=\"$fileName\"\n\n");
+              $self->{sender}->datasend("Content-Disposition: inline; filename=\"$fileName\"\n\n");
            }
            else {
-             $self->{sender}->datasend("Content-Disposition: attachment; =filename=\"$fileName\"\n\n");
+             $self->{sender}->datasend("Content-Disposition: attachment; filename=\"$fileName\"\n\n");
            }
 
            # Google requires us to divide the attachment
@@ -402,12 +407,11 @@ sub send
            $self->{sender}->datasend("Content-Transfer-Encoding: base64\n");
            if ((defined $properties{'-disposition'}) and ('inline' eq lc($properties{'-disposition'}))) {
               $self->{sender}->datasend("Content-ID: <$fileName>\n");
-              $self->{sender}->datasend("Content-Disposition: inline; =filename=\"$fileName\"\n\n");
+              $self->{sender}->datasend("Content-Disposition: inline; filename=\"$fileName\"\n\n");
            }
            else {
-             $self->{sender}->datasend("Content-Disposition: attachment; =filename=\"$fileName\"\n\n");
+             $self->{sender}->datasend("Content-Disposition: attachment; filename=\"$fileName\"\n\n");
            }
-           # $self->{sender}->datasend("Content-Disposition: attachment; =filename=\"$fileName\"\n\n");
 
            # Google requires us to divide the attachment
            # First read -> Encode -> Send in chunks of 76
@@ -462,7 +466,7 @@ __END__
 
 =head1 NAME
 
-Email::Send::SMTP::Gmail - Sends emails with attachments supporting Auth over TLS or SSL (for example: Google's SMTP).
+Email::Send::SMTP::Gmail - Sends emails with attachments supporting Auth over TLS or SSL (for example: Google's SMTP and AWS SES).
 
 =head1 SYNOPSIS
 
@@ -475,7 +479,7 @@ Email::Send::SMTP::Gmail - Sends emails with attachments supporting Auth over TL
                                                     -login=>'whateveraddress@gmail.com',
                                                     -pass=>'whatever_pass');
 
-   print "session error: $error" unless ($email!=-1);
+   print "session error: $error" unless ($mail!=-1);
 
    $mail->send(-to=>'target@xxx.com', -subject=>'Hello!', -body=>'Just testing it',
                -attachments=>'full_path_to_file');
@@ -522,7 +526,7 @@ Also supports SSL parameters as:
 
 =back
 
-=item send(-from=>'', -to=>'', [-subject=>'', -cc=>'', -bcc=>'', -replyto=>'', -charset=>'', -body=>'', -attachments=>'', disposition=>'', -verbose=>'1'])
+=item send(-from=>'', -to=>'', [-subject=>'', -cc=>'', -bcc=>'', -replyto=>'', -charset=>'', -body=>'', -attachments=>'', disposition=>'', -sns_topic=>'', -verbose=>'1'])
 
 It composes and sends the email in one shot
 
@@ -531,6 +535,8 @@ It composes and sends the email in one shot
 =item I<to, cc, bcc>: comma separated email addresses
 
 =item I<contenttype>: Content-Type for the body message. Examples are: text/plain (default), text/html, etc.
+
+=item I<sns_topic>: AWS SES header X-SES-CONFIGURATION-SET to manage email queue in Amazon Web Services.
 
 =item I<disposition>: Set "inline" in sending embeeded attachments. For example using <body><img src="cid:logo.png"><br>Test with Image</body>
 
@@ -654,7 +660,7 @@ L<http://search.cpan.org/dist/Email-Send-SMTP-Gmail/>
 
 =item * Repository
 
-L<http://github.com/NoAuth/Bugs.html?Dist=Email-Send-SMTP-Gmail>
+L<https://github.com/xpeco/Email-Send-SMTP-Gmail>
 
 =back
 
@@ -672,7 +678,7 @@ Devin Ceartas, C<< <devin@nacredata.com> >>
 
 =head1 COPYRIGHT
 
-Copyright 2015 Microbotica
+Copyright 2015-2020 Microbotica
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 

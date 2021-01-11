@@ -64,7 +64,6 @@ with code and data examples if at all possible.
 =cut
 
 package Bio::Tools::Blat;
-$Bio::Tools::Blat::VERSION = '1.7.5';
 use strict;
 use Bio::SeqFeature::Generic;
 use Bio::SeqFeature::FeaturePair;

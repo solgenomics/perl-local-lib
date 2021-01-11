@@ -108,7 +108,7 @@ The rest of the documentation details each of the object methods. Internal metho
 # Let the code begin...
 
 package Bio::Search::Result::PullResultI;
-$Bio::Search::Result::PullResultI::VERSION = '1.7.5';
+
 use strict;
 
 use Bio::Search::GenericStatistics;

@@ -1,1 +1,1 @@
-{"target":"URI::ToDisk","provides":{"URI::ToDisk":{"version":"1.12","file":"lib/URI/ToDisk.pm"}},"pathname":"A/AD/ADAMK/URI-ToDisk-1.12.tar.gz","dist":"URI-ToDisk-1.12","name":"URI::ToDisk","version":"1.12"}
+{"provides":{"URI::ToDisk":{"file":"lib/URI/ToDisk.pm","version":"1.12"}},"dist":"URI-ToDisk-1.12","name":"URI::ToDisk","version":"1.12","target":"URI::ToDisk","pathname":"A/AD/ADAMK/URI-ToDisk-1.12.tar.gz"}

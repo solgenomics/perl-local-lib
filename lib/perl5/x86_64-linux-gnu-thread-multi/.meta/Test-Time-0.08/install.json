@@ -1,1 +1,1 @@
-{"provides":{"Test::Time":{"file":"lib/Test/Time.pm","version":"0.08"}},"name":"Test::Time","version":"0.08","target":"Test::Time","pathname":"S/SA/SATOH/Test-Time-0.08.tar.gz","dist":"Test-Time-0.08"}
+{"provides":{"Test::Time":{"file":"lib/Test/Time.pm","version":"0.08"}},"target":"Test::Time","dist":"Test-Time-0.08","version":"0.08","pathname":"S/SA/SATOH/Test-Time-0.08.tar.gz","name":"Test::Time"}

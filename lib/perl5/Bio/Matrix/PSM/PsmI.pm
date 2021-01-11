@@ -124,7 +124,6 @@ This software is provided "as is" without warranty of any kind.
 
 # Let the code begin...
 package Bio::Matrix::PSM::PsmI;
-$Bio::Matrix::PSM::PsmI::VERSION = '1.7.5';
 use Bio::Matrix::PSM::SiteMatrix;
 use Bio::Matrix::PSM::InstanceSite;
 use strict;

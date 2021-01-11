@@ -5,7 +5,7 @@ use strict;
 use DBI   1.57 ();
 use DynaLoader ();
 
-our $VERSION = '1.62';
+our $VERSION = '1.66';
 our @ISA     = 'DynaLoader';
 
 # sqlite_version cache (set in the XS bootstrap)
@@ -61,6 +61,7 @@ sub driver {
         DBD::SQLite::db->install_method('sqlite_create_module');
         DBD::SQLite::db->install_method('sqlite_limit');
         DBD::SQLite::db->install_method('sqlite_db_config');
+        DBD::SQLite::db->install_method('sqlite_get_autocommit');
 
         $methods_are_installed++;
     }
@@ -249,6 +250,21 @@ sub ping {
 
     return 0 if $file && !-f $file;
     return $dbh->FETCH('Active') ? 1 : 0;
+}
+
+sub quote {
+    my ($self, $value, $data_type) = @_;
+    return "NULL" unless defined $value;
+    if (defined $data_type and (
+            $data_type == DBI::SQL_BIT ||
+            $data_type == DBI::SQL_BLOB ||
+            $data_type == DBI::SQL_BINARY ||
+            $data_type == DBI::SQL_VARBINARY ||
+            $data_type == DBI::SQL_LONGVARBINARY)) {
+        return q(X') . unpack('H*', $value) . q(');
+    }
+    $value =~ s/'/''/g;
+    return "'$value'";
 }
 
 sub get_info {
@@ -1057,7 +1073,7 @@ are limited by the typeless nature of the SQLite database.
 =head1 SQLITE VERSION
 
 DBD::SQLite is usually compiled with a bundled SQLite library
-(SQLite version S<3.26.0> as of this release) for consistency.
+(SQLite version S<3.32.3> as of this release) for consistency.
 However, a different version of SQLite may sometimes be used for
 some reasons like security, or some new experimental features.
 
@@ -1864,7 +1880,8 @@ C<$dbh-E<gt>sqlite_last_insert_rowid()> directly.
 
 =head2 $dbh->sqlite_db_filename()
 
-Retrieve the current (main) database filename. If the database is in-memory or temporary, this returns C<undef>.
+Retrieve the current (main) database filename. If the database is in-memory
+or temporary, this returns an empty string, or C<undef>.
 
 =head2 $dbh->sqlite_busy_timeout()
 
@@ -1909,6 +1926,13 @@ current number of seconds since the epoch:
 After this, it could be used from SQL as:
 
   INSERT INTO mytable ( now() );
+
+The function should return a scalar value, and the value is treated as a text
+(or a number if appropriate) by default. If you do need to specify a type
+of the return value (like BLOB), you can return a reference to an array that
+contains the value and the type, as of 1.65_01.
+
+  $dbh->sqlite_create_function( 'md5', 1, sub { return [md5($_[0]), SQL_BLOB] } );
 
 =head3 REGEXP function
 
@@ -2344,6 +2368,12 @@ Sets a new run-time limit for the category, and returns the current limit.
 If the new value is a negative number (or omitted), the limit is unchanged
 and just returns the current limit. Category ids (SQLITE_LIMIT_LENGTH,
 SQLITE_LIMIT_VARIABLE_NUMBER, etc) can be imported from DBD::SQLite::Constants. 
+
+=head2 $dbh->sqlite_get_autocommit()
+
+Returns true if the internal SQLite connection is in an autocommit mode.
+This does not always return the same value as C<< $dbh->{AutoCommit} >>.
+This returns false if you explicitly issue a C<<BEGIN>> statement.
 
 =head1 DRIVER FUNCTIONS
 

@@ -73,7 +73,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::SeqFeature::Gene::GeneStructure;
-$Bio::SeqFeature::Gene::GeneStructure::VERSION = '1.7.5';
 use vars qw($WeakRefs);
 use strict;
 

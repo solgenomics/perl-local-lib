@@ -80,7 +80,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::SeqIO::asciitree;
-$Bio::SeqIO::asciitree::VERSION = '1.7.5';
 use strict;
 
 

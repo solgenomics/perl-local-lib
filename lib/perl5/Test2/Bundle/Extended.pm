@@ -4,7 +4,7 @@ use warnings;
 
 use Test2::V0;
 
-our $VERSION = '0.000121';
+our $VERSION = '0.000139';
 
 BEGIN {
     push @Test2::Bundle::Extended::ISA => 'Test2::V0';
@@ -187,6 +187,13 @@ not provide a target then C<$CLASS> and C<CLASS()> will not be imported.
     print $CLASS;  # My::Class
     print CLASS(); # My::Class
 
+Or you can specify names:
+
+    use Test2::Bundle::Extended -target => { pkg => 'Some::Package' };
+
+    pkg()->xxx; # Call 'xxx' on Some::Package
+    $pkg->xxx;  # Same
+
 =over 4
 
 =item $CLASS
@@ -276,6 +283,8 @@ See L<Test2::Tools::Compare>.
 =item $check = number($num)
 
 =item $check = string($str)
+
+=item $check = check_isa($class_name)
 
 =item $check = in_set(@things)
 

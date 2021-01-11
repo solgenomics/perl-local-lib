@@ -215,7 +215,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Tools::SeqStats;
-$Bio::Tools::SeqStats::VERSION = '1.7.5';
 use strict;
 use vars qw(%Alphabets %Alphabets_strict $amino_weights
 	    $rna_weights $dna_weights %Weights $amino_hydropathicity);

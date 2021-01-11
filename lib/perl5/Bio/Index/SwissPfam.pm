@@ -91,7 +91,7 @@ The rest of the documentation details each of the object methods. Internal metho
 # Let's begin the code...
 
 package Bio::Index::SwissPfam;
-$Bio::Index::SwissPfam::VERSION = '1.7.5';
+
 use strict;
 use Bio::Seq;
 

@@ -1,1 +1,1 @@
-{"version":"v1.1.1","provides":{"URI::Encode":{"version":"v1.1.1","file":"lib/URI/Encode.pm"}},"pathname":"M/MI/MITHUN/URI-Encode-v1.1.1.tar.gz","name":"URI::Encode","dist":"URI-Encode-v1.1.1","target":"URI::Encode"}
+{"version":"v1.1.1","pathname":"M/MI/MITHUN/URI-Encode-v1.1.1.tar.gz","target":"URI::Encode","name":"URI::Encode","dist":"URI-Encode-v1.1.1","provides":{"URI::Encode":{"version":"v1.1.1","file":"lib/URI/Encode.pm"}}}

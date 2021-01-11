@@ -82,7 +82,7 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Search::Hit::Fasta;
-$Bio::Search::Hit::Fasta::VERSION = '1.7.5';
+
 use vars qw($AUTOLOAD);
 use strict;
 

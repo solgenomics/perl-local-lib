@@ -71,7 +71,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::SeqFeature::Tools::IDHandler;
-$Bio::SeqFeature::Tools::IDHandler::VERSION = '1.7.5';
 use strict;
 
 # Object preamble - inherits from Bio::Root::Root

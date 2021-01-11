@@ -44,7 +44,7 @@ my @uris = @ARGV or die "Must specify a URL or file to check.  See --help for de
 
 binmode(STDOUT, ':utf8');
 
-my $mech = WWW::Mechanize->new();
+my $mech = WWW::Mechanize->new( autocheck => 0 );
 if ( defined $agent ) {
     $mech->agent( $agent );
 }
@@ -95,7 +95,7 @@ sub dump_headers {
 sub dump_forms {
     my $mech = shift;
     print "--> Forms:\n" if $all;
-    $mech->dump_forms( undef, $absolute );
+    $mech->dump_forms( undef );
     return;
 }
 
@@ -131,7 +131,7 @@ mech-dump - Dumps information about a web page
 
 =head1 VERSION
 
-version 1.91
+version 2.03
 
 =head1 SYNOPSIS
 
@@ -181,7 +181,7 @@ Andy Lester <andy at petdance.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2004-2016 by Andy Lester.
+This software is copyright (c) 2004 by Andy Lester.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

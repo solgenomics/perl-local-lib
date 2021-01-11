@@ -2,12 +2,13 @@ package Alien::Build::Util;
 
 use strict;
 use warnings;
+use 5.008004;
 use base qw( Exporter );
 use Path::Tiny qw( path );
 use Config;
 
 # ABSTRACT: Private utility functions for Alien::Build
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 our @EXPORT_OK = qw( _mirror _dump _destdir_prefix _perl_config _ssl_reqs _has_ssl );
@@ -72,12 +73,12 @@ sub _mirror
         # TODO: rmtree if a directory?
         if(-e "$dst")
         { unlink "$dst" }
-        Alien::Build->log("Alien::Build> cp $src $dst") if $opt->{verbose};
+        Alien::Build->log("cp $src $dst") if $opt->{verbose};
         File::Copy::cp("$src", "$dst") || die "copy error $src => $dst: $!";
         if($] < 5.012 && -x "$src" && $^O ne 'MSWin32')
         {
           # apparently Perl 5.8 and 5.10 do not preserver perms
-          my $mode = [stat "$src"]->[2] & 0777;
+          my $mode = [stat "$src"]->[2] & oct(777);
           eval { chmod $mode, "$dst" };
         }
       }
@@ -148,7 +149,7 @@ Alien::Build::Util - Private utility functions for Alien::Build
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 DESCRIPTION
 
@@ -172,7 +173,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -222,9 +223,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -4,13 +4,13 @@
       "Robert Krimen <robertkrimen@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 2.101170, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Dist::Zilla version 2.101170, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Path-Abstract",
    "prereqs" : {
@@ -39,5 +39,5 @@
    },
    "release_status" : "stable",
    "version" : "0.096",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001"
 }

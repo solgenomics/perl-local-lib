@@ -15,7 +15,7 @@ Steve Chervitz E<lt>sac@bioperl.orgE<gt>
 =cut
 
 package Bio::Root::TestObject;
-$Bio::Root::TestObject::VERSION = '1.7.5';
+
 use strict;
 
 # Define a special type of error "Bio::TestException" as a subclass of Error.

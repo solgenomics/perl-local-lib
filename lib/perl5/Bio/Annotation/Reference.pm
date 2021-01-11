@@ -53,7 +53,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Annotation::Reference;
-$Bio::Annotation::Reference::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Annotation::DBLink);

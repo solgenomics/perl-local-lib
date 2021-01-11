@@ -2,6 +2,7 @@ package Alien::Build::Plugin::Extract::CommandLine;
 
 use strict;
 use warnings;
+use 5.008004;
 use Alien::Build::Plugin;
 use Path::Tiny ();
 use File::Which ();
@@ -10,7 +11,7 @@ use File::Temp qw( tempdir );
 use Capture::Tiny qw( capture_merged );
 
 # ABSTRACT: Plugin to extract an archive using command line tools
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 has '+format' => 'tar';
@@ -36,6 +37,25 @@ sub xz_cmd
 }
 
 
+{
+  my $bsd_tar;
+
+  # Note: GNU tar can be iffy to very bad on windows, where absolute
+  # paths get confused with remote tars.  We used to assume that 'tar.exe'
+  # is borked on Windows, but recent versions of Windows 10 come bundled
+  # with bsdtar (libarchive) named 'tar.exe', and we should definitely
+  # prefer that to ptar.
+  sub _windows_tar_is_bsdtar
+  {
+    return 1 if $^O ne 'MSWin32';
+    return $bsd_tar if defined $bsd_tar;
+    my($out) = capture_merged {
+      system 'tar', '--version';
+    };
+    return $bsd_tar = $out =~ /bsdtar/ ? 1 : 0
+  }
+}
+
 sub tar_cmd
 {
   _which('bsdtar')
@@ -44,12 +64,8 @@ sub tar_cmd
     # but seems to have gtar in the path by default, which is okay with it
     : $^O eq 'solaris' && _which('gtar')
       ? 'gtar'
-      # TODO: GNU tar can be iffy on windows, where absolute
-      # paths get confused with remote tars.  *sigh* fix later
-      # if we can, for now just assume that 'tar.exe' is borked
-      # on windows to be on the safe side.  The Fetch::ArchiveTar
-      # is probably a better plugin to use on windows anyway.
-      : _which('tar') && $^O ne 'MSWin32'
+      # See note above for Windows logic.
+      : _which('tar') && _windows_tar_is_bsdtar()
         ? 'tar'
         : _which('ptar')
           ? 'ptar'
@@ -59,7 +75,14 @@ sub tar_cmd
 
 sub unzip_cmd
 {
-  _which('unzip') ? 'unzip' : undef;
+  if($^O eq 'MSWin32' && _which('tar') && _windows_tar_is_bsdtar())
+  {
+    (_which('tar'), 'xf');
+  }
+  else
+  {
+    _which('unzip') ? 'unzip' : undef;
+  }
 }
 
 sub _run
@@ -148,14 +171,14 @@ sub handles
   return 1 if $ext eq 'tar.bz2' && $self->_tar_can('tar.bz2');
   return 1 if $ext eq 'tar.xz'  && $self->_tar_can('tar.xz');
 
-  return if $ext =~ s/\.(gz|Z)$// && (!$self->gzip_cmd);
-  return if $ext =~ s/\.bz2$//    && (!$self->bzip2_cmd);
-  return if $ext =~ s/\.xz$//     && (!$self->xz_cmd);
+  return 0 if $ext =~ s/\.(gz|Z)$// && (!$self->gzip_cmd);
+  return 0 if $ext =~ s/\.bz2$//    && (!$self->bzip2_cmd);
+  return 0 if $ext =~ s/\.xz$//     && (!$self->xz_cmd);
 
   return 1 if $ext eq 'tar' && $self->_tar_can('tar');
   return 1 if $ext eq 'zip' && $self->_tar_can('zip');
 
-  return;
+  return 0;
 }
 
 
@@ -246,15 +269,15 @@ sub _tar_can
   {
     my $name = '';
     local $_; # to avoid dynamically scoped read-only $_ from upper scopes
-    while(<DATA>)
+    while(my $line = <DATA>)
     {
-      if(/^\[ (.*) \]$/)
+      if($line =~ /^\[ (.*) \]$/)
       {
         $name = $1;
       }
       else
       {
-        $tars{$name} .= $_;
+        $tars{$name} .= $line;
       }
     }
 
@@ -315,7 +338,7 @@ Alien::Build::Plugin::Extract::CommandLine - Plugin to extract an archive using 
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -387,7 +410,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -437,9 +460,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

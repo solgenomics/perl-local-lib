@@ -2,17 +2,20 @@ package Alien::Build::Version::Basic;
 
 use strict;
 use warnings;
+use 5.008004;
 use Carp ();
 use base qw( Exporter );
 use overload
-  '<=>' => sub { shift->cmp(@_) },
-  'cmp' => sub { shift->cmp(@_) },
-  '""'  => sub { shift->as_string };
+  '<=>'    => sub { shift->cmp(@_) },
+  'cmp'    => sub { shift->cmp(@_) },
+  '""'     => sub { shift->as_string },
+  bool     => sub { 1 },
+  fallback => 1;
 
 our @EXPORT_OK = qw( version );
 
 # ABSTRACT: Very basic version object for Alien::Build
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 sub new
@@ -41,16 +44,16 @@ sub as_string
 
 sub cmp
 {
-  my @a = split /\./, ${$_[0]};
-  my @b = split /\./, ${ref($_[1]) ? $_[1] : version($_[1])};
-  
-  while(@a or @b)
+  my @x = split /\./, ${$_[0]};
+  my @y = split /\./, ${ref($_[1]) ? $_[1] : version($_[1])};
+
+  while(@x or @y)
   {
-    my $a = (shift @a) || 0;
-    my $b = (shift @b) || 0;
-    return $a <=> $b if $a <=> $b;
+    my $x = (shift @x) || 0;
+    my $y = (shift @y) || 0;
+    return $x <=> $y if $x <=> $y;
   }
-  
+
   0;
 }
 
@@ -69,7 +72,7 @@ Alien::Build::Version::Basic - Very basic version object for Alien::Build
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -184,7 +187,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -234,9 +237,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

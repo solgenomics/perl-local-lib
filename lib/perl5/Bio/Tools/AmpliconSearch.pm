@@ -6,7 +6,7 @@
 
 
 package Bio::Tools::AmpliconSearch;
-$Bio::Tools::AmpliconSearch::VERSION = '1.7.5';
+
 use strict;
 use warnings;
 use Bio::Tools::IUPAC;

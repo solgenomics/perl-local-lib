@@ -2,13 +2,14 @@ package Alien::Build::Plugin::Probe::CBuilder;
 
 use strict;
 use warnings;
+use 5.008004;
 use Alien::Build::Plugin;
 use File::chdir;
 use File::Temp ();
 use Capture::Tiny qw( capture_merged capture );
 
 # ABSTRACT: Probe for system libraries by guessing with ExtUtils::CBuilder
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 has options => sub { {} };
@@ -34,11 +35,11 @@ has lang => 'C';
 sub init
 {
   my($self, $meta) = @_;
-  
-  $meta->add_requires('configure' => 'ExtUtils::CBuilder' => 0 );  
+
+  $meta->add_requires('configure' => 'ExtUtils::CBuilder' => 0 );
 
   if(@{ $self->aliens })
-  {  
+  {
     die "You can't specify both 'aliens' and either 'cflags' or 'libs' for the Probe::CBuilder plugin" if $self->cflags || $self->libs;
 
     $meta->add_requires('configure' => $_ => 0 ) for @{ $self->aliens };
@@ -48,86 +49,91 @@ sub init
     my $libs   = '';
     foreach my $alien (@{ $self->aliens })
     {
-      require Module::Load;
-      Module::Load::load($alien);
+      my $pm = "$alien.pm";
+      $pm =~ s/::/\//g;
+      require $pm;
       $cflags .= $alien->cflags . ' ';
       $libs   .= $alien->libs   . ' ';
     }
     $self->cflags($cflags);
     $self->libs($libs);
   }
-  
+
   my @cpp;
-  
+
   if($self->lang ne 'C')
   {
     $meta->add_requires('Alien::Build::Plugin::Probe::CBuilder' => '0.53');
     @cpp = ('C++' => 1) if $self->lang eq 'C++';
   }
-  
+
   $meta->register_hook(
     probe => sub {
       my($build) = @_;
-      local $CWD = File::Temp::tempdir( CLEANUP => 1 );
-      
+
+      $build->hook_prop->{probe_class} = __PACKAGE__;
+      $build->hook_prop->{probe_instance_id} = $self->instance_id;
+
+      local $CWD = File::Temp::tempdir( CLEANUP => 1, DIR => $CWD );
+
       open my $fh, '>', 'mytest.c';
       print $fh $self->program;
       close $fh;
-      
+
       $build->log("trying: cflags=@{[ $self->cflags ]} libs=@{[ $self->libs ]}");
-      
-      my $b = ExtUtils::CBuilder->new(%{ $self->options });
+
+      my $cb = ExtUtils::CBuilder->new(%{ $self->options });
 
       my($out1, $obj) = capture_merged { eval {
-        $b->compile(
+        $cb->compile(
           source               => 'mytest.c',
           extra_compiler_flags => $self->cflags,
           @cpp,
         );
       } };
-      
+
       if(my $error = $@)
       {
         $build->log("compile failed: $error");
         $build->log("compile failed: $out1");
         die $@;
       }
-      
+
       my($out2, $exe) = capture_merged { eval {
-        $b->link_executable(
+        $cb->link_executable(
           objects              => [$obj],
           extra_linker_flags   => $self->libs,
         );
       } };
-      
+
       if(my $error = $@)
       {
         $build->log("link failed: $error");
         $build->log("link failed: $out2");
         die $@;
-      }      
-      
+      }
+
       my($out, $err, $ret) = capture { system($^O eq 'MSWin32' ? $exe : "./$exe") };
       die "execute failed" if $ret;
-      
+
       my $cflags = $self->cflags;
       my $libs   = $self->libs;
-      
+
       $cflags =~ s{\s*$}{ };
       $libs =~ s{\s*$}{ };
-      
-      $build->install_prop->{plugin_probe_cbuilder_gather} = {
+
+      $build->install_prop->{plugin_probe_cbuilder_gather}->{$self->instance_id} = {
         cflags  => $cflags,
         libs    => $libs,
       };
-      
+
       if(defined $self->version)
       {
         my($version) = $out =~ $self->version;
         $build->hook_prop->{version} = $version;
-        $build->install_prop->{plugin_probe_cbuilder_gather}->{version} = $version;
+        $build->install_prop->{plugin_probe_cbuilder_gather}->{$self->instance_id}->{version} = $version;
       }
-      
+
       'system';
     }
   );
@@ -135,13 +141,13 @@ sub init
   $meta->register_hook(
     gather_system => sub {
       my($build) = @_;
-      if(my $p = $build->install_prop->{plugin_probe_cbuilder_gather})
+
+      return if $build->hook_prop->{name} eq 'gather_system'
+      &&        ($build->install_prop->{system_probe_instance_id} || '') ne $self->instance_id;
+
+      if(my $p = $build->install_prop->{plugin_probe_cbuilder_gather}->{$self->instance_id})
       {
         $build->runtime_prop->{$_} = $p->{$_} for keys %$p;
-      }
-      else
-      {
-        die "cbuilder unable to gather; if you are using multiple probe steps you may need to provide your own gather.";
       }
     },
   );
@@ -161,7 +167,7 @@ Alien::Build::Plugin::Probe::CBuilder - Probe for system libraries by guessing w
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -229,7 +235,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -279,9 +285,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -101,7 +101,6 @@ Private methods are usually preceded by a _.
 # Let the code begin...
 
 package Bio::Tools::pICalculator;
-$Bio::Tools::pICalculator::VERSION = '1.7.5';
 use strict;
 
 

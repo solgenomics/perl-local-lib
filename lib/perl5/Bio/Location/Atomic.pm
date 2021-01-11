@@ -74,7 +74,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Location::Atomic;
-$Bio::Location::Atomic::VERSION = '1.7.5';
 use strict;
 
 use Bio::Location::WidestCoordPolicy;

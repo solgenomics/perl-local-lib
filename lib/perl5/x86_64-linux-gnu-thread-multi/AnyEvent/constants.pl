@@ -1,10 +1,10 @@
 # automatically generated from constants.pl.PL
 sub AnyEvent::common_sense {
    local $^W;
-   ${^WARNING_BITS} ^= ${^WARNING_BITS} ^ "\x0c\x3f\x33\x00\x0f\xf0\x0f\xc0\xf0\xfc\x33\x00\x00\x00\x0c\x00\x00";
+   ${^WARNING_BITS} ^= ${^WARNING_BITS} ^ "\x0c\x3f\x33\x00\x0f\xf0\x0f\xc0\xf0\xfc\x33\x00\x00\x00\x0c\x00\x00\x00";
    $^H |= 0x7c0;
 }
-# generated for perl 5.024001 built for x86_64-linux-gnu-thread-multi
+# generated for perl 5.028001 built for x86_64-linux-gnu-thread-multi
 package AnyEvent;
 sub CYGWIN(){0}
 sub WIN32(){0}

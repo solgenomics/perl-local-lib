@@ -172,7 +172,7 @@ This software is provided "as is" without warranty of any kind.
 =cut
 
 package Bio::SearchIO::Writer::HSPTableWriter;
-$Bio::SearchIO::Writer::HSPTableWriter::VERSION = '1.7.5';
+
 use strict;
 
 use base qw(Bio::SearchIO::Writer::ResultTableWriter);

@@ -76,7 +76,6 @@ methods.
 # Let the code begin...
 
 package Bio::Ontology::OBOterm;
-$Bio::Ontology::OBOterm::VERSION = '1.7.5';
 use strict;
 
 use constant TRUE  => 1;

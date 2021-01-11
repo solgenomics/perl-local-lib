@@ -70,7 +70,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::AlignIO::largemultifasta;
-$Bio::AlignIO::largemultifasta::VERSION = '1.7.5';
 use strict;
 
 use Bio::Seq::LargeLocatableSeq;

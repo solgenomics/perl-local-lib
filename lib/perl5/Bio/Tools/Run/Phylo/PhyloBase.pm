@@ -69,7 +69,7 @@ Internal methods are usually preceded with a _
 =cut
 
 package Bio::Tools::Run::Phylo::PhyloBase;
-$Bio::Tools::Run::Phylo::PhyloBase::VERSION = '1.7.5';
+$Bio::Tools::Run::Phylo::PhyloBase::VERSION = '1.7.7';
 use strict;
 
 use Bio::AlignIO;

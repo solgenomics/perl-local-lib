@@ -1,3 +1,0 @@
-[% IF self.comment.defined %]<span[% process_attrs(self.comment_attributes) %]>
-[% self.comment %]
-</span>[% END %]

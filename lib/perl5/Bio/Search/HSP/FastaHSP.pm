@@ -79,7 +79,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Search::HSP::FastaHSP;
-$Bio::Search::HSP::FastaHSP::VERSION = '1.7.5';
 use strict;
 
 

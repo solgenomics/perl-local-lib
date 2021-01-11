@@ -77,7 +77,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::AlignIO::emboss;
-$Bio::AlignIO::emboss::VERSION = '1.7.5';
 use vars qw($EMBOSSTitleLen $EMBOSSLineLen);
 use strict;
 

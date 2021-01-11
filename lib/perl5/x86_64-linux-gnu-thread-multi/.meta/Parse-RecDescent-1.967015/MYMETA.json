@@ -5,13 +5,13 @@
       "Jeremy T. Braun <JTBRAUN@CPAN.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Module::Build version 0.4229",
+   "generated_by" : "Module::Build version 0.4231",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Parse-RecDescent",
    "no_index" : {
@@ -23,7 +23,7 @@
    "prereqs" : {
       "runtime" : {
          "requires" : {
-            "Test::More" : "0",
+            "Test::More" : 0,
             "Text::Balanced" : 1.95
          }
       }
@@ -40,5 +40,5 @@
       }
    },
    "version" : "1.967015",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001"
 }

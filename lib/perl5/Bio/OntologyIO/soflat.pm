@@ -107,7 +107,7 @@ methods. Internal methods are usually preceded with a _
 
 
 package  Bio::OntologyIO::soflat;
-$Bio::OntologyIO::soflat::VERSION = '1.7.5';
+
 use strict;
 
 use Bio::Ontology::TermFactory;

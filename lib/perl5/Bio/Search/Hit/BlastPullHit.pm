@@ -86,7 +86,7 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Search::Hit::BlastPullHit;
-$Bio::Search::Hit::BlastPullHit::VERSION = '1.7.5';
+
 use strict;
 
 use Bio::Search::HSP::BlastPullHSP;

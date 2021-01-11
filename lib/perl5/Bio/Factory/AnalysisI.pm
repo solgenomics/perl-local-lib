@@ -97,7 +97,6 @@ C<Bio::Tools::Run::AnalysisFactory> object instead.
 # Let the code begin...
 
 package Bio::Factory::AnalysisI;
-$Bio::Factory::AnalysisI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::RootI);

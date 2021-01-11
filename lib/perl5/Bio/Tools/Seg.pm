@@ -83,7 +83,6 @@ Internal methods are usually preceded with a _
 =cut
 
 package Bio::Tools::Seg;
-$Bio::Tools::Seg::VERSION = '1.7.5';
 use strict;
 
 use Bio::SeqFeature::Generic;

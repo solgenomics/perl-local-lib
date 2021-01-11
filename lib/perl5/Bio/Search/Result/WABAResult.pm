@@ -75,7 +75,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Search::Result::WABAResult;
-$Bio::Search::Result::WABAResult::VERSION = '1.7.5';
 use strict;
 
 

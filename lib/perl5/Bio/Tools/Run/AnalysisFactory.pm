@@ -145,7 +145,7 @@ with an underscore _.
 # Let the code begin...
 
 package Bio::Tools::Run::AnalysisFactory;
-$Bio::Tools::Run::AnalysisFactory::VERSION = '1.7.5';
+$Bio::Tools::Run::AnalysisFactory::VERSION = '1.7.7';
 use vars qw(@ISA $Revision);
 use strict;
 
@@ -336,7 +336,7 @@ END
 
 It makes an expert guess what kind of access/transport protocol should
 be used to access the underlying analysis. The guess is based on the
-parameters in I<rh_params>. Rememeber that this method is called only
+parameters in I<rh_params>. Remember that this method is called only
 if there was no I<-access> parameter which could tell directly what
 access method to use.
 

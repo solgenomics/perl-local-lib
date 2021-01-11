@@ -75,7 +75,6 @@ methods. Internal methods are usually preceded with a _
 =cut
 
 package Bio::SeqIO::game::gameSubs;
-$Bio::SeqIO::game::gameSubs::VERSION = '1.7.5';
 use XML::Parser::PerlSAX;
 use UNIVERSAL;
 use strict;

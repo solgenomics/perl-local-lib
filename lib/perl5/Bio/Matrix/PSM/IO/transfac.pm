@@ -53,7 +53,6 @@ Email skirov@utk.edu
 
 # Let the code begin...
 package Bio::Matrix::PSM::IO::transfac;
-$Bio::Matrix::PSM::IO::transfac::VERSION = '1.7.5';
 use Bio::Matrix::PSM::Psm;
 use Bio::Root::Root;
 use Bio::Annotation::Reference;

@@ -27,12 +27,12 @@ BEGIN {
             use Win32::Process qw(INFINITE NORMAL_PRIORITY_CLASS);
             use File::Spec;
             use Win32;
+            use Win32::ShellQuote;
 
             # This uses the same rules as the core win32.c/get_shell() call.
-
             use constant WINDOWS_SHELL => eval { Win32::IsWinNT() }
-                                            ? [ qw(cmd.exe /x/d/c) ]
-                                            : [ qw(command.com /c) ];
+                ? [ File::Spec->catfile(Win32::GetFolderPath(Win32::CSIDL_SYSTEM), 'cmd.exe'), '/x/d/c' ]
+                : [ File::Spec->catfile(Win32::GetFolderPath(Win32::CSIDL_SYSTEM), 'command.com'), '/c' ];
 
             # These are used when invoking _win32_capture
             use constant NO_SHELL  => 0;
@@ -64,7 +64,8 @@ use constant FAIL_BADEXIT   => q{"%s" unexpectedly returned exit value %d};
 
 use constant FAIL_UNDEF     => q{%s called with undefined command};
 
-use constant FAIL_POSIX     => q{IPC::System::Simple does not understand the POSIX error '%s'.  Please check http://search.cpan.org/perldoc?IPC::System::Simple to see if there is an updated version.  If not please report this as a bug to http://rt.cpan.org/Public/Bug/Report.html?Queue=IPC-System-Simple};
+
+use constant FAIL_POSIX     => q{IPC::System::Simple does not understand the POSIX error '%s'.  Please check https://metacpan.org/pod/IPC::System::Simple to see if there is an updated version.  If not please report this as a bug to https://github.com/pjf/ipc-system-simple/issues};
 
 # On Perl's older than 5.8.x we can't assume that there'll be a
 # $^{TAINT} for us to check, so we assume that our args may always
@@ -86,7 +87,9 @@ our @EXPORT_OK = qw(
     $EXITVAL EXIT_ANY
 );
 
-our $VERSION = '1.25'; # VERSION : From dzil
+our $VERSION = '1.30';
+$VERSION =~ tr/_//d;
+
 our $EXITVAL = -1;
 
 my @Signal_from_number = split(' ', $Config{sig_name});
@@ -145,8 +148,10 @@ sub _native_wcoredump {
 
 # system simply calls run
 
+no warnings 'once'; ## no critic
 *system  = \&run;
 *systemx = \&runx;
+use warnings;
 
 # run is our way of running a process with system() semantics
 
@@ -163,7 +168,14 @@ sub run {
                 return systemx($valid_returns, $command, @args);
 	}
 
-        # Without arguments, we're calling system, and checking
+    if (WINDOWS) {
+        my $pid = _spawn_or_die(&WINDOWS_SHELL->[0], join ' ', @{&WINDOWS_SHELL}, $command);
+        $pid->Wait(INFINITE);	# Wait for process exit.
+        $pid->GetExitCode($EXITVAL);
+        return _check_exit($command,$EXITVAL,$valid_returns);
+    }
+
+    # Without arguments, we're calling system, and checking
         # the results.
 
 	# We're throwing our own exception on command not found, so
@@ -188,7 +200,7 @@ sub runx {
     if (WINDOWS) {
         our $EXITVAL = -1;
 
-        my $pid = _spawn_or_die($command, "$command @args");
+        my $pid = _spawn_or_die($command, Win32::ShellQuote::quote_native($command, @args));
 
         $pid->Wait(INFINITE);	# Wait for process exit.
         $pid->GetExitCode($EXITVAL);
@@ -218,7 +230,7 @@ sub capture {
 
         if (WINDOWS) {
             # USE_SHELL really means "You may use the shell if you need it."
-            return _win32_capture(USE_SHELL, $valid_returns, $command, @args);
+            return _win32_capture(USE_SHELL, $valid_returns, $command);
         }
 
 	our $EXITVAL = -1;
@@ -303,7 +315,7 @@ sub _win32_capture {
 
         my $err;
         my $pid = eval { 
-                _spawn_or_die($exe, "$command @args"); 
+                _spawn_or_die($exe, @args ? Win32::ShellQuote::quote_native($command, @args) : $command);
         }
         or do {
                 $err = $@;
@@ -519,13 +531,13 @@ sub _process_child_error {
 
 	my $coredump = WCOREDUMP($child_error);
 
-        # There's a bug in perl 5.10.0 where if the system
+        # There's a bug in perl 5.8.9 and 5.10.0 where if the system
         # does not provide a native WCOREDUMP, then $? will
         # never contain coredump information.  This code
         # checks to see if we have the bug, and works around
         # it if needed.
 
-        if ($] >= 5.010 and not $NATIVE_WCOREDUMP) {
+        if ($] >= 5.008009 and not $NATIVE_WCOREDUMP) {
             $coredump ||= WCOREDUMP( ${^CHILD_ERROR_NATIVE} );
         }
 
@@ -715,7 +727,7 @@ or process diagnostics, then read on!
 =head2 run() and system()
 
 C<IPC::System::Simple> provides a subroutine called
-C<run>, that executes a command using the same semantics is
+C<run>, that executes a command using the same semantics as
 Perl's built-in C<system>:
 
     use IPC::System::Simple qw(run);
@@ -734,7 +746,7 @@ same behaviour:
 
     use IPC::System::Simple qw(system);
 
-    system("cat *.txt");  # system now suceeds or dies!
+    system("cat *.txt");  # system now succeeds or dies!
 
 C<system> and C<run> are aliases to each other.
 
@@ -871,15 +883,29 @@ exception will also be thrown.
 
 =head2 WINDOWS-SPECIFIC NOTES
 
-As of C<IPC::System::Simple> v0.06, the C<run> subroutine I<when
-called with multiple arguments> will make available the full 32-bit
-exit value on Win32 systems.  This is different from the
-previous versions of C<IPC::System::Simple> and from Perl's
-in-build C<system()> function, which can only handle 8-bit return values.
+The C<run> subroutine make available the full 32-bit exit value on
+Win32 systems. This has been true since C<IPC::System::Simple> v0.06
+when called with multiple arguments, and since v1.25 when called with
+a single argument.  This is different from the previous versions of
+C<IPC::System::Simple> and from Perl's in-build C<system()> function,
+which can only handle 8-bit return values.
 
 The C<capture> subroutine always returns the 32-bit exit value under
 Windows.  The C<capture> subroutine also never uses the shell,
 even when passed a single argument.
+
+The C<run> subroutine always uses a shell when passed a single
+argument. On NT systems, it uses C<cmd.exe> in the system root, and on
+non-NT systems it uses C<command.com> in the system root.
+
+As of C<IPC::System::Simple> v1.25, the C<runx> and C<capturex>
+subroutines, as well as multiple-argument calls to the C<run> and
+C<capture> subroutines, have their arguments properly quoted, so that
+arugments with spaces and the like work properly. Unfortunately, this
+breaks any attempt to invoke the shell itself. If you really need to
+execute C<cmd.exe> or C<command.com>, use the single-argument form.
+For single-argument calls to C<run> and C<capture>, the argument must
+be properly shell-quoted in advance of the call.
 
 Versions of C<IPC::System::Simple> before v0.09 would not search
 the C<PATH> environment variable when the multi-argument form of
@@ -989,17 +1015,18 @@ to provide as much information as possible.  Rather than requiring
 the developer to inspect C<$?>, C<IPC::System::Simple> does the
 hard work for you.
 
-If an odd exit status is provided, you're informed of what it is.  If
-a signal kills your process, you are informed of both its name and
-number.  If tainted data or environment prevents your command from
-running, you are informed of exactly which datais 
+If an odd exit status is provided, you're informed of what it is.  If a
+signal kills your process, you are informed of both its name and number.
+If tainted data or environment prevents your command from running, you
+are informed of exactly which data or environmental variable is
+tainted.
 
 =item Exceptions on failure
 
 C<IPC::System::Simple> takes an aggressive approach to error handling.
 Rather than allow commands to fail silently, exceptions are thrown
 when unexpected results are seen.  This allows for easy development
-using a try/catch style, and avoids the possibility of accidently
+using a try/catch style, and avoids the possibility of accidentally
 continuing after a failed command.
 
 =item Easy access to exit status
@@ -1036,13 +1063,8 @@ C<WIFSTOPPED> status is not checked, as perl never spawns processes
 with the C<WUNTRACED> option.
 
 Signals are not supported under Win32 systems, since they don't
-work at all like Unix signals.  Win32 singals cause commands to
+work at all like Unix signals.  Win32 signals cause commands to
 exit with a given exit value, which this modules I<does> capture.
-
-Only 8-bit values are returned when C<run()> or C<system()> 
-is called with a single value under Win32.  Multi-argument calls
-to C<run()> and C<system()>, as well as the C<runx()> and
-C<systemx()> always return the 32-bit Windows return values.
 
 =head2 Reporting bugs
 

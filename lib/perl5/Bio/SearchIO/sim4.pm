@@ -87,7 +87,7 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SearchIO::sim4;
-$Bio::SearchIO::sim4::VERSION = '1.7.5';
+
 use strict;
 use vars qw($DEFAULTFORMAT %ALIGN_TYPES
             %MAPPING %MODEMAP $DEFAULT_WRITER_CLASS);

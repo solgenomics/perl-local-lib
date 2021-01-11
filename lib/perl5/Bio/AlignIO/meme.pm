@@ -77,7 +77,6 @@ underscore.
 # Let the code begin...
 
 package Bio::AlignIO::meme;
-$Bio::AlignIO::meme::VERSION = '1.7.5';
 use strict;
 use Bio::LocatableSeq;
 

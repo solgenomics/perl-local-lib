@@ -4,13 +4,13 @@
       "Robert Krimen <rkrimen@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Module::Install version 0.760, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Module::Install version 0.760, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "File-Assets",
    "no_index" : {
@@ -43,7 +43,7 @@
             "Digest::MD5" : "0",
             "Digest::SHA" : "0",
             "Directory::Scratch" : "0",
-            "ExtUtils::MakeMaker" : "7.1002",
+            "ExtUtils::MakeMaker" : "7.34",
             "HTML::Declare" : "0",
             "IO::Scalar" : "0",
             "MIME::Types" : "0",
@@ -68,5 +68,5 @@
       }
    },
    "version" : "0.064",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001"
 }

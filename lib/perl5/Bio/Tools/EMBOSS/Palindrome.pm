@@ -89,7 +89,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Tools::EMBOSS::Palindrome;
-$Bio::Tools::EMBOSS::Palindrome::VERSION = '1.7.5';
 use vars qw($DEFAULT_SOURCETAG);
 use strict;
 

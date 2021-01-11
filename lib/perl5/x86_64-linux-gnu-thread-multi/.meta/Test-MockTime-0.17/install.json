@@ -1,1 +1,1 @@
-{"version":"0.17","name":"Test::MockTime","provides":{"Test::MockTime":{"file":"lib/Test/MockTime.pm","version":"0.17"}},"dist":"Test-MockTime-0.17","pathname":"D/DD/DDICK/Test-MockTime-0.17.tar.gz","target":"Test::MockTime"}
+{"provides":{"Test::MockTime":{"file":"lib/Test/MockTime.pm","version":"0.17"}},"target":"Test::MockTime","dist":"Test-MockTime-0.17","pathname":"D/DD/DDICK/Test-MockTime-0.17.tar.gz","version":"0.17","name":"Test::MockTime"}

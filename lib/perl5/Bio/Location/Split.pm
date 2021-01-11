@@ -92,7 +92,7 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Location::Split;
-$Bio::Location::Split::VERSION = '1.7.5';
+
 # as defined by BSANE 0.03
 our @CORBALOCATIONOPERATOR = ('NONE','JOIN', undef, 'ORDER');;
 
@@ -713,7 +713,7 @@ sub length {
         my $start   = $sublocs[0]->start;
         my $end     = $sublocs[-1]->end;
 
-        # If Start > End, its a possible case of cut by origin
+        # If Start > ·End, its a possible case of cut by origin
         # location in circular sequences (e.g "join(16..20,1..2)")
         if ($start > $end) {
             # Figure out which segments are located before

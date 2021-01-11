@@ -117,7 +117,7 @@ The rest of the documentation details each of the object methods. Internal metho
 
 
 package Bio::Search::Result::ResultI;
-$Bio::Search::Result::ResultI::VERSION = '1.7.5';
+
 use strict;
 
 

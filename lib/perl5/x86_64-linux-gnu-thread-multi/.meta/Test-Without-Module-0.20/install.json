@@ -1,1 +1,1 @@
-{"name":"Test::Without::Module","provides":{"Test::Without::Module":{"version":"0.20","file":"lib/Test/Without/Module.pm"}},"version":"0.20","dist":"Test-Without-Module-0.20","target":"Test::Without::Module","pathname":"C/CO/CORION/Test-Without-Module-0.20.tar.gz"}
+{"name":"Test::Without::Module","version":"0.20","dist":"Test-Without-Module-0.20","target":"Test::Without::Module","provides":{"Test::Without::Module":{"version":"0.20","file":"lib/Test/Without/Module.pm"}},"pathname":"C/CO/CORION/Test-Without-Module-0.20.tar.gz"}

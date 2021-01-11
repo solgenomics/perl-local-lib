@@ -64,7 +64,6 @@ Email lstein@cshl.org
 =cut
 
 package Bio::IdCollectionI;
-$Bio::IdCollectionI::VERSION = '1.7.5';
 use strict;
 
 

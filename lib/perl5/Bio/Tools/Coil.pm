@@ -77,7 +77,6 @@ web:
 =cut
 
 package Bio::Tools::Coil;
-$Bio::Tools::Coil::VERSION = '1.7.5';
 use strict;
 
 use Bio::SeqFeature::FeaturePair;

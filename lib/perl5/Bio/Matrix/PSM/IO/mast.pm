@@ -61,7 +61,6 @@ methods. Internal methods are usually preceded with a _
 
 # Let the code begin...
 package Bio::Matrix::PSM::IO::mast;
-$Bio::Matrix::PSM::IO::mast::VERSION = '1.7.5';
 use Bio::Matrix::PSM::InstanceSite;
 use Bio::Matrix::PSM::Psm;
 use Bio::Root::Root;

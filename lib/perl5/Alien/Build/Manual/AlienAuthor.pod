@@ -14,13 +14,17 @@ Alien::Build::Manual::AlienAuthor - Alien author documentation
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
  perldoc Alien::Build::Manual::AlienAuthor
 
 =head1 DESCRIPTION
+
+B<Note>: Please read the entire document before you get started in
+writing your own L<alienfile>.  The section on dynamic vs. static
+libraries will likely save you a lot of grief if you read it now!
 
 This document is intended to teach L<Alien> authors how to build their 
 own L<Alien> distribution using L<Alien::Build> and L<Alien::Base>.  
@@ -68,6 +72,12 @@ a shell manually.  The easiest way to automate those instructions is to
 just put the commands in your L<alienfile>.  For example, lets suppose 
 that libfoo is built using autoconf and provides a C<pkg-config> C<.pc>
 file.
+
+We will also later discuss plugins.  For common build systems like
+autoconf or CMake, it is usually better to use the appropriate plugin
+because they will handle corner cases better than a simple set of
+commands.  We're going to take a look at commands first because it's
+easier to understand the different phases with commands.
 
 (Aside, autoconf is a series of tools and macros used to configure 
 (usually) a C or C++ library or tool by generating any number of 
@@ -287,7 +297,7 @@ L<Alien::Build::Plugin::PkgConfig::Negotiate>, it may choose to use
 command line tools, a pure Perl implementation (L<PkgConfig>), or 
 libpkgconf, depending on what is available).  When using negotiation 
 plugins you may omit the C<::Negotiate> suffix.  So as you can see using 
-the plugin here is an advantage because it is more reliable that just 
+the plugin here is an advantage because it is more reliable than just 
 specifying a command which may not be installed!
 
 Next we use the download negotiation plugin.  This is also better than 
@@ -317,6 +327,50 @@ flags to the configure step.
      '%{make} install',
    ];
  };
+
+=head2 A note about dynamic vs. static libraries
+
+If you are using your L<Alien> to build an XS module, it is important
+that you use static libraries if possible.  If you have a package that
+refuses to build a static library, then you can use L<Alien::Role::Dino>.
+
+Actually let me back up a minute.  For a C<share> install it is best
+to use static libraries to build your XS extension.  This is because
+if your L<Alien> is ever upgraded to a new version it can break your
+existing XS modules.  For a C<system> install shared libraries are
+usually best because you can often get security patches without having
+to re-build anything in perl land.
+
+If you looked closely at the "Using commands" and "Using plugins"
+sections above, you may notice that we went out of our way where
+possible to tell Autotools to build only static libraries using the
+C<--disable-shared> command.  The Autoconf plugin also does this by
+default.
+
+Sometimes though you will have a package that builds both, or maybe
+you I<want> both static and dynamic libraries to work with XS and FFI.
+For that case, there is the L<Alien::Build::Plugin::Gather::IsolateDynamic>
+plugin.
+
+ use alienfile;
+ ...
+ plugin 'Gather::IsolateDynamic';
+
+What it does, is that it moves the dynamic libraries (usually .so on
+Unix and .DLL on Windows) to a place where they can be found by FFI,
+and where they won't be used by the compiler for building XS.  It usually
+doesn't do any harm to include this plugin, so if you are just starting
+out you might want to add it anyway.  Arguably it should have been the
+default behavior from the beginning.
+
+If you have already published an Alien that does not isolate its
+dynamic libraries, then you might get some fails from old upgraded
+aliens because the share directory isn't cleaned up by default (this is
+perhaps a design bug in the way that share directories work, but it
+is a long standing characteristic).  One work around for this is to
+use the C<clean_install> property on L<Alien::Build::MM>, which will
+clean out the share directory on upgrade, and possibly save you a lot
+of grief.
 
 =head2 Verifying and debugging your alienfile
 
@@ -416,10 +470,25 @@ Once you have a working L<alienfile> you can write your C<Makefile.PL>.
  my $abmm = Alien::Build::MM->new;
  
  WriteMakefile($abmm->mm_args(
-   ABSTRACT => 'Discover or download and install libfoo',
-   DISTNAME => 'Alien-Libfoo',
-   NAME     => 'Alien::Libfoo',
-   VERSION_FROM => 'lib/Alien/Libfoo.pm',
+   ABSTRACT           => 'Discover or download and install libfoo',
+   DISTNAME           => 'Alien-Libfoo',
+   NAME               => 'Alien::Libfoo',
+   VERSION_FROM       => 'lib/Alien/Libfoo.pm',
+   CONFIGURE_REQUIRES => {
+     'Alien::Build::MM' => 0,
+   },
+   BUILD_REQUIRES => {
+     'Alien::Build::MM' => 0,
+   },
+   PREREQ_PM => {
+     'Alien::Base' => 0,
+   },
+   # If you are going to write the recommended
+   # tests you will will want these:
+   TEST_REQUIRES => {
+     'Test::Alien' => 0,
+     'Test2::V0'   => 0,
+   },
  ));
  
  sub MY::postamble {
@@ -492,7 +561,7 @@ alien will work with any XS modules that are going to use it:
  
  alien_ok 'Alien::Libfoo';
  
- xs_ok { local $/; <DATA> }, with_subtest {
+ xs_ok do { local $/; <DATA> }, with_subtest {
    is Foo::something(), 1, 'Foo::something() returns 1';
  };
  
@@ -506,7 +575,7 @@ alien will work with any XS modules that are going to use it:
  
  MODULE = Foo PACKAGE = Foo
  
- int something(class)
+ int something()
 
 You can also use L<Test::Alien> to test tools instead of libraries:
 
@@ -519,6 +588,38 @@ You can also use L<Test::Alien> to test tools instead of libraries:
    ->exit_is(0);
  
  done_testing;
+
+You can also write tests specifically for L<FFI::Platypus>, if your
+alien is going to be used to write FFI bindings.  (the test below
+is the FFI equivalent to the XS example above).
+
+ use Test2::V0;
+ use Test::Alien;
+ use Alien::Libfoo;
+
+ alien_ok 'Alien::Libfoo';
+ ffi_ok { symbols => [ 'something' ] }, with_subtest {
+   # $ffi is an instance of FFI::Platypus with the lib
+   # set appropriately.
+   my($ffi) = @_;
+   my $something = $ffi->function( something => [] => 'int' );
+   is $something->call(), 1, 'Foo::something() returns 1';
+ };
+
+If you do use C<ffi_ok> you want to make sure that your alien reliably
+produces dynamic libraries.  If it isn't consistent (if for example
+some platforms tend not to provide or build dynamic libraries), you can
+check that C<dynamic_libs> doesn't return an empty list.
+
+ ...
+ alien_ok 'Alien::Libfoo';
+ SKIP: {
+   skip "This test requires a dynamic library"
+     unless Alien::Libfoo->dynamic_libs;
+   ffi_ok { symbols [ 'something' ] }, with_subtest {
+     ...
+   };
+ }
 
 More details on testing L<Alien> modules can be found in the 
 L<Test::Alien> documentation.
@@ -573,7 +674,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -623,9 +724,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

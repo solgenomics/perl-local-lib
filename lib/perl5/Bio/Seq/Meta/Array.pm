@@ -134,7 +134,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Seq::Meta::Array;
-$Bio::Seq::Meta::Array::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::LocatableSeq Bio::Seq Bio::Seq::MetaI);

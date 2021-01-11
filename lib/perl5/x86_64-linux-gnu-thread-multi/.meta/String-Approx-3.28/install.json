@@ -1,1 +1,1 @@
-{"target":"String::Approx","provides":{"String::Approx":{"file":"Approx.pm","version":"3.28"}},"name":"String::Approx","pathname":"J/JH/JHI/String-Approx-3.28.tar.gz","dist":"String-Approx-3.28","version":"3.28"}
+{"provides":{"String::Approx":{"file":"Approx.pm","version":"3.28"}},"dist":"String-Approx-3.28","target":"String::Approx","version":"3.28","name":"String::Approx","pathname":"J/JH/JHI/String-Approx-3.28.tar.gz"}

@@ -74,7 +74,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::AlignIO::metafasta;
-$Bio::AlignIO::metafasta::VERSION = '1.7.5';
 use vars qw($WIDTH);
 use strict;
 

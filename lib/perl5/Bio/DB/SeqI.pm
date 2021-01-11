@@ -75,7 +75,7 @@ methods are usually preceded with a _
 
 
 package Bio::DB::SeqI;
-$Bio::DB::SeqI::VERSION = '1.7.5';
+
 use strict;
 
 use base qw(Bio::DB::RandomAccessI);

@@ -80,7 +80,6 @@ The rest of the documentation details each of the object methods. Internal metho
 
 
 package Bio::Tools::Genomewise;
-$Bio::Tools::Genomewise::VERSION = '1.7.5';
 use vars qw($Srctag);
 use strict;
 

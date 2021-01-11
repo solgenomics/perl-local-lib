@@ -88,7 +88,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Ontology::InterProTerm;
-$Bio::Ontology::InterProTerm::VERSION = '1.7.5';
 use strict;
 
 use Bio::Annotation::Reference;

@@ -1,1 +1,1 @@
-{"provides":{"Captcha::reCAPTCHA":{"version":"0.99","file":"lib/Captcha/reCAPTCHA.pm"}},"target":"Captcha::reCAPTCHA","dist":"Captcha-reCaptcha-0.99","version":"0.99","pathname":"S/SU/SUNNYP/Captcha-reCaptcha-0.99.tar.gz","name":"Captcha::reCAPTCHA"}
+{"pathname":"S/SU/SUNNYP/Captcha-reCaptcha-0.99.tar.gz","target":"Captcha::reCAPTCHA","name":"Captcha::reCAPTCHA","provides":{"Captcha::reCAPTCHA":{"version":"0.99","file":"lib/Captcha/reCAPTCHA.pm"}},"dist":"Captcha-reCaptcha-0.99","version":"0.99"}

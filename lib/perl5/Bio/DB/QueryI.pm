@@ -92,7 +92,6 @@ preceded with a _
 # Let the code begin...
 
 package Bio::DB::QueryI;
-$Bio::DB::QueryI::VERSION = '1.7.5';
 use strict;
 
 

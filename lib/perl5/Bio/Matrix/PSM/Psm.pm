@@ -124,7 +124,6 @@ SiteMatrix, meme, transfac, InstanceSite
 
 # Let the code begin...
 package Bio::Matrix::PSM::Psm;
-$Bio::Matrix::PSM::Psm::VERSION = '1.7.5';
 use Bio::Matrix::PSM::InstanceSite;
 use strict;
 

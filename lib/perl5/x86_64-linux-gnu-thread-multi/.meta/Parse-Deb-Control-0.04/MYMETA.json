@@ -4,31 +4,31 @@
       "Jozef Kutej <jkutej@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Module::Build version 0.4229",
+   "generated_by" : "Module::Build version 0.4231",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Parse-Deb-Control",
    "prereqs" : {
       "build" : {
          "requires" : {
-            "File::Slurp" : "0",
-            "File::Spec" : "0",
-            "Test::Differences" : "0",
-            "Test::Exception" : "0",
-            "Test::More" : "0"
+            "File::Slurp" : 0,
+            "File::Spec" : 0,
+            "Test::Differences" : 0,
+            "Test::Exception" : 0,
+            "Test::More" : 0
          }
       },
       "runtime" : {
          "requires" : {
-            "Class::Accessor::Fast" : "0",
+            "Class::Accessor::Fast" : 0,
             "IO::Any" : 0.04,
-            "List::MoreUtils" : "0",
-            "Storable" : "0"
+            "List::MoreUtils" : 0,
+            "Storable" : 0
          }
       }
    },
@@ -45,5 +45,5 @@
       ]
    },
    "version" : "0.04",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001"
 }

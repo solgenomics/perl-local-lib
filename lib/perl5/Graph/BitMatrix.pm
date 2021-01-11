@@ -1,9 +1,10 @@
 package Graph::BitMatrix;
 
 use strict;
+use warnings;
 
-# $SIG{__DIE__ } = sub { use Carp; confess };
-# $SIG{__WARN__} = sub { use Carp; confess };
+# $SIG{__DIE__ } = \&Graph::__carp_confess;
+# $SIG{__WARN__} = \&Graph::__carp_confess;
 
 sub _V () { 2 } # Graph::_V()
 sub _E () { 3 } # Graph::_E()
@@ -18,38 +19,45 @@ sub new {
     my %V; @V{ @V } = 0 .. $#V;
     my $bm = bless [ [ ( $Z ) x $V ], \%V ], $class;
     my $bm0 = $bm->[0];
-    my $connect_edges;
-    if (exists $opt{connect_edges}) {
-	$connect_edges = $opt{connect_edges};
-	delete $opt{connect_edges};
-    }
+    my $connect_edges = delete $opt{connect_edges};
     $connect_edges = 1 unless defined $connect_edges;
+    my $transpose = delete $opt{transpose};
     Graph::_opt_unknown(\%opt);
-    if ($connect_edges) {
-	# for (my $i = 0; $i <= $#V; $i++) {
-	#    my $u = $V[$i];
-	#    for (my $j = 0; $j <= $#V; $j++) {
-	#	vec($bm0->[$i], $j, 1) = 1 if $g->has_edge($u, $V[$j]);
-	#    }
-	# }
-	my $Vi = $g->[_V]->[_i];
-	my $Ei = $g->[_E]->[_i];
-	if ($g->is_undirected) {
-	    for my $e (keys %{ $Ei }) {
-		my ($i0, $j0) = @{ $Ei->{ $e } };
-		my $i1 = $V{ $Vi->{ $i0 } };
-		my $j1 = $V{ $Vi->{ $j0 } };
-		vec($bm0->[$i1], $j1, 1) = 1;
-		vec($bm0->[$j1], $i1, 1) = 1;
-	    }
-	} else {
-	    for my $e (keys %{ $Ei }) {
-		my ($i0, $j0) = @{ $Ei->{ $e } };
-		vec($bm0->[$V{ $Vi->{ $i0 } }], $V{ $Vi->{ $j0 } }, 1) = 1;
-	    }
+    return $bm if !$connect_edges;
+    # for (my $i = 0; $i <= $#V; $i++) {
+    #    my $u = $V[$i];
+    #    for (my $j = 0; $j <= $#V; $j++) {
+    #	vec($bm0->[$i], $j, 1) = 1 if $g->has_edge($u, $V[$j]);
+    #    }
+    # }
+    my $Ei = $g->[_E]->[_i];
+    if ($g->is_undirected) {
+	for my $e (grep defined, @{ $Ei }) {
+	    my ($i0, $j0) = @$e;
+	    vec($bm0->[$i0], $j0, 1) = 1;
+	    vec($bm0->[$j0], $i0, 1) = 1;
+	}
+    } else {
+	for my $e (grep defined, @{ $Ei }) {
+	    my ($i0, $j0) = @$e;
+            ($j0, $i0) = ($i0, $j0) if $transpose;
+	    vec($bm0->[$i0], $j0, 1) = 1;
 	}
     }
-    return $bm;
+    $bm;
+}
+
+sub stringify {
+    my ($m) = @_;
+    my @V = sort keys %{ $m->[1] };
+    my $top = join ' ', map sprintf('%4s', $_), 'to:', @V;
+    my @indices = map $m->[1]{$_}, @V;
+    my @rows;
+    for my $n (@V) {
+        my @vals = $m->get_row($n, @V);
+        push @rows, join ' ', map sprintf('%4s', defined()?$_:''), $n, @vals;
+    }
+    join '', map "$_\n", $top, @rows;
 }
 
 sub set {
@@ -159,6 +167,14 @@ connect_edges
 If true or if not present, set the bits in the bit matrix that
 correspond to edges.  If false, do not set any bits.  In either
 case the bit matrix of V x V bits is allocated.
+
+=item *
+
+transpose
+
+If true, set the bits in the bit matrix that correspond to edges
+but in the reverse direction. This has the effect of transposing the
+matrix. Obviously makes no difference to the result for undirected graphs.
 
 =back
 

@@ -205,7 +205,7 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Search::Hit::PsiBlastHit;
-$Bio::Search::Hit::PsiBlastHit::VERSION = '1.7.5';
+
 use strict;
 use Bio::Search::BlastUtils;
 use vars qw(%SUMMARY_OFFSET);

@@ -64,7 +64,6 @@ Email birney@sanger.ac.uk
 =cut
 
 package Bio::DescribableI;
-$Bio::DescribableI::VERSION = '1.7.5';
 use strict;
 
 

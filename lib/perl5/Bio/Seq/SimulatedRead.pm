@@ -1,5 +1,5 @@
 package Bio::Seq::SimulatedRead;
-$Bio::Seq::SimulatedRead::VERSION = '1.7.5';
+
 
 =head1 NAME
 

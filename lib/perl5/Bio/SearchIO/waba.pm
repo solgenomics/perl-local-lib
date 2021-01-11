@@ -81,7 +81,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SearchIO::waba;
-$Bio::SearchIO::waba::VERSION = '1.7.5';
 use vars qw(%MODEMAP %MAPPING @STATES);
 use strict;
 

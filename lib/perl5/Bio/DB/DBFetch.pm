@@ -76,7 +76,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::DB::DBFetch;
-$Bio::DB::DBFetch::VERSION = '1.7.5';
 use strict;
 use vars qw($MODVERSION $DEFAULTFORMAT $DEFAULTLOCATION
 	         $DEFAULTSERVERTYPE);

@@ -108,7 +108,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::SeqI;
-$Bio::SeqI::VERSION = '1.7.5';
 use strict;
 
 

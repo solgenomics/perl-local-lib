@@ -142,7 +142,7 @@ L<Bio::SearchIO::Writer::HSPTableWriter>
 
 
 package Bio::SearchIO::Writer::ResultTableWriter;
-$Bio::SearchIO::Writer::ResultTableWriter::VERSION = '1.7.5';
+
 use strict;
 
 use base qw(Bio::Root::Root Bio::SearchIO::SearchWriterI);

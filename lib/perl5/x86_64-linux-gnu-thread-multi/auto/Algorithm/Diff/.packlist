@@ -1,6 +1,2 @@
-/home/production/cxgn/local-lib/lib/perl5/Algorithm/Diff.pm
-/home/production/cxgn/local-lib/lib/perl5/Algorithm/DiffOld.pm
-/home/production/cxgn/local-lib/lib/perl5/Algorithm/cdiff.pl
-/home/production/cxgn/local-lib/lib/perl5/Algorithm/diff.pl
-/home/production/cxgn/local-lib/lib/perl5/Algorithm/diffnew.pl
-/home/production/cxgn/local-lib/lib/perl5/Algorithm/htmldiff.pl
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/Algorithm/Diff.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/Algorithm/DiffOld.pm

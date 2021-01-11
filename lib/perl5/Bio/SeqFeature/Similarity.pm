@@ -77,7 +77,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::SeqFeature::Similarity;
-$Bio::SeqFeature::Similarity::VERSION = '1.7.5';
 use strict;
 
 

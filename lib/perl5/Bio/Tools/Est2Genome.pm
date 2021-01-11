@@ -83,7 +83,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Tools::Est2Genome;
-$Bio::Tools::Est2Genome::VERSION = '1.7.5';
 use strict;
 
 # Object preamble - inherits from Bio::Root::Root

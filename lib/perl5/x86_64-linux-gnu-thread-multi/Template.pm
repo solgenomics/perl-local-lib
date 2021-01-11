@@ -10,7 +10,7 @@
 #   Andy Wardley   <abw@wardley.org>
 #
 # COPYRIGHT
-#   Copyright (C) 1996-2014 Andy Wardley.  All Rights Reserved.
+#   Copyright (C) 1996-2020 Andy Wardley.  All Rights Reserved.
 #
 #   This module is free software; you can redistribute it and/or
 #   modify it under the same terms as Perl itself.
@@ -32,7 +32,7 @@ use File::Basename;
 use File::Path;
 use Scalar::Util qw(blessed);
 
-our $VERSION = '2.29';
+our $VERSION = '3.009';
 our $ERROR   = '';
 our $DEBUG   = 0;
 our $BINMODE = 0 unless defined $BINMODE;
@@ -189,7 +189,7 @@ sub _output {
             # strip file name and line number from error raised by die()
             ($error = $@) =~ s/ at \S+ line \d+\n?$//;
         }
-        elsif (open(FP, ">$where")) {
+        elsif (open(FP, '>', $where)) {
             # binmode option can be 1 or a specific layer, e.g. :utf8
             my $bm = $options->{ binmode  };
             if ($bm && $bm eq 1) {
@@ -915,11 +915,11 @@ Andy Wardley E<lt>abw@wardley.orgE<gt> L<http://wardley.org/>
 
 =head1 VERSION
 
-Template Toolkit version 2.26, released January 2014.
+Template Toolkit version 3.009, released on July 13 2020.
 
 =head1 COPYRIGHT
 
-Copyright (C) 1996-2014 Andy Wardley.  All Rights Reserved.
+Copyright (C) 1996-2020 Andy Wardley.  All Rights Reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

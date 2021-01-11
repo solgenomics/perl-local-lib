@@ -80,7 +80,6 @@ preceded with a _
 # Let the code begin...
 
 package Bio::DB::Query::WebQuery;
-$Bio::DB::Query::WebQuery::VERSION = '1.7.5';
 use strict;
 use URI;
 use LWP::UserAgent;

@@ -98,7 +98,7 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SeqFeature::TypedSeqFeatureI;
-$Bio::SeqFeature::TypedSeqFeatureI::VERSION = '1.7.5';
+
 use strict;
 use Bio::Root::RootI;
 

@@ -1,1 +1,1 @@
-{"target":"DateTime::Format::Pg","name":"DateTime::Format::Pg","provides":{"DateTime::Format::Pg":{"file":"lib/DateTime/Format/Pg.pm","version":"0.16013"}},"version":"0.16013","dist":"DateTime-Format-Pg-0.16013","pathname":"D/DM/DMAKI/DateTime-Format-Pg-0.16013.tar.gz"}
+{"name":"DateTime::Format::Pg","dist":"DateTime-Format-Pg-0.16013","target":"DateTime::Format::Pg","pathname":"D/DM/DMAKI/DateTime-Format-Pg-0.16013.tar.gz","version":"0.16013","provides":{"DateTime::Format::Pg":{"version":"0.16013","file":"lib/DateTime/Format/Pg.pm"}}}

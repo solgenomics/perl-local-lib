@@ -3,7 +3,7 @@ package DateTime::Locale::Catalog;
 use strict;
 use warnings;
 
-our $VERSION = '1.24';
+our $VERSION = '1.31';
 
 1;
 
@@ -21,7 +21,7 @@ DateTime::Locale::Catalog - Provides a catalog of all valid locale names
 
 =head1 VERSION
 
-version 1.24
+version 1.31
 
 =head1 DESCRIPTION
 
@@ -136,8 +136,8 @@ The available locales are:
  ccp-IN           Chakma India                                𑄌𑄋𑄴𑄟𑄳𑄦 𑄞𑄢𑄧𑄖𑄴
  ce               Chechen                                     нохчийн
  ce-RU            Chechen Russia                              нохчийн Росси
- ceb              Cebuano                                     Cebuano
- ceb-PH           Cebuano Philippines                         Cebuano Pilipinas
+ ceb              Cebuano                                     Binisaya
+ ceb-PH           Cebuano Philippines                         Binisaya Pilipinas
  cgg              Chiga                                       Rukiga
  cgg-UG           Chiga Uganda                                Rukiga Uganda
  chr              Cherokee                                    ᏣᎳᎩ
@@ -147,8 +147,6 @@ The available locales are:
  ckb-IR           Central Kurdish Iran                        کوردیی ناوەندی ئێران
  cs               Czech                                       čeština
  cs-CZ            Czech Czechia                               čeština Česko
- cu               Church Slavic                               cu
- cu-RU            Church Slavic Russia                        cu RU
  cy               Welsh                                       Cymraeg
  cy-GB            Welsh United Kingdom                        Cymraeg Y Deyrnas Unedig
  da               Danish                                      dansk
@@ -166,6 +164,8 @@ The available locales are:
  de-LU            German Luxembourg                           Deutsch Luxemburg
  dje              Zarma                                       Zarmaciine
  dje-NE           Zarma Niger                                 Zarmaciine Nižer
+ doi              Dogri                                       डोगरी
+ doi-IN           Dogri India                                 डोगरी भारत
  dsb              Lower Sorbian                               dolnoserbšćina
  dsb-DE           Lower Sorbian Germany                       dolnoserbšćina Nimska
  dua              Duala                                       duálá
@@ -330,6 +330,19 @@ The available locales are:
  fa-AF            Persian Afghanistan                         فارسی افغانستان
  fa-IR            Persian Iran                                فارسی ایران
  ff               Fulah                                       Pulaar
+ ff-Adlm          Fulah Adlam                                 𞤆𞤵𞤤𞤢𞤪 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-BF       Fulah Burkina Faso Adlam                    𞤆𞤵𞤤𞤢𞤪 𞤄𞤵𞤪𞤳𞤭𞤲𞤢 𞤊𞤢𞤧𞤮𞥅 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-CM       Fulah Cameroon Adlam                        𞤆𞤵𞤤𞤢𞤪 𞤑𞤢𞤥𞤢𞤪𞤵𞥅𞤲 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-GH       Fulah Ghana Adlam                           𞤆𞤵𞤤𞤢𞤪 𞤘𞤢𞤲𞤢 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-GM       Fulah Gambia Adlam                          𞤆𞤵𞤤𞤢𞤪 𞤘𞤢𞤥𞤦𞤭𞤴𞤢 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-GN       Fulah Guinea Adlam                          𞤆𞤵𞤤𞤢𞤪 𞤘𞤭𞤲𞤫 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-GW       Fulah Guinea-Bissau Adlam                   𞤆𞤵𞤤𞤢𞤪 𞤘𞤭𞤲𞤫-𞤄𞤭𞤧𞤢𞤱𞤮𞥅 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-LR       Fulah Liberia Adlam                         𞤆𞤵𞤤𞤢𞤪 𞤂𞤢𞤦𞤭𞤪𞤭𞤴𞤢𞥄 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-MR       Fulah Mauritania Adlam                      𞤆𞤵𞤤𞤢𞤪 𞤃𞤮𞤪𞤼𞤢𞤲𞤭𞥅 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-NE       Fulah Niger Adlam                           𞤆𞤵𞤤𞤢𞤪 𞤐𞤭𞥅𞤶𞤫𞤪 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-NG       Fulah Nigeria Adlam                         𞤆𞤵𞤤𞤢𞤪 𞤐𞤢𞤶𞤫𞤪𞤭𞤴𞤢𞥄 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-SL       Fulah Sierra Leone Adlam                    𞤆𞤵𞤤𞤢𞤪 𞤅𞤢𞤪𞤢𞤤𞤮𞤲 𞤀𞤁𞤂𞤢𞤃
+ ff-Adlm-SN       Fulah Senegal Adlam                         𞤆𞤵𞤤𞤢𞤪 𞤅𞤫𞤲𞤫𞤺𞤢𞥄𞤤 𞤀𞤁𞤂𞤢𞤃
  ff-Latn          Fulah Latin                                 Pulaar Latn
  ff-Latn-BF       Fulah Burkina Faso Latin                    Pulaar Burkibaa Faaso Latn
  ff-Latn-CM       Fulah Cameroon Latin                        Pulaar Kameruun Latn
@@ -402,6 +415,7 @@ The available locales are:
  fy               Western Frisian                             Frysk
  fy-NL            Western Frisian Netherlands                 Frysk Nederlân
  ga               Irish                                       Gaeilge
+ ga-GB            Irish United Kingdom                        Gaeilge an Ríocht Aontaithe
  ga-IE            Irish Ireland                               Gaeilge Éire
  gd               Scottish Gaelic                             Gàidhlig
  gd-GB            Scottish Gaelic United Kingdom              Gàidhlig An Rìoghachd Aonaichte
@@ -440,8 +454,8 @@ The available locales are:
  ia-001           Interlingua World                           interlingua Mundo
  id               Indonesian                                  Indonesia
  id-ID            Indonesian Indonesia                        Indonesia Indonesia
- ig               Igbo                                        Asụsụ Igbo
- ig-NG            Igbo Nigeria                                Asụsụ Igbo Naịjịrịa
+ ig               Igbo                                        Igbo
+ ig-NG            Igbo Nigeria                                Igbo Naịjịrịa
  ii               Sichuan Yi                                  ꆈꌠꉙ
  ii-CN            Sichuan Yi China                            ꆈꌠꉙ ꍏꇩ
  is               Icelandic                                   íslenska
@@ -491,7 +505,8 @@ The available locales are:
  kok              Konkani                                     कोंकणी
  kok-IN           Konkani India                               कोंकणी भारत
  ks               Kashmiri                                    کٲشُر
- ks-IN            Kashmiri India                              کٲشُر ہِندوستان
+ ks-Arab          Kashmiri Arabic                             کٲشُر اَربی
+ ks-Arab-IN       Kashmiri India Arabic                       کٲشُر ہِندوستان اَربی
  ksb              Shambala                                    Kishambaa
  ksb-TZ           Shambala Tanzania                           Kishambaa Tanzania
  ksf              Bafia                                       rikpa
@@ -532,6 +547,8 @@ The available locales are:
  luy-KE           Luyia Kenya                                 Luluhia Kenya
  lv               Latvian                                     latviešu
  lv-LV            Latvian Latvia                              latviešu Latvija
+ mai              Maithili                                    मैथिली
+ mai-IN           Maithili India                              मैथिली भारत
  mas              Masai                                       Maa
  mas-KE           Masai Kenya                                 Maa Kenya
  mas-TZ           Masai Tanzania                              Maa Tansania
@@ -545,18 +562,22 @@ The available locales are:
  mgh-MZ           Makhuwa-Meetto Mozambique                   Makua Umozambiki
  mgo              Metaʼ                                       metaʼ
  mgo-CM           Metaʼ Cameroon                              metaʼ Kamalun
- mi               Maori                                       Māori
- mi-NZ            Maori New Zealand                           Māori Aotearoa
+ mi               Maori                                       te reo Māori
+ mi-NZ            Maori New Zealand                           te reo Māori Aotearoa
  mk               Macedonian                                  македонски
  mk-MK            Macedonian North Macedonia                  македонски Северна Македонија
  ml               Malayalam                                   മലയാളം
  ml-IN            Malayalam India                             മലയാളം ഇന്ത്യ
  mn               Mongolian                                   монгол
  mn-MN            Mongolian Mongolia                          монгол Монгол
+ mni              Manipuri                                    মৈতৈলোন্
+ mni-Beng         Manipuri Bangla                             মৈতৈলোন্ বাংলা
+ mni-Beng-IN      Manipuri India Bangla                       মৈতৈলোন্ ইন্দিয়া বাংলা
  mr               Marathi                                     मराठी
  mr-IN            Marathi India                               मराठी भारत
  ms               Malay                                       Melayu
  ms-BN            Malay Brunei                                Melayu Brunei
+ ms-ID            Malay Indonesia                             Melayu Indonesia
  ms-MY            Malay Malaysia                              Melayu Malaysia
  ms-SG            Malay Singapore                             Melayu Singapura
  mt               Maltese                                     Malti
@@ -590,8 +611,8 @@ The available locales are:
  nl-SX            Dutch Sint Maarten                          Nederlands Sint-Maarten
  nmg              Kwasio                                      nmg
  nmg-CM           Kwasio Cameroon                             nmg Kamerun
- nn               Norwegian Nynorsk                           nynorsk
- nn-NO            Norwegian Nynorsk Norway                    nynorsk Noreg
+ nn               Norwegian Nynorsk                           norsk nynorsk
+ nn-NO            Norwegian Nynorsk Norway                    norsk nynorsk Noreg
  nnh              Ngiemboon                                   Shwóŋò ngiembɔɔn
  nnh-CM           Ngiemboon Cameroon                          Shwóŋò ngiembɔɔn Kàmalûm
  nus              Nuer                                        Thok Nath
@@ -611,10 +632,10 @@ The available locales are:
  pa-Arab-PK       Punjabi Pakistan Arabic                     پنجابی پاکستان عربی
  pa-Guru          Punjabi Gurmukhi                            ਪੰਜਾਬੀ ਗੁਰਮੁਖੀ
  pa-Guru-IN       Punjabi India Gurmukhi                      ਪੰਜਾਬੀ ਭਾਰਤ ਗੁਰਮੁਖੀ
+ pcm              Nigerian Pidgin                             Naijíriá Píjin
+ pcm-NG           Nigerian Pidgin Nigeria                     Naijíriá Píjin Naijíria
  pl               Polish                                      polski
  pl-PL            Polish Poland                               polski Polska
- prg              Prussian                                    prūsiskan
- prg-001          Prussian World                              prūsiskan 001
  ps               Pashto                                      پښتو
  ps-AF            Pashto Afghanistan                          پښتو افغانستان
  ps-PK            Pashto Pakistan                             پښتو پاکستان
@@ -656,14 +677,22 @@ The available locales are:
  rw-RW            Kinyarwanda Rwanda                          Kinyarwanda U Rwanda
  rwk              Rwa                                         Kiruwa
  rwk-TZ           Rwa Tanzania                                Kiruwa Tanzania
+ sa               Sanskrit                                    संस्कृत भाषा
+ sa-IN            Sanskrit India                              संस्कृत भाषा भारतः
  sah              Sakha                                       саха тыла
  sah-RU           Sakha Russia                                саха тыла Арассыыйа
  saq              Samburu                                     Kisampur
  saq-KE           Samburu Kenya                               Kisampur Kenya
+ sat              Santali                                     ᱥᱟᱱᱛᱟᱲᱤ
+ sat-Olck         Santali Ol Chiki                            ᱥᱟᱱᱛᱟᱲᱤ ᱚᱞ ᱪᱤᱠᱤ
+ sat-Olck-IN      Santali India Ol Chiki                      ᱥᱟᱱᱛᱟᱲᱤ ᱤᱱᱰᱤᱭᱟ ᱚᱞ ᱪᱤᱠᱤ
  sbp              Sangu                                       Ishisangu
  sbp-TZ           Sangu Tanzania                              Ishisangu Tansaniya
  sd               Sindhi                                      سنڌي
- sd-PK            Sindhi Pakistan                             سنڌي پاڪستان
+ sd-Arab          Sindhi Arabic                               سنڌي عربي
+ sd-Arab-PK       Sindhi Pakistan Arabic                      سنڌي پاڪستان عربي
+ sd-Deva          Sindhi Devanagari                           सिन्धी देवनागिरी
+ sd-Deva-IN       Sindhi India Devanagari                     सिन्धी भारत देवनागिरी
  se               Northern Sami                               davvisámegiella
  se-FI            Northern Sami Finland                       davvisámegiella Suopma
  se-NO            Northern Sami Norway                        davvisámegiella Norga
@@ -709,6 +738,9 @@ The available locales are:
  sr-Latn-ME       Serbian Montenegro Latin                    srpski Crna Gora latinica
  sr-Latn-RS       Serbian Serbia Latin                        srpski Srbija latinica
  sr-Latn-XK       Serbian Kosovo Latin                        srpski Kosovo latinica
+ su               Sundanese                                   Basa Sunda
+ su-Latn          Sundanese Latin                             Basa Sunda Latin
+ su-Latn-ID       Sundanese Indonesia Latin                   Basa Sunda ID Latin
  sv               Swedish                                     svenska
  sv-AX            Swedish Åland Islands                       svenska Åland
  sv-FI            Swedish Finland                             svenska Finland
@@ -732,9 +764,9 @@ The available locales are:
  tg-TJ            Tajik Tajikistan                            тоҷикӣ Тоҷикистон
  th               Thai                                        ไทย
  th-TH            Thai Thailand                               ไทย ไทย
- ti               Tigrinya                                    ትግርኛ
- ti-ER            Tigrinya Eritrea                            ትግርኛ ኤርትራ
- ti-ET            Tigrinya Ethiopia                           ትግርኛ ኢትዮጵያ
+ ti               Tigrinya                                    ትግር
+ ti-ER            Tigrinya Eritrea                            ትግር ኤርትራ
+ ti-ET            Tigrinya Ethiopia                           ትግር ኢትዮጵያ
  tk               Turkmen                                     türkmen dili
  tk-TM            Turkmen Turkmenistan                        türkmen dili Türkmenistan
  to               Tongan                                      lea fakatonga
@@ -769,8 +801,6 @@ The available locales are:
  vai-Vaii-LR      Vai Liberia Vai                             ꕙꔤ ꕞꔤꔫꕩ Vaii
  vi               Vietnamese                                  Tiếng Việt
  vi-VN            Vietnamese Vietnam                          Tiếng Việt Việt Nam
- vo               Volapük                                     vo
- vo-001           Volapük World                               vo 001
  vun              Vunjo                                       Kyivunjo
  vun-TZ           Vunjo Tanzania                              Kyivunjo Tanzania
  wae              Walser                                      Walser
@@ -786,8 +816,8 @@ The available locales are:
  yi               Yiddish                                     ייִדיש
  yi-001           Yiddish World                               ייִדיש וועלט
  yo               Yoruba                                      Èdè Yorùbá
- yo-BJ            Yoruba Benin                                Èdè Yorùbá Orílɛ́ède Bɛ̀nɛ̀
- yo-NG            Yoruba Nigeria                              Èdè Yorùbá Orilẹ̀-èdè Nàìjíríà
+ yo-BJ            Yoruba Benin                                Èdè Yorùbá Bɛ̀nɛ̀
+ yo-NG            Yoruba Nigeria                              Èdè Yorùbá Nàìjíríà
  yue              Cantonese                                   粵語
  yue-Hans         Cantonese Simplified                        粤语 简体
  yue-Hans-CN      Cantonese China Simplified                  粤语 中华人民共和国 简体
@@ -827,7 +857,7 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2003 - 2019 by Dave Rolsky.
+This software is copyright (c) 2003 - 2020 by Dave Rolsky.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

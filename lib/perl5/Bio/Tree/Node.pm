@@ -82,7 +82,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Tree::Node;
-$Bio::Tree::Node::VERSION = '1.7.5';
 use vars qw($CREATIONORDER);
 use strict;
 

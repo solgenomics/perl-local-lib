@@ -456,10 +456,7 @@ methods. Internal methods are usually preceded with a "_".
 
 
 package Bio::Seq;
-$Bio::Seq::VERSION = '1.7.5';
 use strict;
-
-use Carp;
 
 use Bio::Annotation::Collection;
 use Bio::PrimarySeq;
@@ -1136,9 +1133,13 @@ sub add_SeqFeature {
    $self->{'_as_feat'} = [] unless $self->{'_as_feat'};
 
    if (scalar @feat > 1) {
-       Carp::carp('Providing an array of features to Bio::Seq add_SeqFeature()'
-                  . ' is deprecated and will be removed in a future version.'
-                  . ' Add a single feature at a time instead.');
+      $self->deprecated(
+         -message => 'Providing an array of features to Bio::Seq add_SeqFeature()'.
+                     ' is deprecated and will be removed in a future version. '.
+                     'Add a single feature at a time instead.',
+         -warn_version    => 1.007,
+         -throw_version   => 1.009,
+      );
    }
 
    for my $feat ( @feat ) {

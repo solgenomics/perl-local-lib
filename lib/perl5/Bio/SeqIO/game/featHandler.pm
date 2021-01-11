@@ -69,7 +69,7 @@ methods. Internal methods are usually preceded with a _
 =cut
 
 package Bio::SeqIO::game::featHandler;
-$Bio::SeqIO::game::featHandler::VERSION = '1.7.5';
+
 use Bio::SeqFeature::Generic;
 use Bio::Location::Split;
 use Data::Dumper;

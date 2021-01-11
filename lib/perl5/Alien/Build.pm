@@ -2,6 +2,7 @@ package Alien::Build;
 
 use strict;
 use warnings;
+use 5.008004;
 use Path::Tiny ();
 use Carp ();
 use File::chdir;
@@ -9,9 +10,10 @@ use JSON::PP ();
 use Env qw( @PATH );
 use Env qw( @PKG_CONFIG_PATH );
 use Config ();
+use Alien::Build::Log;
 
 # ABSTRACT: Build external dependencies for use in CPAN
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 sub _path { goto \&Path::Tiny::path }
@@ -28,6 +30,7 @@ sub new
     runtime_prop => {
       alien_build_version => $Alien::Build::VERSION || 'dev',
     },
+    plugin_instance_prop => {},
     bin_dir => [],
     pkg_config_path => [],
     aclocal_path => [],
@@ -58,20 +61,8 @@ sub load
   my $rcfile = Path::Tiny->new($ENV{ALIEN_BUILD_RC} || '~/.alienbuild/rc.pl')->absolute;
   if(-r $rcfile)
   {
+    require Alien::Build::rc;
     package Alien::Build::rc;
-    sub logx ($)
-    {
-      unshift @_, 'Alien::Build';
-      goto &Alien::Build::log;
-    };
-    sub preload ($)
-    {
-      push @Alien::Build::rc::PRELOAD, $_[0];
-    }
-    sub postload ($)
-    {
-      push @Alien::Build::rc::POSTLOAD, $_[0];
-    }
     require $rcfile;
   }
 
@@ -96,14 +87,14 @@ sub load
     $class->meta;
   }};
 
-  my @preload = qw( Core::Setup Core::Download Core::FFI Core::Override );
+  my @preload = qw( Core::Setup Core::Download Core::FFI Core::Override Core::CleanInstall );
   push @preload, @Alien::Build::rc::PRELOAD;
-  push @preload, split ';', $ENV{ALIEN_BUILD_PRELOAD}
+  push @preload, split /;/, $ENV{ALIEN_BUILD_PRELOAD}
     if defined $ENV{ALIEN_BUILD_PRELOAD};
 
   my @postload = qw( Core::Legacy Core::Gather Core::Tail );
   push @postload, @Alien::Build::rc::POSTLOAD;
-  push @postload, split ';', $ENV{ALIEN_BUILD_POSTLOAD}
+  push @postload, split /;/, $ENV{ALIEN_BUILD_POSTLOAD}
     if defined $ENV{ALIEN_BUILD_POSTLOAD};
 
   my $self = $class->new(
@@ -119,12 +110,14 @@ sub load
   }
 
   # TODO: do this without a string eval ?
+  ## no critic
   eval '# line '. __LINE__ . ' "' . __FILE__ . qq("\n) . qq{
     package ${class}::Alienfile;
     do '@{[ $file->absolute->stringify ]}';
     die \$\@ if \$\@;
   };
   die $@ if $@;
+  ## use critic
 
   foreach my $postload (@postload)
   {
@@ -140,7 +133,7 @@ sub load
   unless(defined $self->meta->prop->{network})
   {
     $self->meta->prop->{network} = 1;
-    ## https://github.com/Perl5-Alien/Alien-Build/issues/23#issuecomment-341114414
+    ## https://github.com/PerlAlien/Alien-Build/issues/23#issuecomment-341114414
     #$self->meta->prop->{network} = 0 if $ENV{NO_NETWORK_TESTING};
     $self->meta->prop->{network} = 0 if (defined $ENV{ALIEN_INSTALL_NETWORK}) && ! $ENV{ALIEN_INSTALL_NETWORK};
   }
@@ -173,8 +166,9 @@ sub resume
   my(undef, $alienfile, $root) = @_;
   my $h = JSON::PP::decode_json(_path("$root/state.json")->slurp);
   my $self = Alien::Build->load("$alienfile", @{ $h->{args} });
-  $self->{install_prop} = $h->{install};
-  $self->{runtime_prop} = $h->{runtime};
+  $self->{install_prop}         = $h->{install};
+  $self->{plugin_instance_prop} = $h->{plugin_instance};
+  $self->{runtime_prop}         = $h->{runtime};
   $self;
 }
 
@@ -189,6 +183,14 @@ sub meta_prop
 sub install_prop
 {
   shift->{install_prop};
+}
+
+
+sub plugin_instance_prop
+{
+  my($self, $plugin) = @_;
+  my $instance_id = $plugin->instance_id;
+  $self->{plugin_instance_prop}->{$instance_id} ||= {};
 }
 
 
@@ -227,10 +229,11 @@ sub checkpoint
   my($self) = @_;
   my $root = $self->root;
   _path("$root/state.json")->spew(
-    JSON::PP->new->pretty->canonical(1)->encode({
-      install => $self->install_prop,
-      runtime => $self->runtime_prop,
-      args    => $self->{args},
+    JSON::PP->new->pretty->canonical(1)->ascii->encode({
+      install         => $self->install_prop,
+      runtime         => $self->runtime_prop,
+      plugin_instance => $self->{plugin_instance_prop},
+      args            => $self->{args},
     })
   );
   $self;
@@ -393,7 +396,7 @@ sub _call_hook
   # autoconf uses MSYS paths, even for the ACLOCAL_PATH environment variable, so we can't use Env for this.
   {
     my @path;
-    @path = split ':', $ENV{ACLOCAL_PATH} if defined $ENV{ACLOCAL_PATH};
+    @path = split /:/, $ENV{ACLOCAL_PATH} if defined $ENV{ACLOCAL_PATH};
     unshift @path, @{ $self->{aclocal_path} };
     $ENV{ACLOCAL_PATH} = join ':', @path;
   }
@@ -436,7 +439,23 @@ sub probe
             $CWD = $self->root;
           },
           ok       => 'system',
-          continue => sub { $_[0] ne 'system' },
+          continue => sub {
+            if($_[0] eq 'system')
+            {
+              foreach my $name (qw( probe_class probe_instance_id ))
+              {
+                if(exists $self->hook_prop->{$name} && defined $self->hook_prop->{$name})
+                {
+                  $self->install_prop->{"system_$name"} = $self->hook_prop->{$name};
+                }
+              }
+              return undef;
+            }
+            else
+            {
+              return 1;
+            }
+          },
         },
         'probe',
       );
@@ -765,6 +784,16 @@ sub test
 }
 
 
+sub clean_install
+{
+  my($self) = @_;
+  if($self->install_type eq 'share')
+  {
+    $self->_call_hook("clean_install");
+  }
+}
+
+
 sub system
 {
   my($self, $command, @args) = @_;
@@ -786,9 +815,15 @@ sub system
 sub log
 {
   my(undef, $message) = @_;
-  my $caller = caller;
+  my $caller = [caller];
   chomp $message;
-  print "$caller> $message\n";
+  foreach my $line (split /\n/, $message)
+  {
+    Alien::Build::Log->default->log(
+      caller  => $caller,
+      message => $line,
+    );
+  }
 }
 
 
@@ -1109,8 +1144,14 @@ sub apply_plugin
 
 package Alien::Build::TempDir;
 
+# TODO: it's confusing that there is both a AB::TempDir and AB::Temp
+# although they do different things.  there could maybe be a better
+# name for AB::TempDir (maybe AB::TempBuildDir, though that is a little
+# redundant).  Happily both are private classes, and either are able to
+# rename, if a good name can be thought of.
+
 use Path::Tiny qw( path );
-use overload '""' => sub { shift->as_string };
+use overload '""' => sub { shift->as_string }, bool => sub { 1 }, fallback => 1;
 use File::Temp qw( tempdir );
 
 sub new
@@ -1151,7 +1192,7 @@ Alien::Build - Build external dependencies for use in CPAN
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -1254,7 +1295,7 @@ C<plugin_fetch_newprotocol>:
    my($self, $meta) = @_;
  
    $meta->prop( plugin_fetch_newprotocol_foo => 'some value' );
-  
+ 
    $meta->register_hook(
      some_hook => sub {
        my($build) = @_;
@@ -1491,7 +1532,33 @@ absolute form of C<./_alien> by default.
 The stage directory where files will be copied.  This is usually the
 root of the blib share directory.
 
+=item system_probe_class
+
+After the probe step this property may contain the plugin class that
+performed the system probe.  It shouldn't be filled in directly by
+the plugin (instead if should use the hook property C<probe_class>,
+see below).  This is optional, and not all probe plugins will provide
+this information.
+
+=item system_probe_instance_id
+
+After the probe step this property may contain the plugin instance id that
+performed the system probe.  It shouldn't be filled in directly by
+the plugin (instead if should use the hook property C<probe_instance_id>,
+see below).  This is optional, and not all probe plugins will provide
+this information.
+
 =back
+
+=head2 plugin_instance_prop
+
+ my $href = $build->plugin_instance_prop($plugin);
+
+This returns the private plugin instance properties for a given plugin.
+This method should usually only be called internally by plugins themselves
+to keep track of internal state.  Because the content can be used arbitrarily
+by the owning plugin because it is private to the plugin, and thus is not
+part of the L<Alien::Build> spec.
 
 =head2 runtime_prop
 
@@ -1625,6 +1692,20 @@ The name of the currently running hook.
 Probe and PkgConfig plugins I<may> set this property indicating the
 version of the alienized package.  Not all plugins and configurations
 may be able to provide this.
+
+=item probe_class (probe)
+
+Probe and PkgConfig plugins I<may> set this property indicating the
+plugin class that made the probe.  If the probe results in a system
+install this will be propagated to C<system_probe_class> for later
+use.
+
+=item probe_instance_id (probe)
+
+Probe and PkgConfig plugins I<may> set this property indicating the
+plugin instance id that made the probe.  If the probe results in a
+system install this will be propagated to C<system_probe_instance_id>
+for later use.
 
 =back
 
@@ -1788,6 +1869,16 @@ The C<gather_system> hook will be executed.
 
 Run the test phase
 
+=head2 clean_install
+
+ $build->clean_install
+
+Clean files from the final install location.  The default implementation removes all
+files recursively except for the C<_alien> directory.  This is helpful when you have
+an old install with files that may break the new build.
+
+For a non-share install this doesn't do anything.
+
 =head2 system
 
  $build->system($command);
@@ -1937,6 +2028,10 @@ user is aware that L<Alien> modules may be installed and have indicated consent.
 The actual implementation of this, by its nature would have to be in the consuming
 CPAN module.
 
+=item ALIEN_BUILD_LOG
+
+The default log class used.  See L<Alien::Build::Log> and L<Alien::Build::Log::Default>.
+
 =item ALIEN_BUILD_RC
 
 Perl source file which can override some global defaults for L<Alien::Build>,
@@ -1977,7 +2072,7 @@ be used by some Fetch plugins, if they support it.
 =head1 SUPPORT
 
 The intent of the C<Alien-Build> team is to support as best as possible
-all Perls from 5.8.1 to the latest production version.  So long as they
+all Perls from 5.8.4 to the latest production version.  So long as they
 are also supported by the Perl toolchain.
 
 Please feel encouraged to report issues that you encounter to the
@@ -1985,7 +2080,7 @@ project GitHub Issue tracker:
 
 =over 4
 
-=item L<https://github.com/Perl5-Alien/Alien-Build/issues>
+=item L<https://github.com/PerlAlien/Alien-Build/issues>
 
 =back
 
@@ -1994,7 +2089,7 @@ pull-request on the project GitHub:
 
 =over 4
 
-=item L<https://github.com/Perl5-Alien/Alien-Build/pulls>
+=item L<https://github.com/PerlAlien/Alien-Build/pulls>
 
 =back
 
@@ -2026,17 +2121,20 @@ not have been possible without him getting the project started.  Thanks to his s
 I have been able to augment the original L<Alien::Base> system with a reliable set
 of tools (L<Alien::Build>, L<alienfile>, L<Test::Alien>), which make up this toolset.
 
-The original L<Alien::Base> is still copyright (c) 2012-2017 Joel Berger.  It has
+The original L<Alien::Base> is still copyright (c) 2012-2020 Joel Berger.  It has
 the same license as the rest of the Alien::Build and related tools distributed as
 C<Alien-Build>.  Joel Berger thanked a number of people who helped in in the development
 of L<Alien::Base>, in the documentation for that module.
 
-I would also like to acknowledge the other members of the Perl5-Alien github
+I would also like to acknowledge the other members of the PerlAlien github
 organization, Zakariyya Mughal (sivoais, ZMUGHAL) and mohawk (ETJ).  Also important
 in the early development of L<Alien::Build> were the early adopters Chase Whitener
 (genio, CAPOEIRAB, author of L<Alien::libuv>), William N. Braswell, Jr (willthechill,
 WBRASWELL, author of L<Alien::JPCRE2> and L<Alien::PCRE2>) and Ahmad Fatoum (a3f,
 ATHREEF, author of L<Alien::libudev> and L<Alien::LibUSB>).
+
+The Alien ecosystem owes a debt to Dan Book, who goes by Grinnz on IRC, for answering
+question about how to use L<Alien::Build> and friends.
 
 =head1 AUTHOR
 
@@ -2046,7 +2144,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -2096,9 +2194,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -81,11 +81,7 @@ preceded with a _
 # Let the code begin...
 
 package Bio::DB::WebDBSeqI;
-$Bio::DB::WebDBSeqI::VERSION = '1.7.5';
 use strict;
-
-use Carp;
-
 use vars qw($MODVERSION %RETRIEVAL_TYPES $DEFAULT_RETRIEVAL_TYPE
 	    $DEFAULTFORMAT $LAST_INVOCATION_TIME @ATTRIBUTES);
 
@@ -300,7 +296,7 @@ sub get_Stream_by_id {
 
 *get_Stream_by_batch = sub {
   my $self = shift;
-  Carp::carp('get_Stream_by_batch() is deprecated; use get_Stream_by_id() instead');
+  $self->deprecated('get_Stream_by_batch() is deprecated; use get_Stream_by_id() instead');
   $self->get_Stream_by_id(@_)
 };
 

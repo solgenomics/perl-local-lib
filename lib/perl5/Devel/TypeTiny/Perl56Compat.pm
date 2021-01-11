@@ -5,26 +5,28 @@ use strict;
 use warnings;
 
 our $AUTHORITY = 'cpan:TOBYINK';
-our $VERSION   = '1.004004';
+our $VERSION   = '1.012001';
+
+$VERSION =~ tr/_//d;
 
 #### B doesn't provide perlstring() in 5.6. Monkey patch it.
 
 use B ();
 
-unless (exists &B::perlstring)
-{
+unless ( exists &B::perlstring ) {
 	my $d;
 	*B::perlstring = sub {
 		no warnings 'uninitialized';
 		require Data::Dumper;
-		$d ||= 'Data::Dumper'->new([])->Indent(0)->Purity(0)->Pad('')->Useqq(1)->Terse(1)->Freezer('')->Toaster('');
-		my $perlstring = $d->Values([''.shift])->Dump;
-		($perlstring =~ /^"/) ? $perlstring : qq["$perlstring"];
+		$d ||= 'Data::Dumper'
+			->new( [] )->Indent( 0 )->Purity( 0 )->Pad( '' )->Useqq( 1 )
+			->Terse( 1 )->Freezer( '' )->Toaster( '' );
+		my $perlstring = $d->Values( [ '' . shift ] )->Dump;
+		( $perlstring =~ /^"/ ) ? $perlstring : qq["$perlstring"];
 	};
-}
+} #/ unless ( exists &B::perlstring)
 
-unless (exists &B::cstring)
-{
+unless ( exists &B::cstring ) {
 	*B::cstring = \&B::perlstring;
 }
 
@@ -62,7 +64,7 @@ C<perlstring> function, as this was only added in Perl 5.8.0.
 =head1 BUGS
 
 Please report any bugs to
-L<http://rt.cpan.org/Dist/Display.html?Queue=Type-Tiny>.
+L<https://github.com/tobyink/p5-type-tiny/issues>.
 
 =head1 AUTHOR
 
@@ -70,7 +72,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2019 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
@@ -80,4 +82,3 @@ the same terms as the Perl 5 programming language system itself.
 THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
 WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
 MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-

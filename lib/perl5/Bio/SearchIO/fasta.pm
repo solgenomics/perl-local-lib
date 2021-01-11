@@ -81,7 +81,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::SearchIO::fasta;
-$Bio::SearchIO::fasta::VERSION = '1.7.5';
 use vars qw(%MODEMAP %MAPPING $IDLENGTH);
 use strict;
 
@@ -1165,9 +1164,6 @@ sub next_result {
                         # toss the first IDLENGTH characters of the line
                         if ( length($_) >= $len ) {
                             push @{ $data[ $count - 1 ] }, substr( $_, $len );
-                        }
-                        elsif (/^$/) {  # fix issue #255
-                            $count = 5;
                         }
                     }
                 }

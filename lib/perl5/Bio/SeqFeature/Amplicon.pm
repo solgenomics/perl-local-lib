@@ -83,7 +83,7 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::SeqFeature::Amplicon;
-$Bio::SeqFeature::Amplicon::VERSION = '1.7.5';
+
 use strict;
 
 use base qw(Bio::SeqFeature::SubSeq);

@@ -74,7 +74,6 @@ The rest of the documentation details each of the object methods. Internal metho
 
 
 package Bio::SeqIO::MultiFile;
-$Bio::SeqIO::MultiFile::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::SeqIO);

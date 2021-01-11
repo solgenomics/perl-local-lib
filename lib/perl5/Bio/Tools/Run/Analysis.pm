@@ -209,7 +209,7 @@ with an underscore _.
 # Let the code begin...
 
 package Bio::Tools::Run::Analysis;
-$Bio::Tools::Run::Analysis::VERSION = '1.7.5';
+$Bio::Tools::Run::Analysis::VERSION = '1.7.7';
 use vars qw(@ISA $Revision);
 use strict;
 
@@ -521,7 +521,7 @@ sub _save_result {
 # -----------------------------------------------------------------------------
 
 package Bio::Tools::Run::Analysis::Job;
-$Bio::Tools::Run::Analysis::Job::VERSION = '1.7.5';
+$Bio::Tools::Run::Analysis::Job::VERSION = '1.7.7';
 
 =head1 Module Bio::Tools::Run::Analysis::Job
 
@@ -658,7 +658,7 @@ sub id { shift->{'_id'}; }
 # ---------------------------------------------------------------------
 
 package Bio::Tools::Run::Analysis::Utils;
-$Bio::Tools::Run::Analysis::Utils::VERSION = '1.7.5';
+$Bio::Tools::Run::Analysis::Utils::VERSION = '1.7.7';
 
 =head1 Module Bio::Tools::Run::Analysis::Utils
 
@@ -776,7 +776,7 @@ END
 
 It makes an expert guess what kind of access/transport protocol should
 be used to access the underlying analysis. The guess is based on the
-parameters in I<rh_params>. Rememeber that this method is called only
+parameters in I<rh_params>. Remember that this method is called only
 if there was no I<-access> parameter which could tell directly what
 access method to use.
 

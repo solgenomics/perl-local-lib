@@ -1,7 +1,7 @@
 # Let the code begin...
 
 package Bio::AlignIO::Handler::GenericAlignHandler;
-$Bio::AlignIO::Handler::GenericAlignHandler::VERSION = '1.7.5';
+
 use strict;
 use warnings;
 

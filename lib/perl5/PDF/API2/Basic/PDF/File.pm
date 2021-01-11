@@ -16,7 +16,7 @@ package PDF::API2::Basic::PDF::File;
 
 use strict;
 
-our $VERSION = '2.033'; # VERSION
+our $VERSION = '2.038'; # VERSION
 
 =head1 NAME
 
@@ -241,7 +241,7 @@ sub open {
     binmode $fh, ':raw';
     $fh->seek(0, 0);            # go to start of file
     $fh->read($buffer, 255);
-    unless ($buffer =~ m/^\%PDF\-1\.(\d)+\s*$cr/mo) {
+    unless ($buffer =~ m/^\%PDF\-([12]\.\d)+\s*$cr/mo) {
         die "$filename not a PDF file version 1.x";
     }
     $self->{' version'} = $1;
@@ -334,9 +334,9 @@ sub append_file {
     # hack to upgrade pdf-version number to support
     # requested features in higher versions than
     # the pdf was originally created.
-    my $version = $self->{' version'} || 4;
+    my $version = $self->{' version'} || '1.4';
     $fh->seek(0, 0);
-    $fh->print("%PDF-1.$version\n");
+    $fh->print("%PDF-$version\n");
 
     my $tdict = PDFDict();
     $tdict->{'Prev'} = PDFNum($self->{' loc'});
@@ -400,7 +400,7 @@ sub create_file {
     }
 
     $self->{' OUTFILE'} = $fh;
-    $fh->print('%PDF-1.' . ($self->{' version'} || '2') . "\n");
+    $fh->print('%PDF-' . ($self->{' version'} || '1.2') . "\n");
     $fh->print("%\xC6\xCD\xCD\xB5\n");   # and some binary stuff in a comment
     return $self;
 }
@@ -477,17 +477,23 @@ sub readval {
             if ($str =~ s|^/($reg_char+)||) {
                 my $key = PDF::API2::Basic::PDF::Name::name_to_string($1, $self);
                 ($value, $str) = $self->readval($str, %opts);
-                $result->{$key} = $value;
+                unless ((ref($value) // '') eq 'PDF::API2::Basic::PDF::Null') {
+                    $result->{$key} = $value;
+                }
             }
             elsif ($str =~ s|^/$ws_char+||) {
                 # fixes a broken key problem of acrobat. -- fredo
                 ($value, $str) = $self->readval($str, %opts);
-                $result->{'null'} = $value;
+                unless ((ref($value) // '') eq 'PDF::API2::Basic::PDF::Null') {
+                    $result->{'null'} = $value;
+                }
             }
             elsif ($str =~ s|^//|/|) {
                 # fixes again a broken key problem of illustrator/enfocus. -- fredo
                 ($value, $str) = $self->readval($str, %opts);
-                $result->{'null'} = $value;
+                unless ((ref($value) // '') eq 'PDF::API2::Basic::PDF::Null') {
+                    $result->{'null'} = $value;
+                }
             }
             else {
                 die "Invalid dictionary key";
@@ -540,7 +546,10 @@ sub readval {
         }
         $result->{' parent'} = $self;
         weaken $result->{' parent'};
-        $result->{' realised'} = 0;
+
+        # Removed to address changes being lost when an indirect object is realised twice
+        # $result->{' realised'} = 0;
+
         # gdj: FIXME: if any of the ws chars were crs, then the whole
         # string might not have been read.
     }
@@ -947,7 +956,7 @@ sub ship_out {
         $self->{' locs'}{$objind->uid()} = $fh->tell();
         my ($objnum, $objgen) = @{$self->{' objects'}{$objind->uid()}}[0..1];
         $fh->printf('%d %d obj ', $objnum, $objgen);
-        $objind->outobjdeep($fh, $self, 'objnum' => $objnum, 'objgen' => $objgen);
+        $objind->outobjdeep($fh, $self);
         $fh->print(" endobj\n");
 
         # Note that we've output this obj, not forgetting to update
@@ -1134,6 +1143,7 @@ sub _unpack_xref_stream {
     return unpack('n', $data)       if $width == 2;
     return unpack('N', "\x00$data") if $width == 3;
     return unpack('N', $data)       if $width == 4;
+    return unpack('Q', $data)       if $width == 8;
 
     die "Invalid column width: $width";
 }

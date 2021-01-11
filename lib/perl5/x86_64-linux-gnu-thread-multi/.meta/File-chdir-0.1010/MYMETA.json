@@ -5,13 +5,13 @@
       "Michael G. Schwern <schwern@pobox.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 5.031, CPAN::Meta::Converter version 2.143240, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Dist::Zilla version 5.031, CPAN::Meta::Converter version 2.143240, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "File-chdir",
    "no_index" : {
@@ -107,5 +107,5 @@
    "x_contributors" : [
       "Joel Berger <joel.a.berger@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001"
 }

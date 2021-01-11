@@ -103,7 +103,6 @@ The rest of the documentation details each of the object methods. Internal metho
 
 
 package Bio::Tools::Fgenesh;
-$Bio::Tools::Fgenesh::VERSION = '1.7.5';
 use strict;
 use Symbol;
 

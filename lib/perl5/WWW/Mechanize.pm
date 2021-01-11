@@ -6,11 +6,11 @@ package WWW::Mechanize;
 use strict;
 use warnings;
 
-our $VERSION = '1.91';
+our $VERSION = '2.03';
 
 use Tie::RefHash;
 use HTTP::Request 1.30;
-use LWP::UserAgent 5.827;
+use LWP::UserAgent 6.45;
 use HTML::Form 1.00;
 use HTML::TokeParser;
 use Scalar::Util qw(tainted);
@@ -26,44 +26,45 @@ BEGIN {
 sub new {
     my $class = shift;
 
-    my %parent_parms = (
+    my %parent_params = (
         agent       => "WWW-Mechanize/$VERSION",
         cookie_jar  => {},
     );
 
-    my %mech_parms = (
-        autocheck     => ($class eq 'WWW::Mechanize' ? 1 : 0),
-        onwarn        => \&WWW::Mechanize::_warn,
-        onerror       => \&WWW::Mechanize::_die,
-        quiet         => 0,
-        stack_depth   => 8675309,     # Arbitrarily humongous stack
-        headers       => {},
-        noproxy       => 0,
-        strict_forms  => 0,           # pass-through to HTML::Form
-        verbose_forms => 0,           # pass-through to HTML::Form
+    my %mech_params = (
+        autocheck       => ($class eq 'WWW::Mechanize' ? 1 : 0),
+        onwarn          => \&WWW::Mechanize::_warn,
+        onerror         => \&WWW::Mechanize::_die,
+        quiet           => 0,
+        stack_depth     => 8675309,     # Arbitrarily humongous stack
+        headers         => {},
+        noproxy         => 0,
+        strict_forms    => 0,           # pass-through to HTML::Form
+        verbose_forms   => 0,           # pass-through to HTML::Form
+        marked_sections => 1,
     );
 
-    my %passed_parms = @_;
+    my %passed_params = @_;
 
-    # Keep the mech-specific parms before creating the object.
-    while ( my($key,$value) = each %passed_parms ) {
-        if ( exists $mech_parms{$key} ) {
-            $mech_parms{$key} = $value;
+    # Keep the mech-specific params before creating the object.
+    while ( my($key,$value) = each %passed_params ) {
+        if ( exists $mech_params{$key} ) {
+            $mech_params{$key} = $value;
         }
         else {
-            $parent_parms{$key} = $value;
+            $parent_params{$key} = $value;
         }
     }
 
-    my $self = $class->SUPER::new( %parent_parms );
+    my $self = $class->SUPER::new( %parent_params );
     bless $self, $class;
 
-    # Use the mech parms now that we have a mech object.
-    for my $parm ( keys %mech_parms ) {
-        $self->{$parm} = $mech_parms{$parm};
+    # Use the mech params now that we have a mech object.
+    for my $param ( keys %mech_params ) {
+        $self->{$param} = $mech_params{$param};
     }
     $self->{page_stack} = [];
-    $self->env_proxy() unless $mech_parms{noproxy};
+    $self->env_proxy() unless $mech_params{noproxy};
 
     # libwww-perl 5.800 (and before, I assume) has a problem where
     # $ua->{proxy} can be undef and clone() doesn't handle it.
@@ -287,27 +288,34 @@ sub title {
 }
 
 
+sub redirects {
+    my $self = shift;
+
+    return $self->response->redirects;
+}
+
+
 sub content {
     my $self = shift;
-    my %parms = @_;
+    my %params = @_;
 
     my $content = $self->{content};
-    if (delete $parms{raw}) {
+    if (delete $params{raw}) {
         $content = $self->response()->content();
     }
-    elsif (delete $parms{decoded_by_headers}) {
+    elsif (delete $params{decoded_by_headers}) {
         $content = $self->response()->decoded_content(charset => 'none');
     }
-    elsif (my $charset = delete $parms{charset}) {
+    elsif (my $charset = delete $params{charset}) {
         $content = $self->response()->decoded_content(charset => $charset);
     }
     elsif ( $self->is_html ) {
-        if ( exists $parms{base_href} ) {
-            my $base_href = (delete $parms{base_href}) || $self->base;
+        if ( exists $params{base_href} ) {
+            my $base_href = (delete $params{base_href}) || $self->base;
             $content=~s/<head>/<head>\n<base href="$base_href">/i;
         }
 
-        if ( my $format = delete $parms{format} ) {
+        if ( my $format = delete $params{format} ) {
             if ( $format eq 'text' ) {
                 $content = $self->text;
             }
@@ -316,7 +324,7 @@ sub content {
             }
         }
 
-        $self->_check_unhandled_parms( %parms );
+        $self->_check_unhandled_params( %params );
     }
 
     return $content;
@@ -342,11 +350,11 @@ sub text {
     return $self->{text};
 }
 
-sub _check_unhandled_parms {
+sub _check_unhandled_params {
     my $self  = shift;
-    my %parms = @_;
+    my %params = @_;
 
-    for my $cmd ( sort keys %parms ) {
+    for my $cmd ( sort keys %params ) {
         $self->die( qq{Unknown named argument "$cmd"} );
     }
 }
@@ -365,14 +373,14 @@ sub links {
 sub follow_link {
     my $self = shift;
     $self->die( qq{Needs to get key-value pairs of parameters.} ) if @_ % 2;
-    my %parms = ( n=>1, @_ );
+    my %params = ( n=>1, @_ );
 
-    if ( $parms{n} eq 'all' ) {
-        delete $parms{n};
+    if ( $params{n} eq 'all' ) {
+        delete $params{n};
         $self->warn( q{follow_link(n=>"all") is not valid} );
     }
 
-    my $link = $self->find_link(%parms);
+    my $link = $self->find_link(%params);
     if ( $link ) {
         return $self->get( $link->url );
     }
@@ -387,24 +395,24 @@ sub follow_link {
 
 sub find_link {
     my $self = shift;
-    my %parms = ( n=>1, @_ );
+    my %params = ( n=>1, @_ );
 
-    my $wantall = ( $parms{n} eq 'all' );
+    my $wantall = ( $params{n} eq 'all' );
 
-    $self->_clean_keys( \%parms, qr/^(n|(text|url|url_abs|name|tag|id|class)(_regex)?)$/ );
+    $self->_clean_keys( \%params, qr/^(n|(text|url|url_abs|name|tag|id|class|rel)(_regex)?)$/ );
 
     my @links = $self->links or return;
 
     my $nmatches = 0;
     my @matches;
     for my $link ( @links ) {
-        if ( _match_any_link_parms($link,\%parms) ) {
+        if ( _match_any_link_params($link,\%params) ) {
             if ( $wantall ) {
                 push( @matches, $link );
             }
             else {
                 ++$nmatches;
-                return $link if $nmatches >= $parms{n};
+                return $link if $nmatches >= $params{n};
             }
         }
     } # for @links
@@ -418,8 +426,8 @@ sub find_link {
 } # find_link
 
 # Used by find_links to check for matches
-# The logic is such that ALL parm criteria that are given must match
-sub _match_any_link_parms {
+# The logic is such that ALL param criteria that are given must match
+sub _match_any_link_params {
     my $link = shift;
     my $p = shift;
 
@@ -442,22 +450,25 @@ sub _match_any_link_parms {
     return if defined $p->{class}         && !($link->attrs->{class} && $link->attrs->{class} eq $p->{class} );
     return if defined $p->{class_regex}   && !($link->attrs->{class} && $link->attrs->{class} =~ $p->{class_regex} );
 
+    return if defined $p->{rel}         && !($link->attrs->{rel} && $link->attrs->{rel} eq $p->{rel} );
+    return if defined $p->{rel_regex}   && !($link->attrs->{rel} && $link->attrs->{rel} =~ $p->{rel_regex} );
+
     # Success: everything that was defined passed.
     return 1;
 
 }
 
-# Cleans the %parms parameter for the find_link and find_image methods.
+# Cleans the %params parameter for the find_link and find_image methods.
 sub _clean_keys {
     my $self = shift;
-    my $parms = shift;
+    my $params = shift;
     my $rx_keyname = shift;
 
-    for my $key ( keys %$parms ) {
-        my $val = $parms->{$key};
+    for my $key ( keys %$params ) {
+        my $val = $params->{$key};
         if ( $key !~ qr/$rx_keyname/ ) {
             $self->warn( qq{Unknown link-finding parameter "$key"} );
-            delete $parms->{$key};
+            delete $params->{$key};
             next;
         }
 
@@ -467,23 +478,23 @@ sub _clean_keys {
         if ( $key_regex ) {
             if ( !$val_regex ) {
                 $self->warn( qq{$val passed as $key is not a regex} );
-                delete $parms->{$key};
+                delete $params->{$key};
                 next;
             }
         }
         else {
             if ( $val_regex ) {
                 $self->warn( qq{$val passed as '$key' is a regex} );
-                delete $parms->{$key};
+                delete $params->{$key};
                 next;
             }
             if ( $val =~ /^\s|\s$/ ) {
                 $self->warn( qq{'$val' is space-padded and cannot succeed} );
-                delete $parms->{$key};
+                delete $params->{$key};
                 next;
             }
         }
-    } # for keys %parms
+    } # for keys %params
 
     return;
 } # _clean_keys()
@@ -542,24 +553,24 @@ sub images {
 
 sub find_image {
     my $self = shift;
-    my %parms = ( n=>1, @_ );
+    my %params = ( n=>1, @_ );
 
-    my $wantall = ( $parms{n} eq 'all' );
+    my $wantall = ( $params{n} eq 'all' );
 
-    $self->_clean_keys( \%parms, qr/^(?:n|(?:alt|url|url_abs|tag|id|class)(?:_regex)?)$/ );
+    $self->_clean_keys( \%params, qr/^(?:n|(?:alt|url|url_abs|tag|id|class)(?:_regex)?)$/ );
 
     my @images = $self->images or return;
 
     my $nmatches = 0;
     my @matches;
     for my $image ( @images ) {
-        if ( _match_any_image_parms($image,\%parms) ) {
+        if ( _match_any_image_params($image,\%params) ) {
             if ( $wantall ) {
                 push( @matches, $image );
             }
             else {
                 ++$nmatches;
-                return $image if $nmatches >= $parms{n};
+                return $image if $nmatches >= $params{n};
             }
         }
     } # for @images
@@ -573,18 +584,18 @@ sub find_image {
 }
 
 # Used by find_images to check for matches
-# The logic is such that ALL parm criteria that are given must match
-sub _match_any_image_parms {
+# The logic is such that ALL param criteria that are given must match
+sub _match_any_image_params {
     my $image = shift;
     my $p = shift;
 
     # No conditions, anything matches
     return 1 unless keys %$p;
 
-    return if defined $p->{url}           && !($image->url eq $p->{url} );
-    return if defined $p->{url_regex}     && !($image->url =~ $p->{url_regex} );
-    return if defined $p->{url_abs}       && !($image->url_abs eq $p->{url_abs} );
-    return if defined $p->{url_abs_regex} && !($image->url_abs =~ $p->{url_abs_regex} );
+    return if defined $p->{url}           && !(defined($image->url) && $image->url eq $p->{url} );
+    return if defined $p->{url_regex}     && !(defined($image->url) && $image->url =~ $p->{url_regex} );
+    return if defined $p->{url_abs}       && !(defined($image->url_abs) && $image->url_abs eq $p->{url_abs} );
+    return if defined $p->{url_abs_regex} && !(defined($image->url_abs) && $image->url_abs =~ $p->{url_abs_regex} );
     return if defined $p->{alt}           && !(defined($image->alt) && $image->alt eq $p->{alt} );
     return if defined $p->{alt_regex}     && !(defined($image->alt) && $image->alt =~ $p->{alt_regex} );
     return if defined $p->{tag}           && !($image->tag && $image->tag eq $p->{tag} );
@@ -905,7 +916,7 @@ sub tick {
     my $set = @_ ? shift : 1;  # default to 1 if not passed
 
     # loop though all the inputs
-    my $index = 0;
+    my $index = 1;
     while ( my $input = $self->current_form->find_input( $name, 'checkbox', $index ) ) {
         # Can't guarantee that the first element will be undef and the second
         # element will be the right name
@@ -964,6 +975,20 @@ sub click_button {
         }
     }
 
+    my %exclusive_options = (
+        id     => 1,
+        input  => 1,
+        name   => 1,
+        number => 1,
+        value  => 1,
+    );
+
+    my @present_exclusive_options = @exclusive_options{ keys %args };
+
+    if ( scalar @present_exclusive_options > 1 ) {
+        $self->die( 'click_button: More than one button selector has been used' );
+    }
+
     for ($args{x}, $args{y}) {
         $_ = 1 unless defined;
     }
@@ -981,6 +1006,7 @@ sub click_button {
         $request = $input->click( $form, $args{x}, $args{y} );
     }
     elsif ( $args{number} ) {
+        # changing this 'submit' to qw/submit button image/ will probably break people's code
         my $input = $form->find_input( undef, 'submit', $args{number} );
         $request = $input->click( $form, $args{x}, $args{y} );
     }
@@ -988,14 +1014,13 @@ sub click_button {
         $request = $args{input}->click( $form, $args{x}, $args{y} );
     }
     elsif ( $args{value} ) {
-        my $i = 1;
-        while ( my $input = $form->find_input(undef, 'submit', $i) ) {
-            if ( $args{value} && ($args{value} eq $input->value) ) {
+        my @inputs = map { $form->find_input(undef, $_) } qw/submit button image/;
+        foreach  my $input ( @inputs ) {
+            if ( $input->value && ($args{value} eq $input->value) ) {
                 $request = $input->click( $form, $args{x}, $args{y} );
                 last;
             }
-            $i++;
-        } # while
+        } # foreach
     } # $args{value}
 
     return $self->request( $request );
@@ -1015,8 +1040,7 @@ sub submit_form {
 
     for ( keys %args ) {
         if ( !/^(form_(number|name|fields|id)|(with_)?fields|button|x|y|strict_forms)$/ ) {
-            # XXX Why not die here?
-            $self->warn( qq{Unknown submit_form parameter "$_"} );
+            $self->die( qq{Unknown submit_form parameter "$_"} );
         }
     }
 
@@ -1027,7 +1051,7 @@ sub submit_form {
                 $fields = $args{$_};
             }
             else {
-                die "$_ arg to submit_form must be a hashref";
+                $self->die("$_ arg to submit_form must be a hashref");
             }
             last;
         }
@@ -1037,22 +1061,22 @@ sub submit_form {
     if ( $args{with_fields} ) {
         $fields || die q{must submit some 'fields' with with_fields};
         my @got = $self->all_forms_with_fields(keys %{$fields});
-        die "There is no form with the requested fields" if not @got;
+        $self->die("There is no form with the requested fields") if not @got;
         push @filtered_sets, \@got;
     }
     if ( my $form_number = $args{form_number} ) {
         my $got = $self->form_number( $form_number );
-        die "There is no form numbered $form_number" if not $got;
+        $self->die("There is no form numbered $form_number") if not $got;
         push @filtered_sets, [ $got ];
     }
     if ( my $form_name = $args{form_name} ) {
         my @got = $self->all_forms_with( name => $form_name );
-        die qq{There is no form named "$form_name"} if not @got;
+        $self->die(qq{There is no form named "$form_name"}) if not @got;
         push @filtered_sets, \@got;
     }
     if ( my $form_id = $args{form_id} ) {
         my @got = $self->all_forms_with( id => $form_id );
-        $self->warn(qq{ There is no form with ID "$form_id"}) if not @got;
+        $self->die(qq{There is no form with ID "$form_id"}) if not @got;
         push @filtered_sets, \@got;
     }
 
@@ -1074,10 +1098,10 @@ sub submit_form {
         my $expected_count = scalar @filtered_sets;
         my @matched = grep { $c{$_} == $expected_count } keys %c;
         if (not @matched) {
-            die "There is no form that satisfies all the criteria";
+            $self->die('There is no form that satisfies all the criteria');
         }
         if (@matched > 1) {
-            die "More than one form satisfies all the criteria";
+            $self->die('More than one form satisfies all the criteria');
         }
         $self->{current_form} = $matched[0];
     }
@@ -1476,13 +1500,24 @@ my %link_tags = (
     meta   => 'content',
 );
 
+sub _new_parser {
+    my $self = shift;
+    my $content_ref = shift;
+
+    my $parser = HTML::TokeParser->new($content_ref);
+    $parser->marked_sections( $self->{marked_sections});
+    $parser->xml_mode( $$content_ref=~/^\s*<\?xml/ ); # NOT GENERALLY RELIABLE
+
+    return $parser;
+}
+
 sub _extract_links {
     my $self = shift;
 
 
     $self->{links} = [];
     if ( defined $self->{content} ) {
-        my $parser = HTML::TokeParser->new(\$self->{content});
+        my $parser = $self->_new_parser(\$self->{content});
         while ( my $token = $parser->get_tag( keys %link_tags ) ) {
             my $link = $self->_link_from_token( $token, $parser );
             push( @{$self->{links}}, $link ) if $link;
@@ -1504,11 +1539,28 @@ sub _extract_images {
     $self->{images} = [];
 
     if ( defined $self->{content} ) {
-        my $parser = HTML::TokeParser->new(\$self->{content});
-        while ( my $token = $parser->get_tag( keys %image_tags ) ) {
-            my $image = $self->_image_from_token( $token, $parser );
-            push( @{$self->{images}}, $image ) if $image;
-        } # while
+        if ($self->content_type eq 'text/css') {
+            push( @{$self->{images}}, $self->_images_from_css($self->{content}) );
+        }
+        else {
+            my $parser = $self->_new_parser(\$self->{content});
+            while ( my $token = $parser->get_tag() ) {
+                my ($tag_name, $attrs) = @{$token};
+                next if $tag_name =~ m{^/};
+
+                if ($image_tags{$tag_name}) {
+                    my $image = $self->_image_from_token( $token, $parser );
+                    push( @{$self->{images}}, $image ) if $image;
+                }
+                elsif ($tag_name eq 'style') {
+                    push( @{$self->{images}}, $self->_images_from_css($parser->get_text) );
+                }
+
+                if ($attrs->{style}) {
+                    push( @{$self->{images}}, $self->_images_from_css($attrs->{style}) );
+                }
+            } # while
+        }
     }
 
     return;
@@ -1539,6 +1591,50 @@ sub _image_from_token {
             alt     => $attrs->{alt},
             attrs   => $attrs,
         });
+}
+
+my $STYLE_URL_REGEXP = qr{
+    # ex. "url('/site.css')"
+    (             # capture non url path of the string
+        url       # url
+        \s*       #
+        \(        # (
+        \s*       #
+        (['"]?)   # opening ' or "
+    )
+    (             # the rest is url
+        .+?       # non greedy "everything"
+    )
+    (
+        \2        # closing ' or "
+        \s*       #
+        \)        # )
+    )
+}xmsi;
+
+sub _images_from_css {
+    my $self = shift;
+    my $css  = shift;
+
+    my @images;
+    while ($css =~ m/$STYLE_URL_REGEXP/g) {
+        my $url = $3;
+        require WWW::Mechanize::Image;
+        push(
+            @images,
+            WWW::Mechanize::Image->new({
+                tag     => 'css',
+                base    => $self->base,
+                url     => $url,
+                name    => undef,
+                height  => undef,
+                width   => undef,
+                alt     => undef,
+            })
+        );
+    }
+
+    return @images;
 }
 
 sub _link_from_token {
@@ -1687,7 +1783,7 @@ WWW::Mechanize - Handy web browsing in a Perl object
 
 =head1 VERSION
 
-version 1.91
+version 2.03
 
 =head1 SYNOPSIS
 
@@ -1824,13 +1920,13 @@ the "agent".
 
     my $mech = WWW::Mechanize->new()
 
-The constructor for WWW::Mechanize overrides two of the parms to the
+The constructor for WWW::Mechanize overrides two of the params to the
 LWP::UserAgent constructor:
 
     agent => 'WWW-Mechanize/#.##'
     cookie_jar => {}    # an empty, memory-only HTTP::Cookies object
 
-You can override these overrides by passing parms to the constructor,
+You can override these overrides by passing params to the constructor,
 as in:
 
     my $mech = WWW::Mechanize->new( agent => 'wonderbot 1.01' );
@@ -1840,8 +1936,8 @@ bot accepting cookies, you have to explicitly disallow it, like so:
 
     my $mech = WWW::Mechanize->new( cookie_jar => undef );
 
-Here are the parms that WWW::Mechanize recognizes.  These do not include
-parms that L<LWP::UserAgent> recognizes.
+Here are the params that WWW::Mechanize recognizes.  These do not include
+params that L<LWP::UserAgent> recognizes.
 
 =over 4
 
@@ -1914,7 +2010,7 @@ strict and verbose mode for form handling, which is done with L<HTML::Form>.
 Globally sets the HTML::Form strict flag which causes form submission to
 croak if any of the passed fields don't exist in the form, and/or a value
 doesn't exist in a select element. This can still be disabled in individual
-calls to L<C<< submit_form()|"$mech->submit_form( ... )" >>>.
+calls to C<L<< submit_form()|"$mech->submit_form( ... )" >>>.
 
 Default is off.
 
@@ -1925,6 +2021,14 @@ warn about any bad HTML form constructs found. This cannot be disabled
 later.
 
 Default is off.
+
+=item * C<< marked_sections => [0|1] >>
+
+Globally sets the HTML::Parser marked sections flag which causes HTML
+C<< CDATA[[ >> sections to be honoured. This cannot be disabled
+later.
+
+Default is on.
 
 =back
 
@@ -2000,7 +2104,7 @@ L<LWP::UserAgent>.  This lets you do things like
 
     $mech->get( $uri, ':content_file' => $tempfile );
 
-and you can rest assured that the parms will get filtered down
+and you can rest assured that the params will get filtered down
 appropriately.
 
 B<NOTE:> Because C<:content_file> causes the page contents to be
@@ -2049,7 +2153,7 @@ include the most recently made request.
 This returns the I<n>th item in history.  The 0th item is the most recent
 request and response, which would be acted on by methods like
 C<L<< find_link()|"$mech->find_link( ... )" >>>.
-The 1th item is the state you'd return to if you called
+The 1st item is the state you'd return to if you called
 C<L<< back()|/$mech->back() >>>.
 
 The maximum useful value for C<$n> is C<< $mech->history_count - 1 >>.
@@ -2119,6 +2223,15 @@ HTTP headers.
 Returns the contents of the C<< <TITLE> >> tag, as parsed by
 L<HTML::HeadParser>.  Returns undef if the content is not HTML.
 
+=head2 $mech->redirects()
+
+Convenience method to get the L<< redirects|HTTP::Response/$r->redirects >> from the most recent L<HTTP::Response>.
+
+Note that you can also use L<< is_redirect|HTTP::Response/$r->is_redirect >> to see if the most recent response was a redirect like this.
+
+    $mech->get($url);
+    do_stuff() if $mech->res->is_redirect;
+
 =head1 CONTENT-HANDLING METHODS
 
 =head2 $mech->content(...)
@@ -2169,6 +2282,9 @@ To preserve backwards compatibility, additional parameters will be
 ignored unless none of C<< raw | decoded_by_headers | charset >> is
 specified and the text is HTML, in which case an error will be triggered.
 
+A fresh instance of WWW::Mechanize will return C<undef> when C<< $mech->content() >>
+is called, because no content is present before a request has been made.
+
 =head2 $mech->text()
 
 Returns the text of the current HTML content.  If the content isn't
@@ -2189,7 +2305,7 @@ links.  In scalar context, returns an array reference of all links.
 =head2 $mech->follow_link(...)
 
 Follows a specified link on the page.  You specify the match to be
-found using the same parms that C<L<< find_link()|"$mech->find_link( ... )" >>> uses.
+found using the same params that C<L<< find_link()|"$mech->find_link( ... )" >>> uses.
 
 Here some examples:
 
@@ -2221,9 +2337,11 @@ or
 
 =back
 
-Returns the result of the GET method (an HTTP::Response object) if
-a link was found. If the page has no links, or the specified link
-couldn't be found, returns undef.
+Returns the result of the C<GET> method (an L<HTTP::Response> object) if a link
+was found.
+
+If the page has no links, or the specified link couldn't be found, returns
+C<undef>.  If C<autocheck> is enabled an exception will be thrown instead.
 
 =head2 $mech->find_link( ... )
 
@@ -2236,8 +2354,8 @@ You can take the URL part and pass it to the C<get()> method.  If
 that's your plan, you might as well use the C<follow_link()> method
 directly, since it does the C<get()> for you automatically.
 
-Note that C<< <FRAME SRC="..."> >> tags are parsed out of the the HTML
-and treated as links so this method works with them.
+Note that C<< <FRAME SRC="..."> >> tags are parsed out of the HTML and
+treated as links so this method works with them.
 
 You can select which link to find by passing in one or more of these
 key/value pairs:
@@ -2276,6 +2394,12 @@ in the page.
 
 Matches the name of the link against I<string> or I<regex>, as appropriate.
 
+=item * C<< rel => string >> and C<< rel_regex => regex >>
+
+Matches the rel of the link against I<string> or I<regex>, as appropriate.
+This can be used to find stylesheets, favicons, or links the author of the
+page does not want bots to follow.
+
 =item * C<< id => string >> and C<< id_regex => regex >>
 
 Matches the attribute 'id' of the link against I<string> or
@@ -2299,7 +2423,7 @@ The tags and attributes looked at are defined below.
 =back
 
 If C<n> is not specified, it defaults to 1.  Therefore, if you don't
-specify any parms, this method defaults to finding the first link on the
+specify any params, this method defaults to finding the first link on the
 page.
 
 Note that you can specify multiple text or URL parameters, which
@@ -2471,7 +2595,7 @@ order they appear in the website's source code is not currently supported.
 =back
 
 If C<n> is not specified, it defaults to 1.  Therefore, if you don't
-specify any parms, this method defaults to finding the first image on the
+specify any params, this method defaults to finding the first image on the
 page.
 
 Note that you can specify multiple ALT or URL parameters, which
@@ -2577,7 +2701,7 @@ tag.
 (Currently does not work for attribute C<action> due to implementation details
 of L<HTML::Form>.)
 When given more than one pair, all criteria must match.
-Using C<undef> as value means that the attribute in question may not be present.
+Using C<undef> as value means that the attribute in question must not be present.
 
 All matching forms (perhaps none) are returned as a list of L<HTML::Form> objects.
 
@@ -2588,7 +2712,7 @@ tag.
 (Currently does not work for attribute C<action> due to implementation details
 of L<HTML::Form>.)
 When given more than one pair, all criteria must match.
-Using C<undef> as value means that the attribute in question may not be present.
+Using C<undef> as value means that the attribute in question must not be present.
 
 If it is found, the form is returned as an L<HTML::Form> object and set internally
 for later used with Mech's form methods such as
@@ -2726,9 +2850,10 @@ Returns an L<HTTP::Response> object.
 =head2 $mech->click_button( ... )
 
 Has the effect of clicking a button on the current form by specifying
-its name, value, or index.  Its arguments are a list of key/value
-pairs.  Only one of name, number, input or value must be specified in
-the keys.
+its attributes. The arguments are a list of key/value pairs. Only one
+of name, id, number, input or value must be specified in the keys.
+
+Dies if no button is found.
 
 =over 4
 
@@ -2742,7 +2867,8 @@ Clicks the button with the id I<id> in the current form.
 
 =item * C<< number => n >>
 
-Clicks the I<n>th button in the current form. Numbering starts at 1.
+Clicks the I<n>th button with type I<submit> in the current form.
+Numbering starts at 1.
 
 =item * C<< value => value >>
 
@@ -2755,7 +2881,7 @@ L<HTML::Form::SubmitInput> obtained e.g. from
 
     $mech->current_form()->find_input( undef, 'submit' )
 
-$inputobject must belong to the current form.
+C<$inputobject> must belong to the current form.
 
 =item * C<< x => x >>
 
@@ -2796,7 +2922,8 @@ and data setting in one operation. It selects the first form that contains all
 fields mentioned in C<\%fields>.  This is nice because you don't need to know
 the name or number of the form to do this.
 
-(calls C<L</form_with_fields()>> and C<L</set_fields()>>).
+(calls C<L<< form_with_fields()|"$mech->form_with_fields( @fields )" >>> and
+       C<L<< set_fields()|"$mech->set_fields( $name => $value ... )" >>>).
 
 If you choose C<with_fields>, the C<fields> option will be ignored. The
 C<form_number>, C<form_name> and C<form_id> options will still be used.  An
@@ -2806,7 +2933,7 @@ criteria.
 =item * C<< form_number => n >>
 
 Selects the I<n>th form (calls
-C<L<< form_number()|"$mech->form_number($number)" >>>.  If this parm is not
+C<L<< form_number()|"$mech->form_number($number)" >>>.  If this param is not
 specified, the currently-selected form is used.
 
 =item * C<< form_name => name >>
@@ -2817,7 +2944,7 @@ C<L<< form_name()|"$mech->form_name( $name )" >>>)
 =item * C<< form_id => ID >>
 
 Selects the form with ID I<ID> (calls
-C<L<< form_id()|"$mech->form_id( $name )" >>>)>>)
+C<L<< form_id()|"$mech->form_id( $name )" >>>)
 
 =item * C<< button => button >>
 
@@ -2841,7 +2968,7 @@ by passing C<< strict_forms => 0 >> here.
 
 If no form is selected, the first form found is used.
 
-If I<button> is not passed, then the L<C<< submit()|"$mech->submit()" >>>
+If I<button> is not passed, then the C<L<< submit()|"$mech->submit()" >>>
 method is used instead.
 
 If you want to submit a file and get its content from a scalar rather
@@ -2969,6 +3096,9 @@ is not specified or is undef, it dumps to STDOUT.
 
 If I<$absolute> is true, links displayed are absolute, not relative.
 
+The output will include empty lines for images that have no C<src> attribute
+and therefore no C<<->url>>.
+
 =head2 $mech->dump_forms( [$fh] )
 
 Prints a dump of the forms on the current page to I<$fh>.  If I<$fh>
@@ -3050,7 +3180,7 @@ would overload I<update_html> in a subclass thusly:
 
 If you do this, then the mech will use the tidied-up HTML instead of
 the original both when parsing for its own needs, and for returning to
-you through L</content>.
+you through C<L<< content()|"$mech->content(...)" >>>.
 
 Overloading this method is also the recommended way of implementing
 extra validation steps (e.g. link checkers) for every HTML page
@@ -3452,7 +3582,7 @@ Andy Lester <andy at petdance.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2004-2016 by Andy Lester.
+This software is copyright (c) 2004 by Andy Lester.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

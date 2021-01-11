@@ -144,6 +144,10 @@ cairo_pattern_type_t cairo_pattern_type_from_sv (SV * pattern_type);
 SV * cairo_pattern_type_to_sv (cairo_pattern_type_t val);
 #define SvCairoPatternType(sv)		(cairo_pattern_type_from_sv (sv))
 #define newSVCairoPatternType(val)	(cairo_pattern_type_to_sv (val))
+cairo_pdf_metadata_t cairo_pdf_metadata_from_sv (SV * pdf_metadata);
+SV * cairo_pdf_metadata_to_sv (cairo_pdf_metadata_t val);
+#define SvCairoPdfMetadata(sv)		(cairo_pdf_metadata_from_sv (sv))
+#define newSVCairoPdfMetadata(val)	(cairo_pdf_metadata_to_sv (val))
 cairo_pdf_version_t cairo_pdf_version_from_sv (SV * pdf_version);
 SV * cairo_pdf_version_to_sv (cairo_pdf_version_t val);
 #define SvCairoPdfVersion(sv)		(cairo_pdf_version_from_sv (sv))
@@ -179,6 +183,10 @@ SV * cairo_svg_version_to_sv (cairo_svg_version_t val);
 
 /* flags */
 
+cairo_pdf_outline_flags_t cairo_pdf_outline_flags_from_sv (SV * pdf_outline_flags);
+SV * cairo_pdf_outline_flags_to_sv (cairo_pdf_outline_flags_t val);
+#define SvCairoPdfOutlineFlags(sv)		(cairo_pdf_outline_flags_from_sv (sv))
+#define newSVCairoPdfOutlineFlags(val)	(cairo_pdf_outline_flags_to_sv (val))
 cairo_text_cluster_flags_t cairo_text_cluster_flags_from_sv (SV * text_cluster_flags);
 SV * cairo_text_cluster_flags_to_sv (cairo_text_cluster_flags_t val);
 #define SvCairoTextClusterFlags(sv)		(cairo_text_cluster_flags_from_sv (sv))

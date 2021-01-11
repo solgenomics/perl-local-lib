@@ -89,7 +89,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Factory::FTLocationFactory;
-$Bio::Factory::FTLocationFactory::VERSION = '1.7.5';
 use vars qw($LOCREG);
 use strict;
 

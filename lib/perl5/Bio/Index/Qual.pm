@@ -118,7 +118,7 @@ The rest of the documentation details each of the object methods. Internal metho
 
 
 package Bio::Index::Qual;
-$Bio::Index::Qual::VERSION = '1.7.5';
+
 use strict;
 
 use Bio::Seq;

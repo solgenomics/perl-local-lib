@@ -82,7 +82,7 @@ methods are usually preceded with an "_" (underscore).
 # Let the code begin...
 
 package Bio::Index::Abstract;
-$Bio::Index::Abstract::VERSION = '1.7.5';
+
 use strict;
 use Fcntl qw( O_RDWR O_CREAT O_RDONLY );
 use vars qw( $TYPE_AND_VERSION_KEY
@@ -490,10 +490,10 @@ sub _type_and_version {
 	# Run check or add type and version key if missing
 	if (my $rec = $self->db->{ $key }) {
 		my( $db_type, $db_version ) = $self->unpack_record($rec);
-		$self->throw("This index file is type [$db_type] - Can't access it with module for [$type]")
-		  unless $db_type eq $type;
 		$self->throw("This index file is from version [$db_version] - You need to rebuild it to use module version [$version]")
 		  unless $db_version == $version;
+		$self->throw("This index file is type [$db_type] - Can't access it with module for [$type]")
+		  unless $db_type eq $type;
 	} else {
 		$self->add_record( $key, $type, $version )
 		  or $self->throw("Can't add Type and Version record");

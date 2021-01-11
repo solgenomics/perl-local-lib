@@ -1,1 +1,1 @@
-{"name":"Directory::Scratch","provides":{"Directory::Scratch":{"version":"0.18","file":"lib/Directory/Scratch.pm"}},"target":"Directory::Scratch","pathname":"E/ET/ETHER/Directory-Scratch-0.18.tar.gz","dist":"Directory-Scratch-0.18","version":"0.18"}
+{"provides":{"Directory::Scratch":{"file":"lib/Directory/Scratch.pm","version":"0.18"}},"name":"Directory::Scratch","pathname":"E/ET/ETHER/Directory-Scratch-0.18.tar.gz","dist":"Directory-Scratch-0.18","version":"0.18","target":"Directory::Scratch"}

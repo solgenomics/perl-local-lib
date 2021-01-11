@@ -72,7 +72,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SeqFeature::Gene::ExonI;
-$Bio::SeqFeature::Gene::ExonI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::SeqFeatureI);

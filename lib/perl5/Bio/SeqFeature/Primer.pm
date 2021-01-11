@@ -106,11 +106,8 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::SeqFeature::Primer;
-$Bio::SeqFeature::Primer::VERSION = '1.7.5';
+
 use strict;
-
-use Carp;
-
 use Bio::PrimarySeq;
 use Bio::Tools::SeqStats;
 
@@ -134,8 +131,11 @@ sub new {
     # Legacy stuff
     my $sequence = delete $args{-sequence};
     if ($sequence) {
-        Carp::carp("Constructing a Bio::SeqFeature::Primer with -sequence is"
-                   . " deprecated. Use -seq instead.");
+        Bio::Root::Root->deprecated(
+            -message => 'Creating a Bio::SeqFeature::Primer with -sequence is deprecated. Use -seq instead.',
+            -warn_version  => '1.006',
+            -throw_version => '1.008',
+        );
         $args{-seq} = $sequence;
     }
 
@@ -155,9 +155,11 @@ sub location {
     if ($location) {
         if ( not ref $location ) {
             # Use location as a string for backward compatibility
-            Carp::carp("Passing a string to location() is deprecated. Pass a"
-                       . " Bio::Location::Simple object or use start() and"
-                       . " end() instead.");
+            Bio::Root::Root->deprecated(
+                -message => 'Passing a string to location() is deprecated. Pass a Bio::Location::Simple object or use start() and end() instead.',
+                -warn_version  => '1.006',
+                -throw_version => '1.008',
+            );
             $self->{'_location'} = $location;
         } else {
             $self->SUPER::location($location);

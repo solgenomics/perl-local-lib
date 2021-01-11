@@ -74,7 +74,6 @@ The rest of the documentation details each of the object methods. Internal metho
 
 
 package Bio::Annotation::Relation;
-$Bio::Annotation::Relation::VERSION = '1.7.5';
 use strict;
 
 # Object preamble - inherits from Bio::Root::Root

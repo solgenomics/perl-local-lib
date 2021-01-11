@@ -80,7 +80,7 @@ methods. Internal methods are usually preceded with a _
 =cut
 
 package Bio::Ontology::OBOEngine;
-$Bio::Ontology::OBOEngine::VERSION = '1.7.5';
+
 use Bio::Ontology::SimpleGOEngine::GraphAdaptor;
 
 use strict;

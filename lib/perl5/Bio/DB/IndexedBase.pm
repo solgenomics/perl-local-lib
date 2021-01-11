@@ -238,15 +238,39 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::DB::IndexedBase;
-$Bio::DB::IndexedBase::VERSION = '1.7.5';
 
 BEGIN {
     @AnyDBM_File::ISA = qw(DB_File GDBM_File NDBM_File SDBM_File)
         if(!$INC{'AnyDBM_File.pm'});
-    # Remove carriage returns (\r) and newlines (\n) from a string.  When
-    # called from subseq, this can take a signficiant portion of time, in
-    # Variant Effect Prediction. Therefore we compile the match portion.
+}
 
+use strict;
+use warnings;
+use IO::File;
+use AnyDBM_File;
+use Fcntl;
+use File::Spec;
+use File::Basename qw(basename dirname);
+use Bio::PrimarySeq;
+
+use base qw(Bio::DB::SeqI);
+
+# Store offset, strlen, linelen, headerlen, type and fileno
+use constant STRUCT    => 'NNNnnCa*'; # 32-bit file offset and seq length
+use constant STRUCTBIG => 'QQQnnCa*'; # 64-bit
+
+use constant NA        => 0;
+use constant DNA       => 1;
+use constant RNA       => 2;
+use constant PROTEIN   => 3;
+
+# You can avoid dying if you want but you may get incorrect results
+use constant DIE_ON_MISSMATCHED_LINES => 1;
+
+# Remove carriage returns (\r) and newlines (\n) from a string.  When
+# called from subseq, this can take a signficiant portion of time, in
+# Variant Effect Prediction. Therefore we compile the match portion.
+sub _strip_crnl {
     eval 'require Inline::C';
     if ( $INC{'Inline/C.pm'} ) {
         # C can do _strip_crnl much faster. But this requires the
@@ -279,30 +303,9 @@ BEGIN {
             return $str;
         };
     }
+
+    return _strip_crnl(@_);
 }
-
-use strict;
-use warnings;
-use IO::File;
-use AnyDBM_File;
-use Fcntl;
-use File::Spec;
-use File::Basename qw(basename dirname);
-use Bio::PrimarySeq;
-
-use base qw(Bio::DB::SeqI);
-
-# Store offset, strlen, linelen, headerlen, type and fileno
-use constant STRUCT    => 'NNNnnCa*'; # 32-bit file offset and seq length
-use constant STRUCTBIG => 'QQQnnCa*'; # 64-bit
-
-use constant NA        => 0;
-use constant DNA       => 1;
-use constant RNA       => 2;
-use constant PROTEIN   => 3;
-
-# You can avoid dying if you want but you may get incorrect results
-use constant DIE_ON_MISSMATCHED_LINES => 1;
 
 =head2 new
 
@@ -839,7 +842,7 @@ sub _fh {
     my $file = $self->file($id) or return;
     return eval {
       $self->_fhcache( File::Spec->catfile($self->{dirname}, $file));
-    } || $self->throw( "Can't open file $file" );
+    } or $self->throw( "Can't open file $file" );
 }
 
 
@@ -1150,7 +1153,6 @@ sub DESTROY {
 #
 
 package Bio::DB::Indexed::Stream;
-$Bio::DB::Indexed::Stream::VERSION = '1.7.5';
 use base qw(Tie::Handle Bio::DB::SeqI);
 
 

@@ -67,7 +67,6 @@ web:
 
 
 package Bio::Tools::Profile;
-$Bio::Tools::Profile::VERSION = '1.7.5';
 use strict;
 
 use Bio::SeqFeature::FeaturePair;

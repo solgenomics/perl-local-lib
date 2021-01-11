@@ -71,7 +71,6 @@ Email golharam-at-umdnj-dot-edu
 =cut
 
 package Bio::SeqIO::gbxml;
-$Bio::SeqIO::gbxml::VERSION = '1.7.5';
 use vars qw($Default_Source);
 use strict;
 

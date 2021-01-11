@@ -91,7 +91,7 @@ preceded with a _
 # Let the code begin...
 
 package Bio::DB::ReferenceI;
-$Bio::DB::ReferenceI::VERSION = '1.7.5';
+
 use strict;
 
 =head2 get_Reference_by_id

@@ -109,7 +109,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Ontology::Ontology;
-$Bio::Ontology::Ontology::VERSION = '1.7.5';
 use strict;
 
 # Object preamble - inherits from Bio::Root::Root

@@ -100,7 +100,6 @@ methods.
 # Let the code begin...
 
 package Bio::Ontology::TermI;
-$Bio::Ontology::TermI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::RootI);

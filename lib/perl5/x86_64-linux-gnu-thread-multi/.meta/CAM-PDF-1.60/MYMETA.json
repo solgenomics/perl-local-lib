@@ -4,19 +4,19 @@
       "Clotho Advanced Media, Inc. <cpan@clotho.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Module::Build version 0.4229",
+   "generated_by" : "Module::Build version 0.4231",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "CAM-PDF",
    "prereqs" : {
       "build" : {
          "requires" : {
-            "Test::More" : "0"
+            "Test::More" : 0
          }
       },
       "runtime" : {
@@ -24,8 +24,8 @@
             "Getopt::Long" : "2.0",
             "Pod::Usage" : "1.0",
             "Test::Memory::Cycle" : "1.02",
-            "Test::Pod" : "0",
-            "Test::Pod::Coverage" : "0"
+            "Test::Pod" : 0,
+            "Test::Pod::Coverage" : 0
          },
          "requires" : {
             "Crypt::RC4" : "2.02",
@@ -88,5 +88,5 @@
       ]
    },
    "version" : "1.60",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001"
 }

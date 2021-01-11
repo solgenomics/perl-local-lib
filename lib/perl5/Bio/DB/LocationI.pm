@@ -95,7 +95,7 @@ preceded with a _
 # Let the code begin...
 
 package Bio::DB::LocationI;
-$Bio::DB::LocationI::VERSION = '1.7.5';
+
 use strict;
 
 use Bio::Root::RootI;

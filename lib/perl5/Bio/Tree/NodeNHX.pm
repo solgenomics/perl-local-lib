@@ -85,7 +85,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Tree::NodeNHX;
-$Bio::Tree::NodeNHX::VERSION = '1.7.5';
 use strict;
 
 

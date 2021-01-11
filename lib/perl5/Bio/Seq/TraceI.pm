@@ -92,7 +92,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Seq::TraceI;
-$Bio::Seq::TraceI::VERSION = '1.7.5';
 use strict;
 use Carp;
 use Dumpvalue;

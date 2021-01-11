@@ -92,7 +92,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Factory::ObjectBuilderI;
-$Bio::Factory::ObjectBuilderI::VERSION = '1.7.5';
 use strict;
 use Carp;
 

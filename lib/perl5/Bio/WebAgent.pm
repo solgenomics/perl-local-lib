@@ -96,7 +96,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::WebAgent;
-$Bio::WebAgent::VERSION = '1.7.5';
 use vars qw($LAST_INVOCATION_TIME);
 use strict;
 

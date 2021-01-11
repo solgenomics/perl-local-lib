@@ -76,7 +76,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Matrix::IO;
-$Bio::Matrix::IO::VERSION = '1.7.5';
 use strict;
 
 

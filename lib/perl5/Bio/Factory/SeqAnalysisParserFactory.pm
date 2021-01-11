@@ -94,7 +94,6 @@ methods. Internal methods are usually preceded with a _
 =cut
 
 package Bio::Factory::SeqAnalysisParserFactory;
-$Bio::Factory::SeqAnalysisParserFactory::VERSION = '1.7.5';
 use strict;
 
 

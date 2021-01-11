@@ -2,9 +2,10 @@ package Alien::Build::Interpolate;
 
 use strict;
 use warnings;
+use 5.008004;
 
 # ABSTRACT: Advanced interpolation engine for Alien builds
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 sub new
@@ -24,21 +25,35 @@ sub add_helper
   my $name = shift;
   my $code = shift;
 
-  if(defined $self->{helper}->{$name}->{code})
+  if(defined $self->{helper}->{$name})
   {
     require Carp;
     Carp::croak("duplicate implementation for interpolated key $name");
   }
-  
-  while(@_)
+
+  my $require;
+
+  if(ref $_[0] eq 'CODE')
   {
-    my $module = shift;
-    my $version = shift;
-    $version ||= 0;
-    $self->{helper}->{$name}->{require}->{$module} = $version;
+    $require = shift;
   }
-  
-  $self->{helper}->{$name}->{code} = $code;
+  else
+  {
+    $require = [];
+    while(@_)
+    {
+      my $module = shift;
+      my $version = shift;
+      $version ||= 0;
+      push @$require, $module => $version;
+    }
+  }
+
+  $self->{helper}->{$name} = Alien::Build::Helper->new(
+    $name,
+    $code,
+    $require,
+  );
 }
 
 
@@ -55,31 +70,38 @@ sub has_helper
 {
   my($self, $name) = @_;
 
-  foreach my $module (keys %{ $self->{helper}->{$name}->{require} })
-  {
-    my $version = $self->{helper}->{$name}->{require}->{$module};
+  return unless defined $self->{helper}->{$name};
 
-    # yeah we do have to eval every time in case $version is different
-    # from the last load.
-    eval qq{ use $module @{[ $version ? $version : '' ]} (); 1 };
-    die $@ if $@;
+  my @require = $self->{helper}->{$name}->require;
+
+  while(@require)
+  {
+    my $module  = shift @require;
+    my $version = shift @require;
+
+    {
+      my $pm = "$module.pm";
+      $pm =~ s/::/\//g;
+      require $pm;
+      $module->VERSION($version) if $version;
+    }
 
     unless($self->{classes}->{$module})
     {
       if($module->can('alien_helper'))
       {
         my $helpers = $module->alien_helper;
-        while(my($k,$v) = each %$helpers)
+        foreach my $k (keys %$helpers)
         {
-          $self->{helper}->{$k}->{code} = $v;
+          $self->{helper}->{$k}->code($helpers->{$k});
         }
       }
       $self->{classes}->{$module} = 1;
     }
   }
-  
-  my $code = $self->{helper}->{$name}->{code};
-  
+
+  my $code = $self->{helper}->{$name}->code;
+
   return unless defined $code;
 
   if(ref($code) ne 'CODE')
@@ -87,12 +109,14 @@ sub has_helper
     my $perl = $code;
     package Alien::Build::Interpolate::Helper;
     $code = sub {
+      ##  no critic
       my $value = eval $perl;
+      ## use critic
       die $@ if $@;
       $value;
     };
   }
-  
+
   $code;
 }
 
@@ -100,10 +124,10 @@ sub has_helper
 sub execute_helper
 {
   my($self, $name) = @_;
-  
+
   my $code = $self->has_helper($name);
   die "no helper defined for $name" unless defined $code;
-  
+
   $code->();
 }
 
@@ -111,9 +135,9 @@ sub execute_helper
 sub _get_prop
 {
   my($name, $prop, $orig) = @_;
-  
+
   $name =~ s/^\./alien./;
-  
+
   if($name =~ /^(.*?)\.(.*)$/)
   {
     my($key,$rest) = ($1,$2);
@@ -134,7 +158,7 @@ sub interpolate
 {
   my($self, $string, $prop) = @_;
   $prop ||= {};
-  
+
   $string =~ s{(?<!\%)\%\{([a-zA-Z_][a-zA-Z_0-9]+)\}}{$self->execute_helper($1)}eg;
   $string =~ s{(?<!\%)\%\{([a-zA-Z_\.][a-zA-Z_0-9\.]+)\}}{_get_prop($1,$prop,$1)}eg;
   $string =~ s/\%(?=\%)//g;
@@ -146,8 +170,8 @@ sub requires
 {
   my($self, $string) = @_;
   map {
-    my $name = $_;
-    map { $_ => $self->{helper}->{$name}->{require}->{$_} || 0 } keys %{ $self->{helper}->{$name}->{require} }
+    my $helper = $self->{helper}->{$_};
+    $helper ? $helper->require : ();
   } $string =~ m{(?<!\%)\%\{([a-zA-Z_][a-zA-Z_0-9]+)\}}g;
 }
 
@@ -155,20 +179,61 @@ sub requires
 sub clone
 {
   my($self) = @_;
-  
+
   require Storable;
-  
-  my %help;
-  foreach my $helper (keys %{ $self->{helper} })
+
+  my %helper;
+  foreach my $name (keys %{ $self->{helper} })
   {
-    $help{$helper}->{code}    = $self->{helper}->{$helper}->{code};
-    $help{$helper}->{require} = $self->{helper}->{$helper}->{require };
+    $helper{$name} = $self->{helper}->{$name}->clone;
   }
 
   my $new = bless {
-    helper => \%help,
+    helper => \%helper,
     classes => Storable::dclone($self->{classes}),
   }, ref $self;
+}
+
+package Alien::Build::Helper;
+
+sub new
+{
+  my($class, $name, $code, $require) = @_;
+  bless {
+    name    => $name,
+    code    => $code,
+    require => $require,
+  }, $class;
+}
+
+sub name { shift->{name} }
+
+sub code
+{
+  my($self, $code) = @_;
+  $self->{code} = $code if $code;
+  $self->{code};
+}
+
+sub require
+{
+  my($self) = @_;
+  if(ref $self->{require} eq 'CODE')
+  {
+    $self->{require} = [ $self->{require}->($self) ];
+  }
+  @{ $self->{require} };
+}
+
+sub clone
+{
+  my($self) = @_;
+  my $class = ref $self;
+  $class->new(
+    $self->name,
+    $self->code,
+    [ $self->require ],
+  );
 }
 
 1;
@@ -185,7 +250,7 @@ Alien::Build::Interpolate - Advanced interpolation engine for Alien builds
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 CONSTRUCTOR
 
@@ -234,7 +299,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -284,9 +349,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

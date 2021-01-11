@@ -88,7 +88,7 @@ Internal methods are usually preceded with a _
 =cut
 
 package Bio::Tools::Geneid;
-$Bio::Tools::Geneid::VERSION = '1.7.5';
+
 use vars qw($SOURCE_TAG);
 use strict;
 

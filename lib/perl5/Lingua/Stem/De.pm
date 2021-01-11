@@ -1,7 +1,5 @@
 package Lingua::Stem::De;
 
-# $RCSfile: De.pm,v $ $Revision: 1.4 $ $Date: 1999/06/24 23:33:37 $ $Author: snowhare $
-
 =head1 NAME
 
 Lingua::Stem::De - Stemming algorithm for German
@@ -24,6 +22,10 @@ a standardized interface and caching.
 
 =head1 CHANGES
 
+2.31 2020.09.26 - Fix for Latin1/UTF8 issue in documentation
+
+2.30 2020.06.20 - Version renumber for module consistency
+
 1.01 2003.09.28 - Documentation fix
 
 1.00 2003.04.05 - Initial release
@@ -35,6 +37,7 @@ a standardized interface and caching.
 #######################################################################
 
 use strict;
+use warnings;
 
 use Text::German;
 
@@ -47,7 +50,7 @@ BEGIN {
     @EXPORT_OK   = qw (stem clear_stem_cache stem_caching);
     %EXPORT_TAGS = ();
 }
-$VERSION = "1.01";
+$VERSION = "2.31";
 
 my $Stem_Caching  = 0;
 my $Stem_Cache    = {};
@@ -194,13 +197,13 @@ written by Ulrich Pfeifer
   Ulrich Pfeifer
 
   Integration in Lingua::Stem by 
-  Benjamin Franz, FreeRun Technologies,
-  snowhare@nihongo.org or http://www.nihongo.org/snowhare/
+  Jerilyn Franz, FreeRun Technologies,
+  <cpan@jerilyn.info>
 
 =head1 COPYRIGHT
 
 Ulrich Pfeifer
-Benjamin Franz, FreeRun Technologies
+Jerilyn Franz, FreeRun Technologies
 
 This code is freely available under the same terms as Perl.
 

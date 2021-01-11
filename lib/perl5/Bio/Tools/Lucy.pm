@@ -163,7 +163,7 @@ and should not be called directly.
 
 
 package Bio::Tools::Lucy;
-$Bio::Tools::Lucy::VERSION = '1.7.5';
+
 use vars qw($AUTOLOAD @ATTR %OK_FIELD);
 use strict;
 use Bio::PrimarySeq;

@@ -65,7 +65,7 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Seq::SequenceTrace;
-$Bio::Seq::SequenceTrace::VERSION = '1.7.5';
+
 
 use strict;
 use Bio::Seq::QualI;

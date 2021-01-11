@@ -1,5 +1,5 @@
 package Bio::SeqFeature::Lite;
-$Bio::SeqFeature::Lite::VERSION = '1.7.5';
+
 =head1 NAME
 
 Bio::SeqFeature::Lite - Lightweight Bio::SeqFeatureI class

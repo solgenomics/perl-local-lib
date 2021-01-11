@@ -88,7 +88,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::SeqIO::raw;
-$Bio::SeqIO::raw::VERSION = '1.7.5';
 use strict;
 
 use Bio::Seq::SeqFactory;

@@ -102,7 +102,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Search::Iteration::GenericIteration;
-$Bio::Search::Iteration::GenericIteration::VERSION = '1.7.5';
 use strict;
 
 

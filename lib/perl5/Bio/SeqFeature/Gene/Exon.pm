@@ -80,7 +80,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SeqFeature::Gene::Exon;
-$Bio::SeqFeature::Gene::Exon::VERSION = '1.7.5';
 use strict;
 
 

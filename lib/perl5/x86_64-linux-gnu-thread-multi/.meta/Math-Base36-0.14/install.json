@@ -1,1 +1,1 @@
-{"target":"Math::Base36","dist":"Math-Base36-0.14","pathname":"B/BR/BRICAS/Math-Base36-0.14.tar.gz","name":"Math::Base36","provides":{"Math::Base36":{"version":"0.14","file":"lib/Math/Base36.pm"}},"version":"0.14"}
+{"provides":{"Math::Base36":{"version":"0.14","file":"lib/Math/Base36.pm"}},"pathname":"B/BR/BRICAS/Math-Base36-0.14.tar.gz","target":"Math::Base36","name":"Math::Base36","version":"0.14","dist":"Math-Base36-0.14"}

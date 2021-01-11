@@ -98,7 +98,7 @@ methods. Internal methods are usually preceded with a _
 
 
 package  Bio::OntologyIO::simplehierarchy;
-$Bio::OntologyIO::simplehierarchy::VERSION = '1.7.5';
+
 use strict;
 
 use Data::Dumper;

@@ -72,7 +72,7 @@ but for the most part they should more or less DWYM.
 Although technically it can be considered a quote, for the time being
 C<HereDocs> are being treated as a completely separate C<Token> subclass,
 and will not be found in a search for L<PPI::Token::Quote> or
-L<PPI::Token::QuoteLike objects>.
+L<PPI::Token::QuoteLike> objects.
 
 This may change in the future, with it most likely to end up under
 QuoteLike.
@@ -85,9 +85,8 @@ have a relatively large number of unique methods all of their own.
 =cut
 
 use strict;
-use PPI::Token ();
 
-our $VERSION = '1.264'; # VERSION
+our $VERSION = '1.270'; # VERSION
 
 our @ISA = "PPI::Token";
 
@@ -111,11 +110,7 @@ the here-doc, B<excluding> the terminator line.
 
 =cut
 
-sub heredoc {
-	wantarray
-		? @{shift->{_heredoc}}
-		: scalar @{shift->{_heredoc}};
-}
+sub heredoc { @{shift->{_heredoc}} }
 
 =pod
 
@@ -136,7 +131,7 @@ sub terminator {
 sub _is_terminator {
 	my ( $self, $terminator, $line, $indented ) = @_;
 	if ( $indented ) {
-		return $line =~ /^\s*$terminator$/;
+		return $line =~ /^\s*\Q$terminator\E$/;
 	} else {
 		return $line eq $terminator;
 	}

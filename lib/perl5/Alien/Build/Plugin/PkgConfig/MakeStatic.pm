@@ -2,11 +2,12 @@ package Alien::Build::Plugin::PkgConfig::MakeStatic;
 
 use strict;
 use warnings;
+use 5.008004;
 use Alien::Build::Plugin;
 use Path::Tiny ();
 
 # ABSTRACT: Convert .pc files into static
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 has path => undef;
@@ -14,14 +15,14 @@ has path => undef;
 sub _convert
 {
   my($self, $build, $path) = @_;
-  
+
   die "unable to read $path" unless -r $path;
   die "unable to write $path" unless -w $path;
-  
+
   $build->log("converting $path to static");
-  
+
   my %h = map {
-    my($key, $value) = $_ =~ /^(.*?):(.*?)$/;
+    my($key, $value) = /^(.*?):(.*?)$/;
     $value =~ s{^\s+}{};
     $value =~ s{\s+$}{};
     ($key => $value);
@@ -29,15 +30,15 @@ sub _convert
 
   $h{Cflags} = '' unless defined $h{Cflags};
   $h{Libs}   = '' unless defined $h{Libs};
-  
+
   $h{Cflags} .= ' ' . $h{"Cflags.private"} if defined $h{"Cflags.private"};
   $h{Libs}   .= ' ' . $h{"Libs.private"} if defined $h{"Libs.private"};
-  
+
   $h{"Cflags.private"} = '';
   $h{"Libs.private"}  = '';
-  
+
   $path->edit_lines(sub {
-  
+
     if(/^(.*?):/)
     {
       my $key = $1;
@@ -47,7 +48,7 @@ sub _convert
         delete $h{$key};
       }
     }
-  
+
   });
 
   $path->append("$_: $h{$_}\n") foreach keys %h;
@@ -56,7 +57,7 @@ sub _convert
 sub _recurse
 {
   my($self, $build, $dir) = @_;
-  
+
   foreach my $child ($dir->children)
   {
     if(-d $child)
@@ -79,7 +80,7 @@ sub init
   $meta->before_hook(
     gather_share => sub {
       my($build) = @_;
-    
+
       if($self->path)
       {
         $self->_convert($build, Path::Tiny->new($self->path)->absolute);
@@ -88,7 +89,7 @@ sub init
       {
         $self->_recurse($build, Path::Tiny->new(".")->absolute);
       }
-    
+
     },
   );
 }
@@ -107,7 +108,7 @@ Alien::Build::Plugin::PkgConfig::MakeStatic - Convert .pc files into static
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -137,7 +138,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -187,9 +188,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

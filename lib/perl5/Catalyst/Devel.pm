@@ -1,13 +1,16 @@
 package Catalyst::Devel;
+require 5.008003;
 
 use strict;
 use warnings;
 
-# Change Catalyst::Helper also.
-our $VERSION             = '1.39';
+our $VERSION = '1.42';
+$VERSION =~ tr/_//d;
+
 our $CATALYST_SCRIPT_GEN = 40;
 
-$VERSION = eval $VERSION;
+1;
+__END__
 
 =head1 NAME
 
@@ -18,7 +21,7 @@ Catalyst::Devel - Catalyst Development Tools
 The C<Catalyst-Devel> distribution includes a variety of modules useful
 for the development of Catalyst applications, but not required to run
 them. This is intended to make it easier to deploy Catalyst apps. The
-runtime parts of Catalyst are now known as C<Catalyst::Runtime>. 
+runtime parts of Catalyst are now known as C<Catalyst::Runtime>.
 
 C<Catalyst-Devel> includes the L<Catalyst::Helper> system, which
 autogenerates scripts and tests; L<Module::Install::Catalyst>, a
@@ -50,5 +53,3 @@ This library is free software. You can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
-
-1;

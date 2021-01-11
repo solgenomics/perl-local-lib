@@ -76,7 +76,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SeqFeature::Gene::UTR;
-$Bio::SeqFeature::Gene::UTR::VERSION = '1.7.5';
 use strict;
 
 # Object preamble - inherits from Bio::Root::Root

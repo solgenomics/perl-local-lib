@@ -79,7 +79,7 @@ Internal methods are usually preceded with a _
 =cut
 
 package Bio::SeqIO::tinyseq::tinyseqHandler;
-$Bio::SeqIO::tinyseq::tinyseqHandler::VERSION = '1.7.5';
+
 use strict;
 use warnings;
 

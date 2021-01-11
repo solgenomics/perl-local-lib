@@ -477,11 +477,11 @@ Tongan Tonga locale.
    1995-12-22T09:05:02 = Fal 22 Tīsema
   -0010-09-15T04:44:23 = Tok 15 Sepitema
 
-=head3 MMMMW-count-other ('week' W 'of' MMMM)
+=head3 MMMMW-count-other ('uike' 'hono' W ʻ'o' MMMM)
 
-   2008-02-05T18:30:30 = week 1 of Fēpueli
-   1995-12-22T09:05:02 = week 3 of Tīsema
-  -0010-09-15T04:44:23 = week 2 of Sepitema
+   2008-02-05T18:30:30 = uike hono 1 ʻo Fēpueli
+   1995-12-22T09:05:02 = uike hono 3 ʻo Tīsema
+  -0010-09-15T04:44:23 = uike hono 2 ʻo Sepitema
 
 =head3 MMMMd (d MMMM)
 
@@ -609,11 +609,11 @@ Tongan Tonga locale.
    1995-12-22T09:05:02 = 1995 kuata fā
   -0010-09-15T04:44:23 = -10 kuata tolu
 
-=head3 yw-count-other ('week' w 'of' Y)
+=head3 yw-count-other ('uike' 'hono' w ʻ'o' Y)
 
-   2008-02-05T18:30:30 = week 6 of 2008
-   1995-12-22T09:05:02 = week 51 of 1995
-  -0010-09-15T04:44:23 = week 37 of -10
+   2008-02-05T18:30:30 = uike hono 6 ʻo 2008
+   1995-12-22T09:05:02 = uike hono 51 ʻo 1995
+  -0010-09-15T04:44:23 = uike hono 37 ʻo -10
 
 
 =head2 Miscellaneous
@@ -625,6 +625,26 @@ No
 =head3 Local first day of the week
 
 1 (Mōnite)
+
+=head2 Strftime Patterns
+
+=head3 %c (%A %d %b %Y %I:%M:%S %p) - date time format
+
+   2008-02-05T18:30:30 = Tūsite 05 Fēp 2008 06:30:30 PM
+   1995-12-22T09:05:02 = Falaite 22 Tīs 1995 09:05:02 AM
+  -0010-09-15T04:44:23 = Tokonaki 15 Sep -10 04:44:23 AM
+
+=head3 %x (%A %d %b %Y) - date format
+
+   2008-02-05T18:30:30 = Tūsite 05 Fēp 2008
+   1995-12-22T09:05:02 = Falaite 22 Tīs 1995
+  -0010-09-15T04:44:23 = Tokonaki 15 Sep -10
+
+=head3 %X (%I:%M:%S %p %Z) - time format
+
+   2008-02-05T18:30:30 = 06:30:30 PM UTC
+   1995-12-22T09:05:02 = 09:05:02 AM UTC
+  -0010-09-15T04:44:23 = 04:44:23 AM UTC
 
 =head1 SUPPORT
 

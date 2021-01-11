@@ -80,7 +80,7 @@ Internal methods are usually preceded with a _
 
 
 package Bio::DB::Taxonomy::silva;
-$Bio::DB::Taxonomy::silva::VERSION = '1.7.5';
+
 use strict;
 use Bio::SeqIO;
 

@@ -92,7 +92,6 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::SeqIO::table;
-$Bio::SeqIO::table::VERSION = '1.7.5';
 use strict;
 
 use Bio::Species;

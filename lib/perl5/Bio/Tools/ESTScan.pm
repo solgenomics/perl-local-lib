@@ -88,7 +88,6 @@ The rest of the documentation details each of the object methods. Internal metho
 # Let the code begin...
 
 package Bio::Tools::ESTScan;
-$Bio::Tools::ESTScan::VERSION = '1.7.5';
 use strict;
 use Symbol;
 

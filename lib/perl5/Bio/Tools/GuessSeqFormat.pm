@@ -4,7 +4,7 @@
 #
 # Please direct questions and support issues to <bioperl-l@bioperl.org> 
 #
-# Cared for by Andreas K√§h√§ri, andreas.kahari@ebi.ac.uk
+# Cared for by Andreas K‰h‰ri, andreas.kahari@ebi.ac.uk
 #
 # You may distribute this module under the same terms as perl itself
 #------------------------------------------------------------------
@@ -243,7 +243,7 @@ Mark A. Jensen, maj-at-fortinbras-dot-us
 
 
 package Bio::Tools::GuessSeqFormat;
-$Bio::Tools::GuessSeqFormat::VERSION = '1.7.5';
+
 use strict;
 use warnings;
 

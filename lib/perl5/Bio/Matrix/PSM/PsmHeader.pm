@@ -54,7 +54,7 @@ Email skirov@utk.edu
 
 # Let the code begin...
 package Bio::Matrix::PSM::PsmHeader;
-$Bio::Matrix::PSM::PsmHeader::VERSION = '1.7.5';
+
 use Bio::Matrix::PSM::InstanceSite;
 
 use strict;

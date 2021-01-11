@@ -121,7 +121,7 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Ontology::SimpleGOEngine::GraphAdaptor;
-$Bio::Ontology::SimpleGOEngine::GraphAdaptor::VERSION = '1.7.5';
+
 use Graph::Directed;
 
 use strict;

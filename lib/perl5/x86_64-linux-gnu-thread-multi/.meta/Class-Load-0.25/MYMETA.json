@@ -4,7 +4,7 @@
       "Shawn M Moore <sartak at bestpractical.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 6.012, CPAN::Meta::Converter version 2.150010, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Dist::Zilla version 6.012, CPAN::Meta::Converter version 2.150010",
    "keywords" : [
       "class",
       "module",
@@ -18,7 +18,7 @@
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Class-Load",
    "no_index" : {
@@ -1285,6 +1285,6 @@
       "Caleb Cushing <xenoterracide@gmail.com>"
    ],
    "x_generated_by_perl" : "v5.27.11",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01",
+   "x_serialization_backend" : "JSON::PP version 2.97001",
    "x_use_unsafe_inc" : 0
 }

@@ -245,7 +245,7 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Search::Iteration::IterationI;
-$Bio::Search::Iteration::IterationI::VERSION = '1.7.5';
+
 use strict;
 
 

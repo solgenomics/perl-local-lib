@@ -471,35 +471,35 @@ Breton France locale.
    1995-12-22T09:05:02 = Gwe. 22 Kzu.
   -0010-09-15T04:44:23 = Sad. 15 Gwen.
 
-=head3 MMMMW-count-few ('sizhun' W MMMM)
+=head3 MMMMW-count-few ('sizhun' W 'miz' MMMM)
 
-   2008-02-05T18:30:30 = sizhun 1 Cʼhwevrer
-   1995-12-22T09:05:02 = sizhun 3 Kerzu
-  -0010-09-15T04:44:23 = sizhun 2 Gwengolo
+   2008-02-05T18:30:30 = sizhun 1 miz Cʼhwevrer
+   1995-12-22T09:05:02 = sizhun 3 miz Kerzu
+  -0010-09-15T04:44:23 = sizhun 2 miz Gwengolo
 
-=head3 MMMMW-count-many ('sizhun' W MMMM)
+=head3 MMMMW-count-many ('sizhun' W 'miz' MMMM)
 
-   2008-02-05T18:30:30 = sizhun 1 Cʼhwevrer
-   1995-12-22T09:05:02 = sizhun 3 Kerzu
-  -0010-09-15T04:44:23 = sizhun 2 Gwengolo
+   2008-02-05T18:30:30 = sizhun 1 miz Cʼhwevrer
+   1995-12-22T09:05:02 = sizhun 3 miz Kerzu
+  -0010-09-15T04:44:23 = sizhun 2 miz Gwengolo
 
-=head3 MMMMW-count-one ('sizhun' W MMMM)
+=head3 MMMMW-count-one ('sizhun' W 'miz' MMMM)
 
-   2008-02-05T18:30:30 = sizhun 1 Cʼhwevrer
-   1995-12-22T09:05:02 = sizhun 3 Kerzu
-  -0010-09-15T04:44:23 = sizhun 2 Gwengolo
+   2008-02-05T18:30:30 = sizhun 1 miz Cʼhwevrer
+   1995-12-22T09:05:02 = sizhun 3 miz Kerzu
+  -0010-09-15T04:44:23 = sizhun 2 miz Gwengolo
 
-=head3 MMMMW-count-other ('sizhun' W MMMM)
+=head3 MMMMW-count-other ('sizhun' W 'miz' MMMM)
 
-   2008-02-05T18:30:30 = sizhun 1 Cʼhwevrer
-   1995-12-22T09:05:02 = sizhun 3 Kerzu
-  -0010-09-15T04:44:23 = sizhun 2 Gwengolo
+   2008-02-05T18:30:30 = sizhun 1 miz Cʼhwevrer
+   1995-12-22T09:05:02 = sizhun 3 miz Kerzu
+  -0010-09-15T04:44:23 = sizhun 2 miz Gwengolo
 
-=head3 MMMMW-count-two ('sizhun' W MMMM)
+=head3 MMMMW-count-two ('sizhun' W 'miz' MMMM)
 
-   2008-02-05T18:30:30 = sizhun 1 Cʼhwevrer
-   1995-12-22T09:05:02 = sizhun 3 Kerzu
-  -0010-09-15T04:44:23 = sizhun 2 Gwengolo
+   2008-02-05T18:30:30 = sizhun 1 miz Cʼhwevrer
+   1995-12-22T09:05:02 = sizhun 3 miz Kerzu
+  -0010-09-15T04:44:23 = sizhun 2 miz Gwengolo
 
 =head3 MMMMd (d MMMM)
 
@@ -661,6 +661,26 @@ Yes
 =head3 Local first day of the week
 
 1 (Lun)
+
+=head2 Strftime Patterns
+
+=head3 %c (Dʼar %A %d a viz %B %Y %T) - date time format
+
+   2008-02-05T18:30:30 = Dʼar Meurzh 05 a viz Cʼhwevrer 2008 18:30:30
+   1995-12-22T09:05:02 = Dʼar Gwener 22 a viz Kerzu 1995 09:05:02
+  -0010-09-15T04:44:23 = Dʼar Sadorn 15 a viz Gwengolo -10 04:44:23
+
+=head3 %x (%d.%m.%Y) - date format
+
+   2008-02-05T18:30:30 = 05.02.2008
+   1995-12-22T09:05:02 = 22.12.1995
+  -0010-09-15T04:44:23 = 15.09.-10
+
+=head3 %X (%T) - time format
+
+   2008-02-05T18:30:30 = 18:30:30
+   1995-12-22T09:05:02 = 09:05:02
+  -0010-09-15T04:44:23 = 04:44:23
 
 =head1 SUPPORT
 

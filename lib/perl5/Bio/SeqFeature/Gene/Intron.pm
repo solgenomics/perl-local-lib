@@ -69,7 +69,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SeqFeature::Gene::Intron;
-$Bio::SeqFeature::Gene::Intron::VERSION = '1.7.5';
 use strict;
 
 use Bio::SeqFeature::Gene::Exon;

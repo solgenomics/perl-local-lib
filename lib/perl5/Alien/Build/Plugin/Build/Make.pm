@@ -2,13 +2,13 @@ package Alien::Build::Plugin::Build::Make;
 
 use strict;
 use warnings;
-use 5.008001;
+use 5.008004;
 use Carp ();
 use Capture::Tiny qw( capture );
 use Alien::Build::Plugin;
 
 # ABSTRACT: Make plugin for Alien::Build
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 has '+make_type' => undef;
@@ -18,23 +18,23 @@ sub init
   my($self, $meta) = @_;
 
   $meta->add_requires('configure', 'Alien::Build::Plugin::Build::Make', '0.99');
-  
+
   my $type = $self->make_type;
-  
+
   return unless defined $type;
-  
+
   $type = 'gmake' if $^O eq 'MSWin32' && $type eq 'umake';
-  
+
   if($type eq 'nmake')
   {
     $meta->interpolator->replace_helper( make => sub { 'nmake' } );
   }
-  
+
   elsif($type eq 'dmake')
   {
     $meta->interpolator->replace_helper( make => sub { 'dmake' } );
   }
-  
+
   elsif($type eq 'gmake')
   {
     my $found = 0;
@@ -53,12 +53,12 @@ sub init
       $meta->interpolator->replace_helper('make' => sub { require Alien::gmake; Alien::gmake->exe });
     }
   }
-  
+
   elsif($type eq 'umake')
   {
     # nothing
   }
-  
+
   else
   {
     Carp::croak("unknown make type = ", $self->make_type);
@@ -79,7 +79,7 @@ Alien::Build::Plugin::Build::Make - Make plugin for Alien::Build
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -97,8 +97,8 @@ projects do not use.  This plugin will alter the L<alienfile> recipe to use a di
 case of C<gmake> / L<Alien::gmake>) automatically download and install an alienized version of that C<make> if it
 is not already installed.
 
-This plugin should NOT be used with other plugins that replace the C<make> helper, like 
-L<Alien::Build::Plugin::Build::CMake>, L<Alien::Build::Plugin::Build::Autoconf>, 
+This plugin should NOT be used with other plugins that replace the C<make> helper, like
+L<Alien::Build::Plugin::Build::CMake>, L<Alien::Build::Plugin::Build::Autoconf>,
 L<Alien::Build::Plugin::Build::MSYS>.  This plugin is intended instead for projects that use vanilla makefiles of
 a specific type.
 
@@ -147,7 +147,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -197,9 +197,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

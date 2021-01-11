@@ -65,7 +65,7 @@ L<Bio::DB::Flat>,
 =cut
 
 package Bio::DB::Flat::BDB::embl;
-$Bio::DB::Flat::BDB::embl::VERSION = '1.7.5';
+
 use strict;
 
 use base qw(Bio::DB::Flat::BDB);

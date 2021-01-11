@@ -108,7 +108,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Tools::Genemark;
-$Bio::Tools::Genemark::VERSION = '1.7.5';
 use strict;
 use Symbol;
 

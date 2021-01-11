@@ -1,1 +1,1 @@
-{"name":"Data::Structure::Util","pathname":"A/AN/ANDYA/Data-Structure-Util-0.16.tar.gz","target":"Data::Structure::Util","version":"0.16","provides":{"Data::Structure::Util":{"version":"0.16","file":"lib/Data/Structure/Util.pm"}},"dist":"Data-Structure-Util-0.16"}
+{"pathname":"A/AN/ANDYA/Data-Structure-Util-0.16.tar.gz","provides":{"Data::Structure::Util":{"file":"lib/Data/Structure/Util.pm","version":"0.16"}},"version":"0.16","target":"Data::Structure::Util","dist":"Data-Structure-Util-0.16","name":"Data::Structure::Util"}

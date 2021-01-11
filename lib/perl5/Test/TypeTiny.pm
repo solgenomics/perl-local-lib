@@ -5,81 +5,106 @@ use warnings;
 
 use Test::More qw();
 use Scalar::Util qw(blessed);
-use Types::TypeTiny qw(to_TypeTiny);
+use Types::TypeTiny ();
+use Type::Tiny      ();
 
 require Exporter::Tiny;
 our @ISA = 'Exporter::Tiny';
 
 BEGIN {
-	*EXTENDED_TESTING = $ENV{EXTENDED_TESTING} ? sub(){!!1} : sub(){!!0};
-};
+	*EXTENDED_TESTING = $ENV{EXTENDED_TESTING} ? sub() { !!1 } : sub() { !!0 };
+}
 
 our $AUTHORITY = 'cpan:TOBYINK';
-our $VERSION   = '1.004004';
+our $VERSION   = '1.012001';
 our @EXPORT    = qw( should_pass should_fail ok_subtype );
 our @EXPORT_OK = qw( EXTENDED_TESTING matchfor );
 
-sub matchfor
-{
+$VERSION =~ tr/_//d;
+
+my $overloads_installed = 0;
+
+sub matchfor {
 	my @matchers = @_;
 	bless \@matchers, do {
-		package #
-		Test::TypeTiny::Internal::MATCHFOR;
-		use overload
+		package    #
+			Test::TypeTiny::Internal::MATCHFOR;
+		Test::TypeTiny::Internal::MATCHFOR->Type::Tiny::_install_overloads(
 			q[==] => 'match',
 			q[eq] => 'match',
 			q[""] => 'to_string',
-			fallback => 1;
+		) unless $overloads_installed++;
+		
 		sub to_string {
-			$_[0][0]
+			$_[0][0];
 		}
+		
 		sub match {
-			my ($self, $e) = @_;
-			my $does = Scalar::Util::blessed($e) ? ($e->can('DOES') || $e->can('isa')) : undef;
-			for my $s (@$self) {
-				return 1 if  ref($s) && $e =~ $s;
-				return 1 if !ref($s) && $does && $e->$does($s);
+			my ( $self, $e ) = @_;
+			my $does =
+				Scalar::Util::blessed( $e )
+				? ( $e->can( 'DOES' ) || $e->can( 'isa' ) )
+				: undef;
+			for my $s ( @$self ) {
+				return 1 if ref( $s ) && $e =~ $s;
+				return 1 if !ref( $s ) && $does && $e->$does( $s );
 			}
 			return;
-		}
+		} #/ sub match
 		__PACKAGE__;
 	};
-}
+} #/ sub matchfor
 
-sub _mk_message
-{
+sub _mk_message {
 	require Type::Tiny;
-	my ($template, $value) = @_;
-	sprintf($template, Type::Tiny::_dd($value));
+	my ( $template, $value ) = @_;
+	sprintf( $template, Type::Tiny::_dd( $value ) );
 }
 
-sub ok_subtype
-{
-	my ($type, @s) = @_;
+sub ok_subtype {
+	my ( $type, @s ) = @_;
 	@_ = (
-		not(scalar grep !$_->is_subtype_of($type), @s),
-		sprintf("%s subtype: %s", $type, join q[, ], @s),
+		not( scalar grep !$_->is_subtype_of( $type ), @s ),
+		sprintf( "%s subtype: %s", $type, join q[, ], @s ),
 	);
 	goto \&Test::More::ok;
 }
 
-eval(EXTENDED_TESTING ? <<'SLOW' : <<'FAST');
+eval( EXTENDED_TESTING ? <<'SLOW' : <<'FAST');
 
 sub should_pass
 {
 	my ($value, $type, $message) = @_;
 	
 	local $Test::Builder::Level = $Test::Builder::Level + 1;
-	$type = to_TypeTiny($type) unless blessed($type) && $type->can("check");
+	$type = Types::TypeTiny::to_TypeTiny($type) unless blessed($type) && $type->can("check");
 	
 	my $strictures = $type->can("_strict_check");
+	my $compiled   = $type->can("compiled_check");
+	my $can_inline = $type->can("can_be_inlined") && $type->can_be_inlined && $type->can("inline_check");
+	
+	my $count = 1;
+	$count +=1 if $strictures;
+	$count +=1 if $compiled;
+	$count +=2 if $can_inline;
+	
+	my @codes;
+	if ( $can_inline ) {
+		push @codes, eval sprintf('no warnings; [ q(inlined), sub { my $VAR = shift; %s } ]', $type->inline_check('$VAR'));
+		local $Type::Tiny::AvoidCallbacks = 1;
+		push @codes, eval sprintf('no warnings; [ q(inlined avoiding callbacks), sub { my $VAR = shift; %s } ]', $type->inline_check('$VAR'));
+	}
 	
 	my $test = "Test::Builder"->new->child(
 		$message || _mk_message("%s passes type constraint $type", $value),
 	);
-	$test->plan(tests => ($strictures ? 2 : 1));
+	$test->plan(tests => $count);
 	$test->ok(!!$type->check($value), '->check');
 	$test->ok(!!$type->_strict_check($value), '->_strict_check') if $strictures;
+	$test->ok(!!$type->compiled_check->($value), '->compiled_check') if $compiled;
+	for my $code ( @codes ) {
+		$test->ok(!!$code->[1]->($value), $code->[0]);
+	}
 	$test->finalize;
 	return $test->is_passing;
 }
@@ -87,18 +112,36 @@ sub should_pass
 sub should_fail
 {
 	my ($value, $type, $message) = @_;
-	$type = to_TypeTiny($type) unless blessed($type) && $type->can("check");
+	$type = Types::TypeTiny::to_TypeTiny($type) unless blessed($type) && $type->can("check");
 	
 	local $Test::Builder::Level = $Test::Builder::Level + 1;
 	
 	my $strictures = $type->can("_strict_check");
+	my $compiled   = $type->can("compiled_check");
+	my $can_inline = $type->can("can_be_inlined") && $type->can_be_inlined && $type->can("inline_check");
+	
+	my $count = 1;
+	$count +=1 if $strictures;
+	$count +=1 if $compiled;
+	$count +=2 if $can_inline;
+	
+	my @codes;
+	if ( $can_inline ) {
+		push @codes, eval sprintf('no warnings; [ q(inlined), sub { my $VAR = shift; %s } ]', $type->inline_check('$VAR'));
+		local $Type::Tiny::AvoidCallbacks = 1;
+		push @codes, eval sprintf('no warnings; [ q(inlined avoiding callbacks), sub { my $VAR = shift; %s } ]', $type->inline_check('$VAR'));
+	}
 	
 	my $test = "Test::Builder"->new->child(
 		$message || _mk_message("%s fails type constraint $type", $value),
 	);
-	$test->plan(tests => ($strictures ? 2 : 1));
+	$test->plan(tests => $count);
 	$test->ok(!$type->check($value), '->check');
 	$test->ok(!$type->_strict_check($value), '->_strict_check') if $strictures;
+	$test->ok(!$type->compiled_check->($value), '->compiled_check') if $compiled;
+	for my $code ( @codes ) {
+		$test->ok(!$code->[1]->($value), $code->[0]);
+	}
 	$test->finalize;
 	return $test->is_passing;
 }
@@ -108,7 +151,7 @@ SLOW
 sub should_pass
 {
 	my ($value, $type, $message) = @_;
-	$type = to_TypeTiny($type) unless blessed($type) && $type->can("check");
+	$type = Types::TypeTiny::to_TypeTiny($type) unless blessed($type) && $type->can("check");
 	@_ = (
 		!!$type->check($value),
 		$message || _mk_message("%s passes type constraint $type", $value),
@@ -119,7 +162,7 @@ sub should_pass
 sub should_fail
 {
 	my ($value, $type, $message) = @_;
-	$type = to_TypeTiny($type) unless blessed($type) && $type->can("check");
+	$type = Types::TypeTiny::to_TypeTiny($type) unless blessed($type) && $type->can("check");
 	@_ = (
 		!$type->check($value),
 		$message || _mk_message("%s fails type constraint $type", $value),
@@ -215,7 +258,7 @@ loaded).
 =head1 BUGS
 
 Please report any bugs to
-L<http://rt.cpan.org/Dist/Display.html?Queue=Type-Tiny>.
+L<https://github.com/tobyink/p5-type-tiny/issues>.
 
 =head1 SEE ALSO
 
@@ -230,7 +273,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2019 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
@@ -240,4 +283,3 @@ the same terms as the Perl 5 programming language system itself.
 THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
 WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
 MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-

@@ -103,7 +103,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Tree::RandomFactory;
-$Bio::Tree::RandomFactory::VERSION = '1.7.5';
 use vars qw($PRECISION_DIGITS $DefaultNodeType %Defaults);
 use strict;
 

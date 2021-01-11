@@ -13,7 +13,7 @@ use constant skip  => true;
 
 use DateTime::Format::Natural::Helpers qw(%flag);
 
-our $VERSION = '1.63';
+our $VERSION = '1.69';
 
 our (%init,
      %timespan,
@@ -170,7 +170,14 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
             thurs => 'thu',
         },
         tokens => {
+            sec  => 'second',
+            secs => 'seconds',
+            min  => 'minute',
             mins => 'minutes',
+            hr   => 'hour',
+            hrs  => 'hours',
+            yr   => 'year',
+            yrs  => 'years',
             '@'  => 'at',
         },
         short => {
@@ -357,7 +364,10 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          ],
          [ {} ],
          [ '_daytime_variant' ],
-         { truncate_to => [q(hour)] },
+         {
+           advance_future => true,
+           truncate_to    => [q(hour)],
+         },
        ],
        [
          { 0 => qr/^(afternoon)$/i },
@@ -370,7 +380,10 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          ],
          [ {} ],
          [ '_daytime_variant' ],
-         { truncate_to => [q(hour)] },
+         {
+           advance_future => true,
+           truncate_to    => [q(hour)],
+         },
        ],
        [
          { 0 => qr/^(evening)$/i },
@@ -383,7 +396,10 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          ],
          [ {} ],
          [ '_daytime_variant' ],
-         { truncate_to => [q(hour)] },
+         {
+           advance_future => true,
+           truncate_to    => [q(hour)],
+         },
        ]
     ],
     daytime_noon_midnight => [
@@ -399,7 +415,10 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          ],
          [ {} ],
          [ '_daytime' ],
-         { truncate_to => [q(hour)] },
+         {
+           advance_future => true,
+           truncate_to    => [q(hour)],
+         },
        ],
        [
          { 0 => qr/^(midnight)$/i },
@@ -412,7 +431,10 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          ],
          [ {} ],
          [ '_daytime' ],
-         { truncate_to => [q(hour)] },
+         {
+           advance_future => true,
+           truncate_to    => [q(hour)],
+         },
        ],
     ],
     daytime_noon_midnight_at => [
@@ -825,8 +847,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_weekday', '_daytime_variant' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour)],
          },
        ],
        [
@@ -844,8 +866,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_weekday', '_daytime_variant' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour)],
          },
        ],
        [
@@ -863,8 +885,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_weekday', '_daytime_variant' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour)],
          },
        ],
     ],
@@ -1278,8 +1300,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ { unit => 'month' } ],
          [ '_unit_date' ],
          {
-           prefer_future => true,
-           truncate_to   => [q(month)],
+           advance_future => true,
+           truncate_to    => [q(month)],
          },
        ],
     ],
@@ -1298,8 +1320,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {} ],
          [ '_month_day' ],
          {
-           prefer_future => true,
-           truncate_to   => [q(day)],
+           advance_future => true,
+           truncate_to    => [q(day)],
          },
        ],
        [
@@ -1315,8 +1337,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {} ],
          [ '_month_day' ],
          {
-           prefer_future => true,
-           truncate_to   => [q(day)],
+           advance_future => true,
+           truncate_to    => [q(day)],
          },
        ]
     ],
@@ -1750,8 +1772,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {} ],
          [ '_weekday' ],
          {
-           prefer_future => true,
-           truncate_to   => [q(day)],
+           advance_future => true,
+           truncate_to    => [q(day)],
          },
        ],
     ],
@@ -2102,8 +2124,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {} ],
          [ '_at' ],
          {
-           prefer_future => true,
-           truncate_to   => [q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [q(hour_minute)],
          },
        ],
        [
@@ -2118,8 +2140,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {} ],
          [ '_at' ],
          {
-           prefer_future => true,
-           truncate_to   => [q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [q(hour_minute)],
          },
        ],
     ],
@@ -2138,8 +2160,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_weekday', '_time' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour_minute)],
          },
        ],
        [
@@ -2157,8 +2179,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_weekday', '_at' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour_minute)],
          },
        ],
        [
@@ -2176,8 +2198,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_weekday', '_at' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour_minute)],
          },
        ],
        [
@@ -2193,8 +2215,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_time', '_weekday' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour_minute)],
          },
        ],
        [
@@ -2212,8 +2234,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_at', '_weekday' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour_minute)],
          },
        ],
        [
@@ -2231,8 +2253,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_at', '_weekday' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour_minute)],
          },
        ],
     ],
@@ -2246,8 +2268,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {} ],
          [ '_time' ],
          {
-           prefer_future => true,
-           truncate_to   => [q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [q(hour_minute)],
          },
        ],
     ],
@@ -3450,6 +3472,36 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
     daytime_hours_variant => [
        [ 'REGEXP', 'REGEXP', 'REGEXP', 'REGEXP' ],
        [
+         { 0 => $RE{number}, 1 => qr/^(seconds?)$/i, 2 => qr/^(before)$/i, 3 => qr/^(yesterday)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'second' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(minutes?)$/i, 2 => qr/^(before)$/i, 3 => qr/^(yesterday)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'minute' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
          { 0 => $RE{number}, 1 => qr/^(hours?)$/i, 2 => qr/^(before)$/i, 3 => qr/^(yesterday)$/i },
          [ [ 0, 1 ] ],
          [ $extended_checks{suffix} ],
@@ -3460,9 +3512,84 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
              { 3 => [ $flag{yes_today_tom} ] },
            ],
          ],
-         [ {} ],
-         [ '_daytime_hours_variant' ],
-         { truncate_to => [q(hour)] },
+         [ { unit => 'hour' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(seconds?)$/i, 2 => qr/^(before)$/i, 3 => qr/^(today)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'second' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(minutes?)$/i, 2 => qr/^(before)$/i, 3 => qr/^(today)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'minute' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(hours?)$/i, 2 => qr/^(before)$/i, 3 => qr/^(today)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'hour' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(seconds?)$/i, 2 => qr/^(before)$/i, 3 => qr/^(tomorrow)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'second' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(minutes?)$/i, 2 => qr/^(before)$/i, 3 => qr/^(tomorrow)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'minute' } ],
+         [ '_daytime_unit_variant' ],
+         {},
        ],
        [
          { 0 => $RE{number}, 1 => qr/^(hours?)$/i, 2 => qr/^(before)$/i, 3 => qr/^(tomorrow)$/i },
@@ -3475,9 +3602,39 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
              { 3 => [ $flag{yes_today_tom} ] },
            ],
          ],
-         [ {} ],
-         [ '_daytime_hours_variant' ],
-         { truncate_to => [q(hour)] },
+         [ { unit => 'hour' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(seconds?)$/i, 2 => qr/^(after)$/i, 3 => qr/^(yesterday)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'second' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(minutes?)$/i, 2 => qr/^(after)$/i, 3 => qr/^(yesterday)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'minute' } ],
+         [ '_daytime_unit_variant' ],
+         {},
        ],
        [
          { 0 => $RE{number}, 1 => qr/^(hours?)$/i, 2 => qr/^(after)$/i, 3 => qr/^(yesterday)$/i },
@@ -3490,9 +3647,84 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
              { 3 => [ $flag{yes_today_tom} ] },
            ],
          ],
-         [ {} ],
-         [ '_daytime_hours_variant' ],
-         { truncate_to => [q(hour)] },
+         [ { unit => 'hour' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(seconds?)$/i, 2 => qr/^(after)$/i, 3 => qr/^(today)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'second' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(minutes?)$/i, 2 => qr/^(after)$/i, 3 => qr/^(today)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'minute' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(hours?)$/i, 2 => qr/^(after)$/i, 3 => qr/^(today)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'hour' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(seconds?)$/i, 2 => qr/^(after)$/i, 3 => qr/^(tomorrow)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'second' } ],
+         [ '_daytime_unit_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(minutes?)$/i, 2 => qr/^(after)$/i, 3 => qr/^(tomorrow)$/i },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+             { 3 => [ $flag{yes_today_tom} ] },
+           ],
+         ],
+         [ { unit => 'minute' } ],
+         [ '_daytime_unit_variant' ],
+         {},
        ],
        [
          { 0 => $RE{number}, 1 => qr/^(hours?)$/i, 2 => qr/^(after)$/i, 3 => qr/^(tomorrow)$/i },
@@ -3505,13 +3737,41 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
              { 3 => [ $flag{yes_today_tom} ] },
            ],
          ],
-         [ {} ],
-         [ '_daytime_hours_variant' ],
-         { truncate_to => [q(hour)] },
+         [ { unit => 'hour' } ],
+         [ '_daytime_unit_variant' ],
+         {},
        ],
     ],
-    hourtime_before_variant => [
+    hourtime_before_after_variant => [
        [ 'REGEXP', 'REGEXP', 'REGEXP', 'SCALAR' ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(seconds?)$/i, 2 => qr/^(before)$/i, 3 => 'noon' },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+           ],
+         ],
+         [ { hours => 12, unit => 'second' } ],
+         [ '_hourtime_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(minutes?)$/i, 2 => qr/^(before)$/i, 3 => 'noon' },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+           ],
+         ],
+         [ { hours => 12, unit => 'minute' } ],
+         [ '_hourtime_variant' ],
+         {},
+       ],
        [
          { 0 => $RE{number}, 1 => qr/^(hours?)$/i, 2 => qr/^(before)$/i, 3 => 'noon' },
          [ [ 0, 1 ] ],
@@ -3522,9 +3782,37 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
              { 2 => [ $flag{before_after_from} ] },
            ],
          ],
-         [ { hours => 12 } ],
+         [ { hours => 12, unit => 'hour' } ],
          [ '_hourtime_variant' ],
-         { truncate_to => [q(hour)] },
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(seconds?)$/i, 2 => qr/^(before)$/i, 3 => 'midnight' },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+           ],
+         ],
+         [ { unit => 'second' } ],
+         [ '_hourtime_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(minutes?)$/i, 2 => qr/^(before)$/i, 3 => 'midnight' },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+           ],
+         ],
+         [ { unit => 'minute' } ],
+         [ '_hourtime_variant' ],
+         {},
        ],
        [
          { 0 => $RE{number}, 1 => qr/^(hours?)$/i, 2 => qr/^(before)$/i, 3 => 'midnight' },
@@ -3536,9 +3824,37 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
              { 2 => [ $flag{before_after_from} ] },
            ],
          ],
-         [ {} ],
+         [ { unit => 'hour' } ],
          [ '_hourtime_variant' ],
-         { truncate_to => [q(hour)] },
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(seconds?)$/i, 2 => qr/^(after)$/i, 3 => 'noon' },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+           ],
+         ],
+         [ { hours => 12, unit => 'second' } ],
+         [ '_hourtime_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(minutes?)$/i, 2 => qr/^(after)$/i, 3 => 'noon' },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+           ],
+         ],
+         [ { hours => 12, unit => 'minute' } ],
+         [ '_hourtime_variant' ],
+         {},
        ],
        [
          { 0 => $RE{number}, 1 => qr/^(hours?)$/i, 2 => qr/^(after)$/i, 3 => 'noon' },
@@ -3550,9 +3866,37 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
              { 2 => [ $flag{before_after_from} ] },
            ],
          ],
-         [ { hours => 12 } ],
+         [ { hours => 12, unit => 'hour' } ],
          [ '_hourtime_variant' ],
-         { truncate_to => [q(hour)] },
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(seconds?)$/i, 2 => qr/^(after)$/i, 3 => 'midnight' },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+           ],
+         ],
+         [ { unit => 'second' } ],
+         [ '_hourtime_variant' ],
+         {},
+       ],
+       [
+         { 0 => $RE{number}, 1 => qr/^(minutes?)$/i, 2 => qr/^(after)$/i, 3 => 'midnight' },
+         [ [ 0, 1 ] ],
+         [ $extended_checks{suffix} ],
+         [
+           [
+               0,
+             { 2 => [ $flag{before_after_from} ] },
+           ],
+         ],
+         [ { unit => 'minute' } ],
+         [ '_hourtime_variant' ],
+         {},
        ],
        [
          { 0 => $RE{number}, 1 => qr/^(hours?)$/i, 2 => qr/^(after)$/i, 3 => 'midnight' },
@@ -3564,9 +3908,9 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
              { 2 => [ $flag{before_after_from} ] },
            ],
          ],
-         [ {} ],
+         [ { unit => 'hour' } ],
          [ '_hourtime_variant' ],
-         { truncate_to => [q(hour)] },
+         {},
        ],
     ],
     day_at => [
@@ -3725,8 +4069,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_time', '_weekday' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour_minute)],
          },
        ],
        [
@@ -3744,8 +4088,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_at', '_weekday' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour_minute)],
          },
        ],
        [
@@ -3763,8 +4107,8 @@ $regexes{format} = qr/^$regexes{format_}(?:(?=\s)|$)/;
          [ {}, {} ],
          [ '_at', '_weekday' ],
          {
-           prefer_future => true,
-           truncate_to   => [undef, q(hour_minute)],
+           advance_future => true,
+           truncate_to    => [undef, q(hour_minute)],
          },
        ],
     ],
@@ -4310,13 +4654,35 @@ also parsable with precision in seconds):
  11 january next year
  11 january this year
  11 january last year
+ 6 seconds before yesterday
+ 6 minutes before yesterday
  6 hours before yesterday
+ 6 seconds before today
+ 6 minutes before today
+ 6 hours before today
+ 6 seconds before tomorrow
+ 6 minutes before tomorrow
  6 hours before tomorrow
+ 3 seconds after yesterday
+ 3 minutes after yesterday
  3 hours after yesterday
+ 3 seconds after today
+ 3 minutes after today
+ 3 hours after today
+ 3 seconds after tomorrow
+ 3 minutes after tomorrow
  3 hours after tomorrow
+ 10 seconds before noon
+ 10 minutes before noon
  10 hours before noon
+ 10 seconds before midnight
+ 10 minutes before midnight
  10 hours before midnight
+ 5 seconds after noon
+ 5 minutes after noon
  5 hours after noon
+ 5 seconds after midnight
+ 5 minutes after midnight
  5 hours after midnight
  noon last friday
  midnight last friday
@@ -4445,6 +4811,8 @@ also parsable with precision in seconds):
  27/5/1979
  1/3
  1/3 16:00
+ 3/1
+ 3/1 16:00
  4:00
  17:00
  3:20:00
@@ -4455,7 +4823,14 @@ also parsable with precision in seconds):
 
 =head2 Aliases
 
+ 1 sec ago
+ 10 secs ago
+ 1 min ago
  5 mins ago
+ 1 hr ago
+ 3 hrs ago
+ 1 yr ago
+ 7 yrs ago
  yesterday @ noon
  tues this week
  final thurs in sep

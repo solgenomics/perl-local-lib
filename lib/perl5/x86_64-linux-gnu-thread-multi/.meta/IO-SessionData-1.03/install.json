@@ -1,1 +1,1 @@
-{"dist":"IO-SessionData-1.03","name":"IO::SessionData","pathname":"P/PH/PHRED/IO-SessionData-1.03.tar.gz","provides":{"IO::SessionSet":{"file":"lib/IO/SessionSet.pm"},"IO::SessionData":{"file":"lib/IO/SessionData.pm","version":"1.03"}},"version":"1.03","target":"IO::SessionData"}
+{"dist":"IO-SessionData-1.03","provides":{"IO::SessionSet":{"file":"lib/IO/SessionSet.pm"},"IO::SessionData":{"version":"1.03","file":"lib/IO/SessionData.pm"}},"name":"IO::SessionData","target":"IO::SessionData","pathname":"P/PH/PHRED/IO-SessionData-1.03.tar.gz","version":"1.03"}

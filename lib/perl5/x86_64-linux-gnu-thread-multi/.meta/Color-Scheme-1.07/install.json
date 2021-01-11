@@ -1,1 +1,1 @@
-{"pathname":"R/RJ/RJBS/Color-Scheme-1.07.tar.gz","name":"Color::Scheme","provides":{"Color::Scheme":{"version":"1.07","file":"lib/Color/Scheme.pm"}},"target":"Color::Scheme","version":"1.07","dist":"Color-Scheme-1.07"}
+{"version":"1.07","provides":{"Color::Scheme":{"file":"lib/Color/Scheme.pm","version":"1.07"}},"target":"Color::Scheme","dist":"Color-Scheme-1.07","pathname":"R/RJ/RJBS/Color-Scheme-1.07.tar.gz","name":"Color::Scheme"}

@@ -1,5 +1,4 @@
 package Bio::Search::Result::CrossMatchResult;
-$Bio::Search::Result::CrossMatchResult::VERSION = '1.7.5';
 #
 # BioPerl module for Bio::Search::Result::CrossMatchResult
 #
@@ -94,6 +93,7 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 
+package Bio::Search::Result::CrossMatchResult;
 use strict;
 
 use Bio::Search::Result::GenericResult;

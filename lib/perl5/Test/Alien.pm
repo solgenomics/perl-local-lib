@@ -2,11 +2,11 @@ package Test::Alien;
 
 use strict;
 use warnings;
-use 5.008001;
+use 5.008004;
 use Env qw( @PATH );
 use File::Which 1.10 qw( which );
 use Capture::Tiny qw( capture capture_merged );
-use File::Temp qw( tempdir );
+use Alien::Build::Temp;
 use File::Copy qw( move );
 use Text::ParseWords qw( shellwords );
 use Test2::API qw( context run_subtest );
@@ -18,7 +18,7 @@ use Config;
 our @EXPORT = qw( alien_ok run_ok xs_ok ffi_ok with_subtest synthetic helper_ok interpolate_template_is );
 
 # ABSTRACT: Testing tools for Alien modules
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 our @aliens;
@@ -31,14 +31,14 @@ sub alien_ok ($;$)
   $name = 'undef' unless defined $name;
   my @methods = qw( cflags libs dynamic_libs bin_dir );
   $message ||= "$name responds to: @methods";
-  
+
   my $ok;
   my @diag;
-  
+
   if(defined $alien)
   {
     my @missing = grep { ! $alien->can($_) } @methods;
-  
+
     $ok = !@missing;
     push @diag, map { "  missing method $_" } @missing;
 
@@ -58,7 +58,7 @@ sub alien_ok ($;$)
   $ctx->ok($ok, $message);
   $ctx->diag($_) for @diag;
   $ctx->release;
-  
+
   $ok;
 }
 
@@ -69,17 +69,17 @@ sub synthetic
   $opt ||= {};
   my %alien = %$opt;
   require Test::Alien::Synthetic;
-  bless \%alien, 'Test::Alien::Synthetic', 
+  bless \%alien, 'Test::Alien::Synthetic',
 }
 
 
 sub run_ok
 {
   my($command, $message) = @_;
-  
+
   my(@command) = ref $command ? @$command : ($command);
   $message ||= "run @command";
-  
+
   require Test::Alien::Run;
   my $run = bless {
     out    => '',
@@ -88,7 +88,7 @@ sub run_ok
     sig    => 0,
     cmd    => [@command],
   }, 'Test::Alien::Run';
-  
+
   my $ctx = context();
   my $exe = which $command[0];
   if(defined $exe)
@@ -99,7 +99,7 @@ sub run_ok
     my $ok = 1;
     my($exit, $errno);
     ($run->{out}, $run->{err}, $exit, $errno) = capture { system $exe, @command; ($?,$!); };
-  
+
     if($exit == -1)
     {
       $ok = 0;
@@ -118,8 +118,8 @@ sub run_ok
     }
 
     $ctx->ok($ok, $message);
-    $ok 
-      ? $ctx->note("  using $exe") 
+    $ok
+      ? $ctx->note("  using $exe")
       : $ctx->diag("  using $exe");
     $ctx->diag(@diag) for @diag;
 
@@ -130,9 +130,9 @@ sub run_ok
     $ctx->diag("  command not found");
     $run->{fail} = 'command not found';
   }
-  
+
   $ctx->release;
-  
+
   $run;
 }
 
@@ -153,8 +153,21 @@ sub xs_ok
   my($xs, $message) = @_;
   $message ||= 'xs';
 
+  $xs = { xs => $xs } unless ref $xs;
+  # make sure this is a copy because we may
+  # modify it.
+  $xs->{xs} = "@{[ $xs->{xs} ]}";
+  $xs->{pxs}              ||= {};
+  $xs->{cbuilder_check}   ||= 'have_compiler';
+  $xs->{cbuilder_config}  ||= {};
+  $xs->{cbuilder_compile} ||= {};
+  $xs->{cbuilder_link}    ||= {};
+
   require ExtUtils::CBuilder;
-  my $skip = !ExtUtils::CBuilder->new->have_compiler;
+  my $skip = do {
+    my $have_compiler = $xs->{cbuilder_check};
+    !ExtUtils::CBuilder->new( config => $xs->{cbuilder_config} )->$have_compiler;
+  };
 
   if($skip)
   {
@@ -164,14 +177,6 @@ sub xs_ok
     $ctx->release;
     return;
   }
-  
-  $xs = { xs => $xs } unless ref $xs;
-  # make sure this is a copy because we may
-  # modify it.
-  $xs->{xs} = "@{[ $xs->{xs} ]}";
-  $xs->{pxs} ||= {};
-  $xs->{cbuilder_compile} ||= {};
-  $xs->{cbuilder_link}    ||= {};
 
   if($xs->{cpp} || $xs->{'C++'})
   {
@@ -186,10 +191,13 @@ sub xs_ok
   my $verbose = $xs->{verbose} || 0;
   my $ok = 1;
   my @diag;
-  my $dir = _tempdir( CLEANUP => 1, TEMPLATE => 'testalienXXXXX' );
+  my $dir = Alien::Build::Temp->newdir(
+    TEMPLATE => 'test-alien-XXXXXX',
+    CLEANUP  => $^O =~ /^(MSWin32|cygwin)$/ ? 0 : 1,
+  );
   my $xs_filename = path($dir)->child('test.xs')->stringify;
   my $c_filename  = path($dir)->child("test.@{[ $xs->{c_ext} ]}")->stringify;
-  
+
   my $ctx = context();
   my $module;
 
@@ -223,10 +231,10 @@ sub xs_ok
     open my $fh, '>', $xs_filename;
     print $fh $xs->{xs};
     close $fh;
-  
+
     require ExtUtils::ParseXS;
     my $pxs = ExtUtils::ParseXS->new;
-  
+
     my($out, $err) = capture_merged {
       eval {
         $pxs->process_file(
@@ -239,7 +247,7 @@ sub xs_ok
       };
       $@;
     };
-    
+
     $ctx->note("parse xs $xs_filename => $c_filename") if $verbose;
     $ctx->note($out) if $verbose;
     $ctx->note("error: $err") if $verbose && $err;
@@ -256,8 +264,11 @@ sub xs_ok
   if($ok)
   {
     my $cb = ExtUtils::CBuilder->new(
-      config => {
-        lddlflags => join(' ', grep !/^-l/, shellwords map { _flags $_, 'libs' } @aliens) . " $Config{lddlflags}",
+      config => do {
+        my %config = %{ $xs->{cbuilder_config} };
+        my $lddlflags = join(' ', grep !/^-l/, shellwords map { _flags $_, 'libs' } @aliens) . " $Config{lddlflags}";
+        $config{lddlflags} = defined $config{lddlflags} ? "$lddlflags $config{lddlflags}" : $lddlflags;
+        \%config;
       },
     );
 
@@ -265,12 +276,12 @@ sub xs_ok
       source               => $c_filename,
       %{ $xs->{cbuilder_compile} },
     );
-    
+
     if(defined $compile_options{extra_compiler_flags} && ref($compile_options{extra_compiler_flags}) eq '')
     {
       $compile_options{extra_compiler_flags} = [ shellwords $compile_options{extra_compiler_flags} ];
     }
-    
+
     push @{ $compile_options{extra_compiler_flags} }, shellwords map { _flags $_, 'cflags' } @aliens;
 
     my($out, $obj, $err) = capture_merged {
@@ -279,7 +290,7 @@ sub xs_ok
       };
       ($obj, $@);
     };
-    
+
     $ctx->note("compile $c_filename") if $verbose;
     $ctx->note($out) if $verbose;
     $ctx->note($err) if $verbose && $err;
@@ -288,7 +299,7 @@ sub xs_ok
     {
       $ctx->note(_dump({ compile_options => \%compile_options }));
     }
-    
+
     unless($obj)
     {
       $ok = 0;
@@ -296,7 +307,7 @@ sub xs_ok
       push @diag, "    $err" if $err;
       push @diag, "    $_" for split /\r?\n/, $out;
     }
-    
+
     if($ok)
     {
 
@@ -310,16 +321,16 @@ sub xs_ok
       {
         $link_options{extra_linker_flags} = [ shellwords $link_options{extra_linker_flags} ];
       }
-      
-      push @{ $link_options{extra_linker_flags} }, grep /^-l/, shellwords map { _flags $_, 'libs' } @aliens;
+
+      unshift @{ $link_options{extra_linker_flags} }, grep /^-l/, shellwords map { _flags $_, 'libs' } @aliens;
 
       my($out, $lib, $err) = capture_merged {
-        my $lib = eval { 
+        my $lib = eval {
           $cb->link(%link_options);
         };
         ($lib, $@);
       };
-      
+
       $ctx->note("link $obj") if $verbose;
       $ctx->note($out) if $verbose;
       $ctx->note($err) if $verbose && $err;
@@ -340,7 +351,7 @@ sub xs_ok
         push @diag, "    $err" if $err;
         push @diag, "    $_" for split /\r?\n/, $out;
       }
-      
+
       if($ok)
       {
         my @modparts = split(/::/,$module);
@@ -350,14 +361,14 @@ sub xs_ok
         my $libpath = path($dir)->child('auto', @modparts, "$modfname.$dl_dlext");
         $libpath->parent->mkpath;
         move($lib, "$libpath") || die "unable to copy $lib => $libpath $!";
-        
+
         pop @modparts;
         my $pmpath = path($dir)->child(@modparts, "$modfname.pm");
         $pmpath->parent->mkpath;
         open my $fh, '>', "$pmpath";
-        
+
         my($alien_with_xs_load, @rest) = grep { $_->can('xs_load') } @aliens;
-        
+
         if($alien_with_xs_load)
         {
           {
@@ -367,15 +378,15 @@ sub xs_ok
           }
           print $fh '# line '. __LINE__ . ' "' . __FILE__ . qq("\n) . qq{
             package $module;
-            
+
             use strict;
             use warnings;
             our \$VERSION = '0.01';
             our \@rest;
             our \$alien_with_xs_load;
-            
+
             \$alien_with_xs_load->xs_load('$module', \$VERSION, \@rest);
-            
+
             1;
           };
         }
@@ -383,13 +394,13 @@ sub xs_ok
         {
           print $fh '# line '. __LINE__ . ' "' . __FILE__ . qq("\n) . qq{
             package $module;
-          
+
             use strict;
             use warnings;
             require XSLoader;
             our \$VERSION = '0.01';
             XSLoader::load('$module',\$VERSION);
-          
+
             1;
           };
         }
@@ -397,12 +408,14 @@ sub xs_ok
 
         {
           local @INC = @INC;
-          unshift @INC, $dir;
+          unshift @INC, "$dir";
+          ## no critic
           eval '# line '. __LINE__ . ' "' . __FILE__ . qq("\n) . qq{
             use $module;
           };
+          ## use critic
         }
-        
+
         if(my $error = $@)
         {
           $ok = 0;
@@ -416,7 +429,7 @@ sub xs_ok
   $ctx->ok($ok, $message);
   $ctx->diag($_) for @diag;
   $ctx->release;
-  
+
   if($cb)
   {
     $cb = sub {
@@ -433,7 +446,26 @@ sub xs_ok
   $ok;
 }
 
-sub with_subtest (&) { $_[0]; }
+sub with_subtest (&)
+{
+  my($code) = @_;
+
+  # it may be possible to catch a segmentation fault,
+  # but not with signal handlers apparently.  See:
+  # https://feepingcreature.github.io/handling.html
+  return $code if $^O eq 'MSWin32';
+
+  # try to catch a segmentation fault and bail out
+  # with a useful diagnostic.  prove test to swallow
+  # the diagnostic on such failures.
+  sub {
+    local $SIG{SEGV} = sub {
+      my $ctx = context();
+      $ctx->bail("Segmentation fault");
+    };
+    $code->(@_);
+  }
+}
 
 
 sub ffi_ok
@@ -441,42 +473,53 @@ sub ffi_ok
   my $cb;
   $cb = pop if defined $_[-1] && ref $_[-1] eq 'CODE';
   my($opt, $message) = @_;
-  
+
   $message ||= 'ffi';
-  
+
   my $ok = 1;
   my $skip;
   my $ffi;
   my @diag;
-  
+
   {
     my $min = '0.12'; # the first CPAN release
     $min = '0.15' if $opt->{ignore_not_found};
     $min = '0.18' if $opt->{lang};
+    $min = '0.99' if defined $opt->{api} && $opt->{api} > 0;
     unless(eval { require FFI::Platypus; FFI::Platypus->VERSION($min) })
     {
       $ok = 0;
       $skip = "Test requires FFI::Platypus $min";
     }
   }
-  
+
   if($ok && $opt->{lang})
   {
     my $class = "FFI::Platypus::Lang::@{[ $opt->{lang} ]}";
-    eval qq{ use $class () };
+    {
+      my $pm = "$class.pm";
+      $pm =~ s/::/\//g;
+      eval { require $pm };
+    }
     if($@)
     {
       $ok = 0;
       $skip = "Test requires FFI::Platypus::Lang::@{[ $opt->{lang} ]}";
     }
   }
-  
+
   if($ok)
   {
     $ffi = FFI::Platypus->new(
-      lib              => [map { $_->dynamic_libs } @aliens],
-      ignore_not_found => $opt->{ignore_not_found},
-      lang             => $opt->{lang},
+      do {
+        my @args = (
+          lib              => [map { $_->dynamic_libs } @aliens],
+          ignore_not_found => $opt->{ignore_not_found},
+          lang             => $opt->{lang},
+        );
+        push @args, api => $opt->{api} if defined $opt->{api};
+        @args;
+      }
     );
     foreach my $symbol (@{ $opt->{symbols} || [] })
     {
@@ -487,9 +530,9 @@ sub ffi_ok
       }
     }
   }
-  
-  my $ctx = context(); 
-  
+
+  my $ctx = context();
+
   if($skip)
   {
     $ctx->skip($message, $skip);
@@ -499,7 +542,7 @@ sub ffi_ok
     $ctx->ok($ok, $message);
   }
   $ctx->diag($_) for @diag;
-  
+
   $ctx->release;
 
   if($cb)
@@ -514,16 +557,16 @@ sub ffi_ok
 
     goto \&Test2::API::run_subtest;
   }
-  
+
   $ok;
 }
 
 
 sub _interpolator
-{  
+{
   require Alien::Build::Interpolate::Default;
   my $intr = Alien::Build::Interpolate::Default->new;
-  
+
   foreach my $alien (@aliens)
   {
     if($alien->can('alien_helper'))
@@ -536,7 +579,7 @@ sub _interpolator
       }
     }
   }
-  
+
   $intr;
 }
 
@@ -546,7 +589,7 @@ sub helper_ok
 
   $message ||= "helper $name exists";
 
-  my $intr = _interpolator; 
+  my $intr = _interpolator;
 
   my $code = $intr->has_helper($name);
 
@@ -555,7 +598,7 @@ sub helper_ok
   my $ctx = context();
   $ctx->ok($ok, $message);
   $ctx->release;
-  
+
   $ok;
 }
 
@@ -563,16 +606,16 @@ sub helper_ok
 sub interpolate_template_is
 {
   my($template, $pattern, $message) = @_;
-  
+
   $message ||= "template matches";
-  
+
   my $intr = _interpolator;
-  
+
   my $value = eval { $intr->interpolate($template) };
   my $error = $@;
   my @diag;
   my $ok;
-  
+
   if($error)
   {
     $ok = 0;
@@ -589,36 +632,12 @@ sub interpolate_template_is
     $ok = $value eq "$pattern";
     push @diag, "value '$value' does not equal '$pattern'" unless $ok;
   }
-  
+
   my $ctx = context();
   $ctx->ok($ok, $message, [@diag]);
   $ctx->release;
-  
+
   $ok;
-}
-
-sub _tempdir {
-  # makes sure /tmp or whatever isn't mounted noexec,
-  # which will cause xs_ok tests to fail.
-
-  my $dir = tempdir(@_);
-
-  if($^O ne 'MSWin32')
-  {
-    my $filename = path($dir, 'foo.pl');
-    my $fh;
-    open $fh, '>', $filename;
-    print $fh "#!$^X";
-    close $fh;
-    chmod 0755, $filename;
-    system $filename, 'foo';
-    if($?)
-    {
-      $dir = tempdir( DIR => path('.')->absolute->stringify );
-    }
-  }
-  
-  $dir;  
 }
 
 1;
@@ -635,7 +654,7 @@ Test::Alien - Testing tools for Alien modules
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -650,7 +669,7 @@ Test commands that come with your Alien:
    ->success
    # we only accept the version written
    # by Larry ...
-   ->out_like(qr{Larry Wall}); 
+   ->out_like(qr{Larry Wall});
  
  done_testing;
 
@@ -668,7 +687,7 @@ Test that your library works with C<XS>:
  };
  
  done_testing;
-
+ 
  __DATA__
  
  #include "EXTERN.h"
@@ -848,6 +867,16 @@ The XS code.  This is the only required element.
 
 Extra L<ExtUtils::ParseXS> arguments passed in as a hash reference.
 
+=item cbuilder_check
+
+The compile check that should be done prior to attempting to build.
+Should be one of C<have_compiler> or C<have_cplusplus>.  Defaults
+to C<have_compiler>.
+
+=item cbuilder_config
+
+Hash to override values normally provided by C<Config>.
+
 =item cbuilder_compile
 
 Extra The L<ExtUtils::CBuilder> arguments passed in as a hash reference.
@@ -877,6 +906,8 @@ The module name detected during the XS parsing phase will
 be passed in to the subtest.  This is helpful when you are
 using a generated module name.
 
+If you need to test XS C++ interfaces, see L<Test::Alien::CPP>.
+
 =head2 ffi_ok
 
  ffi_ok;
@@ -902,6 +933,16 @@ not influence the C<symbols> key above.
 =item lang
 
 Set the language.  Used primarily for language specific native types.
+
+=item api
+
+Set the API.  C<api = 1> requires FFI::Platypus 0.99 or later.  This
+option was added with Test::Alien version 1.90, so your use line should
+include this version as a safeguard to make sure it works:
+
+ use Test::Alien 1.90;
+ ...
+ ffi_ok ...;
 
 =back
 
@@ -954,6 +995,8 @@ either the given string or regular expression.
 
 =item L<Test::Alien::Synthetic>
 
+=item L<Test::Alien::CPP>
+
 =back
 
 =head1 AUTHOR
@@ -964,7 +1007,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -1014,9 +1057,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

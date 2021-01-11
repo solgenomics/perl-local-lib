@@ -4,13 +4,13 @@
       "Jonathan Rockway <jrockway@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 5.031, CPAN::Meta::Converter version 2.143240, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Dist::Zilla version 5.031, CPAN::Meta::Converter version 2.143240, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Directory-Scratch",
    "no_index" : {
@@ -914,5 +914,5 @@
    ],
    "x_deprecated" : 1,
    "x_permissions_from_module" : "Directory::Scratch",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001"
 }

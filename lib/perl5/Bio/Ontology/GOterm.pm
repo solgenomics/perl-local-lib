@@ -104,7 +104,6 @@ methods.
 # Let the code begin...
 
 package Bio::Ontology::GOterm;
-$Bio::Ontology::GOterm::VERSION = '1.7.5';
 use strict;
 
 use constant GOID_DEFAULT => "GO:0000000";

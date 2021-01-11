@@ -2,16 +2,17 @@ package Alien::Build::Plugin::Fetch::CurlCommand;
 
 use strict;
 use warnings;
-use 5.008001;
+use 5.008004;
 use Alien::Build::Plugin;
 use File::Which qw( which );
 use Path::Tiny qw( path );
 use Capture::Tiny qw( capture );
 use File::Temp qw( tempdir );
+use List::Util 1.33 qw( any );
 use File::chdir;
 
 # ABSTRACT: Plugin for fetching files using curl
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 sub curl_command
@@ -33,10 +34,30 @@ sub protocol_ok
 {
   my($class, $protocol) = @_;
   my $curl = $class->curl_command;
-  return unless defined $curl;
+  return 0 unless defined $curl;
   my($out, $err, $exit) = capture {
     system $curl, '--version';
   };
+
+  {
+    # make sure curl supports the -J option.
+    # CentOS 6 for example is recent enough
+    # that it does not.  gh#147, gh#148, gh#149
+    local $CWD = tempdir( CLEANUP => 1 );
+    my $file1 = path('foo/foo.txt');
+    $file1->parent->mkpath;
+    $file1->spew("hello world\n");
+    my $url = 'file://' . $file1->absolute;
+    my($out, $err, $exit) = capture {
+      system $curl, '-O', '-J', $url;
+    };
+    my $file2 = $file1->parent->child($file1->basename);
+    unlink "$file1";
+    unlink "$file2";
+    rmdir($file1->parent);
+    return 0 if $exit;
+  }
+
   foreach my $line (split /\n/, $out)
   {
     if($line =~ /^Protocols:\s*(.*)\s*$/)
@@ -45,7 +66,7 @@ sub protocol_ok
       return $proto{$protocol} if $proto{$protocol};
     }
   }
-  return;
+  return 0;
 }
 
 sub init
@@ -99,7 +120,7 @@ sub init
           $build->log(" header: $_") for path('headers')->lines;
         }
 
-        my($type) = split ';', $h{content_type};
+        my($type) = split /;/, $h{content_type};
 
         if($type eq 'text/html')
         {
@@ -192,7 +213,7 @@ sub _execute
   {
     chomp $stderr;
     $build->log($_) for split /\n/, $stderr;
-    if($stderr =~ /Remote filename has no length/ && !!(grep /^-O$/, @command))
+    if($stderr =~ /Remote filename has no length/ && !!(any { /^-O$/ } @command))
     {
       my @new_command = map {
         /^-O$/ ? ( -o => 'index.html' ) : /^-J$/ ? () : ($_)
@@ -218,7 +239,7 @@ Alien::Build::Plugin::Fetch::CurlCommand - Plugin for fetching files using curl
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -275,7 +296,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -325,9 +346,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

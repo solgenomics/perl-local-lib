@@ -2,13 +2,14 @@ package Alien::Base::PkgConfig;
 
 use strict;
 use warnings;
+use 5.008004;
 use Carp;
 use Config;
 use Path::Tiny qw( path );
 use Capture::Tiny qw( capture_stderr );
 
 # ABSTRACT: Private legacy pkg-config class for Alien::Base
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 sub new {
@@ -46,10 +47,10 @@ sub read {
   open my $fh, '<', $path
     or croak "Cannot open .pc file $path: $!";
 
-  while (<$fh>) {
-    if (/^([^=:]+?)=([^\n\r]*)/) {
+  while (my $line = <$fh>) {
+    if ($line =~ /^([^=:]+?)=([^\n\r]*)/) {
       $self->{vars}{$1} = $2;
-    } elsif (/^([^=:]+?):\s*([^\n\r]*)/) {
+    } elsif ($line =~ /^([^=:]+?):\s*([^\n\r]*)/) {
       $self->{keywords}{$1} = $2;
     }
   }
@@ -72,7 +73,7 @@ sub make_abstract {
   my ($var, $value) = @_;
 
   $value = defined $value ? $value : $self->{vars}{$var};
-    
+
   # convert other vars
   foreach my $key (keys %{ $self->{vars} }) {
     next if $key eq $var; # don't overwrite the current var
@@ -93,7 +94,7 @@ sub _interpolate_vars {
   $override ||= {};
 
   foreach my $key (keys %$override) {
-    carp "Overriden pkg-config variable $key, contains no data" 
+    carp "Overriden pkg-config variable $key, contains no data"
       unless $override->{$key};
   }
 
@@ -106,7 +107,7 @@ sub _interpolate_vars {
 sub keyword {
   my $self = shift;
   my ($keyword, $override) = @_;
-  
+
   {
     no warnings 'uninitialized';
     croak "overrides passed to 'keyword' must be a hashref"
@@ -121,7 +122,7 @@ my $pkg_config_command;
 sub pkg_config_command {
   unless (defined $pkg_config_command) {
     capture_stderr {
-    
+
       # For now we prefer PkgConfig.pm over pkg-config on
       # Solaris 64 bit Perls.  We may need to do this on
       # other platforms, in which case this logic should
@@ -136,7 +137,7 @@ sub pkg_config_command {
       }
     }
   }
-  
+
   $pkg_config_command;
 }
 
@@ -162,7 +163,7 @@ Alien::Base::PkgConfig - Private legacy pkg-config class for Alien::Base
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 DESCRIPTION
 
@@ -191,7 +192,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -241,9 +242,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -1,1 +1,1 @@
-{"dist":"Net-Server-SS-PreFork-0.05","provides":{"Net::Server::SS::PreFork":{"version":"0.05","file":"lib/Net/Server/SS/PreFork.pm"}},"name":"Net::Server::SS::PreFork","version":"0.05","target":"Net::Server::SS::PreFork","pathname":"K/KA/KAZUHO/Net-Server-SS-PreFork-0.05.tar.gz"}
+{"dist":"Net-Server-SS-PreFork-0.05","pathname":"K/KA/KAZUHO/Net-Server-SS-PreFork-0.05.tar.gz","name":"Net::Server::SS::PreFork","provides":{"Net::Server::SS::PreFork":{"file":"lib/Net/Server/SS/PreFork.pm","version":"0.05"}},"version":"0.05","target":"Net::Server::SS::PreFork"}

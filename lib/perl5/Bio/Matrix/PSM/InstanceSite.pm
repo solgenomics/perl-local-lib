@@ -85,7 +85,6 @@ Email skirov@utk.edu
 
 # Let the code begin...
 package Bio::Matrix::PSM::InstanceSite;
-$Bio::Matrix::PSM::InstanceSite::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::LocatableSeq Bio::Matrix::PSM::InstanceSiteI);

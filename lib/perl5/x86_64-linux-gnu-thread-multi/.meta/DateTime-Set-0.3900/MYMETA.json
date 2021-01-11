@@ -4,13 +4,13 @@
       "Flavio S. Glock <fglock@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Module::Build version 0.4229",
+   "generated_by" : "Module::Build version 0.4231",
    "license" : [
       "unknown"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "DateTime-Set",
    "no_index" : {
@@ -33,9 +33,9 @@
          },
          "requires" : {
             "DateTime" : 0.12,
-            "Params::Validate" : "0",
+            "Params::Validate" : 0,
             "Set::Infinite" : 0.59,
-            "Test::More" : "0"
+            "Test::More" : 0
          }
       }
    },
@@ -48,5 +48,5 @@
       }
    },
    "version" : "0.3900",
-   "x_serialization_backend" : "JSON::PP version 2.27300_01"
+   "x_serialization_backend" : "JSON::PP version 2.97001"
 }

@@ -1,5 +1,5 @@
-/home/production/cxgn/local-lib/lib/perl5/B/Hooks/EndOfScope.pm
-/home/production/cxgn/local-lib/lib/perl5/B/Hooks/EndOfScope/PP.pm
-/home/production/cxgn/local-lib/lib/perl5/B/Hooks/EndOfScope/PP/FieldHash.pm
-/home/production/cxgn/local-lib/lib/perl5/B/Hooks/EndOfScope/PP/HintHash.pm
-/home/production/cxgn/local-lib/lib/perl5/B/Hooks/EndOfScope/XS.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/B/Hooks/EndOfScope.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/B/Hooks/EndOfScope/PP.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/B/Hooks/EndOfScope/PP/FieldHash.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/B/Hooks/EndOfScope/PP/HintHash.pm
+/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/B/Hooks/EndOfScope/XS.pm

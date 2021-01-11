@@ -75,7 +75,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Factory::SequenceStreamI;
-$Bio::Factory::SequenceStreamI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::RootI);

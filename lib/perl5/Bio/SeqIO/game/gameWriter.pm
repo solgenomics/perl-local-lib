@@ -79,7 +79,7 @@ methods. Internal methods are usually preceded with a _
 =cut
 
 package Bio::SeqIO::game::gameWriter;
-$Bio::SeqIO::game::gameWriter::VERSION = '1.7.5';
+
 use strict;
 use IO::String;
 use XML::Writer;

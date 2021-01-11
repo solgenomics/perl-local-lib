@@ -81,7 +81,6 @@ Internal methods are usually preceded with a _
 =cut
 
 package Bio::Matrix::Generic;
-$Bio::Matrix::Generic::VERSION = '1.7.5';
 use strict;
 
 

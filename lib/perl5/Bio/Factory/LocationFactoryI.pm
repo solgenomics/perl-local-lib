@@ -88,7 +88,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Factory::LocationFactoryI;
-$Bio::Factory::LocationFactoryI::VERSION = '1.7.5';
 use strict;
 use Carp;
 

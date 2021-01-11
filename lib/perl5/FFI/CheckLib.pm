@@ -22,7 +22,7 @@ our @EXPORT_OK = qw(
 );
 
 # ABSTRACT: Check that a library is available for FFI
-our $VERSION = '0.24'; # VERSION
+our $VERSION = '0.27'; # VERSION
 
 
 our $system_path = [];
@@ -42,6 +42,7 @@ else
 {
   $system_path = eval {
     require DynaLoader;
+    no warnings 'once';
     \@DynaLoader::dl_library_path;
   };
   die $@ if $@;
@@ -129,7 +130,7 @@ sub find_lib
   my $recursive = $args{_r} || $args{recursive} || 0;
 
   # make arguments be lists.
-  foreach my $arg (qw( lib libpath symbol verify ))
+  foreach my $arg (qw( lib libpath symbol verify alien ))
   {
     next if ref $args{$arg} eq 'ARRAY';
     if(defined $args{$arg})
@@ -160,23 +161,49 @@ sub find_lib
 
   delete $missing{'*'};
 
+  foreach my $alien (@{ $args{alien} })
+  {
+    unless($alien =~ /^([A-Za-z_][A-Za-z_0-9]*)(::[A-Za-z_][A-Za-z_0-9]*)*$/)
+    {
+        croak "Doesn't appear to be a valid Alien name $alien";
+    }
+    unless(eval { $alien->can('dynamic_libs') })
+    {
+      my $pm = "$alien.pm";
+      $pm =~ s/::/\//g;
+      require $pm;
+      unless(eval { $alien->can('dynamic_libs') })
+      {
+        croak "Alien $alien doesn't provide a dynamic_libs method";
+      }
+    }
+    push @path, [$alien->dynamic_libs];
+  }
+
   foreach my $path (@path)
   {
-    next unless -d $path;
-    my $dh;
-    opendir $dh, $path;
+    next if ref $path ne 'ARRAY' && ! -d $path;
+
     my @maybe =
       # make determinist based on names and versions
       sort { _cmp($a,$b) }
       # Filter out the items that do not match the name that we are looking for
       # Filter out any broken symbolic links
       grep { ($any || $missing{$_->[0]} ) && (-e $_->[1]) }
-      # get [ name, full_path ] mapping,
-      # each entry is a 2 element list ref
-      map { _matches($_,$path) }
-      # read all files from the directory
-      readdir $dh;
-    closedir $dh;
+      ref $path eq 'ARRAY'
+        ? do {
+          map {
+            my($v, $d, $f) = File::Spec->splitpath($_);
+            _matches($f, File::Spec->catpath($v,$d));
+          } @$path;
+        }
+        : do {
+          my $dh;
+          opendir $dh, $path;
+          # get [ name, full_path ] mapping,
+          # each entry is a 2 element list ref
+          map { _matches($_,$path) } readdir $dh;
+        };
 
     if($try_ld_on_text && $args{try_linker_script})
     {
@@ -225,7 +252,6 @@ sub find_lib
         while(-l $found)
         {
           require File::Basename;
-          require File::Spec;
           my $dir = File::Basename::dirname($found);
           $found = File::Spec->rel2abs( readlink($found), $dir );
         }
@@ -375,7 +401,7 @@ FFI::CheckLib - Check that a library is available for FFI
 
 =head1 VERSION
 
-version 0.24
+version 0.27
 
 =head1 SYNOPSIS
 
@@ -465,12 +491,12 @@ Example:
    lib => 'foo',
    verify => sub {
      my($name, $libpath) = @_;
-     
+ 
      my $ffi = FFI::Platypus->new;
      $ffi->lib($libpath);
-     
+ 
      my $f = $ffi->function('foo_version', [] => 'int');
-     
+ 
      return $f->call() >= 500; # we accept version 500 or better
    },
  );
@@ -493,8 +519,17 @@ On select platforms, this options will use the linker command (C<ld>)
 to attempt to resolve the real C<.so> for non-binary files.  Since there
 is extra overhead this is off by default.
 
-An example is libyaml on RedHat based Linux distributions.  On Debian
+An example is libyaml on Red Hat based Linux distributions.  On Debian
 these are handled with symlinks and no trickery is required.
+
+=item alien
+
+[version 0.25]
+
+If no libraries can be found, try the given aliens instead.  The Alien
+classes specified must provide the L<Alien::Base> interface for dynamic
+libraries, which is to say they should provide a method called
+C<dynamic_libs> that returns a list of dynamic libraries.
 
 =back
 
@@ -588,6 +623,63 @@ probably do some careful consideration before you do so.
 
 This function is not exportable, even on request.
 
+=head1 FAQ
+
+=over 4
+
+=item Why not just use C<dlopen>?
+
+Calling C<dlopen> on a library name and then C<dlclose> immediately can tell
+you if you have the exact name of a library available on a system.  It does
+have a number of drawbacks as well.
+
+=over 4
+
+=item No absolute or relative path
+
+It only tells you that the library is I<somewhere> on the system, not having
+the absolute or relative path makes it harder to generate useful diagnostics.
+
+=item POSIX only
+
+This doesn't work on non-POSIX systems like Microsoft Windows. If you are
+using a POSIX emulation layer on Windows that provides C<dlopen>, like
+Cygwin, there are a number of gotchas there as well.  Having a layer written
+in Perl handles this means that developers on Unix can develop FFI that will
+more likely work on these platforms without special casing them.
+
+=item inconsistent implementations
+
+Even on POSIX systems you have inconsistent implementations.  OpenBSD for
+example don't usually include symlinks for C<.so> files meaning you need
+to know the exact C<.so> version.
+
+=item non-system directories
+
+By default C<dlopen> only works for libraries in the system paths.  Most
+platforms have a way of configuring the search for different non-system
+paths, but none of them are portable, and are usually discouraged anyway.
+L<Alien> and friends need to do searches for dynamic libraries in
+non-system directories for C<share> installs.
+
+=back
+
+=item My 64-bit Perl is misconfigured and has 32-bit libraries in its search path.  Is that a bug in L<FFI::CheckLib>?
+
+Nope.
+
+=item The way L<FFI::CheckLib> is implemented it won't work on AIX, HP-UX, OpenVMS or Plan 9.
+
+I know for a fact that it doesn't work on AIX I<as currently implemented>
+because I used to develop on AIX in the early 2000s, and I am aware of some
+of the technical challenges.  There are probably other systems that it won't
+work on.  I would love to add support for these platforms.  Realistically
+these platforms have a tiny market share, and absent patches from users or
+the companies that own these operating systems (patches welcome), or hardware
+/ CPU time donations, these platforms are unsupportable anyway.
+
+=back
+
 =head1 SEE ALSO
 
 =over 4
@@ -615,6 +707,8 @@ Dan Book (grinnz, DBOOK)
 Ilya Pavlov (Ilya, ILUX)
 
 Shawn Laffan (SLAFFAN)
+
+Petr Pisar (ppisar)
 
 =head1 COPYRIGHT AND LICENSE
 

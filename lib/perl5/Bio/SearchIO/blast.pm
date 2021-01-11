@@ -140,7 +140,7 @@ Internal methods are usually preceded with a _
 # Let the code begin...'
 
 package Bio::SearchIO::blast;
-$Bio::SearchIO::blast::VERSION = '1.7.5';
+
 use Bio::SearchIO::IteratedSearchResultEventBuilder;
 use strict;
 use vars qw(%MAPPING %MODEMAP

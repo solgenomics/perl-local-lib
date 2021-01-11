@@ -97,7 +97,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Annotation::AnnotationFactory;
-$Bio::Annotation::AnnotationFactory::VERSION = '1.7.5';
 use strict;
 
 

@@ -53,7 +53,7 @@ Bio::Seq::PrimaryQual - Bioperl lightweight Quality Object
 
 This module provides a mechanism for storing quality
 values. Much more useful as part of
-Bio::Seq::Quality where these quality values
+Bio::Seq::SeqWithQuality where these quality values
 are associated with the sequence information.
 
 =head1 FEEDBACK
@@ -98,7 +98,7 @@ The rest of the documentation details each of the object methods. Internal metho
 
 
 package Bio::Seq::PrimaryQual;
-$Bio::Seq::PrimaryQual::VERSION = '1.7.5';
+
 use strict;
 
 use base qw(Bio::Root::Root Bio::Seq::QualI);

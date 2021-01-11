@@ -78,7 +78,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SearchIO::Writer::GbrowseGFF;
-$Bio::SearchIO::Writer::GbrowseGFF::VERSION = '1.7.5';
 use vars qw(%Defaults);
 use strict;
 

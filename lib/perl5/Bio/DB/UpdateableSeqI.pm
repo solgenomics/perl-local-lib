@@ -73,7 +73,7 @@ The rest of the documentation details each of the object methods. Internal metho
 #Lets start some code
 
 package Bio::DB::UpdateableSeqI;
-$Bio::DB::UpdateableSeqI::VERSION = '1.7.5';
+
 use strict;
 
 

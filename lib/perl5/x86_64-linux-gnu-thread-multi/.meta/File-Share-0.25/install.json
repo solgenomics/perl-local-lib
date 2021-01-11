@@ -1,1 +1,1 @@
-{"pathname":"I/IN/INGY/File-Share-0.25.tar.gz","dist":"File-Share-0.25","version":"0.25","target":"File::Share","provides":{"File::Share":{"version":"0.25","file":"lib/File/Share.pm"}},"name":"File::Share"}
+{"provides":{"File::Share":{"file":"lib/File/Share.pm","version":"0.25"}},"target":"File::Share","version":"0.25","name":"File::Share","dist":"File-Share-0.25","pathname":"I/IN/INGY/File-Share-0.25.tar.gz"}

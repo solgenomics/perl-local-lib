@@ -1,6 +1,7 @@
 use alienfile;
+use Config;
 
-configure { requires 'Alien::Build' => '1.60' };
+configure { requires 'Alien::Build' => '2.37' };
 
 my $test_program = <<'EOF';
 #include <stdio.h>
@@ -28,13 +29,15 @@ my @try_flags = (
   { cflags => '-I/usr/local/include/libxml2', libs => '-lxml2' },
 );
 
-plugin 'PkgConfig' => 'libxml-2.0';
+plugin 'Probe::Vcpkg' => 'libxml2';
 
 probe [
   ['xml2-config', '--version' => \'%{.install.my_version}'],
   ['xml2-config', '--cflags'  => \'%{.install.my_cflags}'],
   ['xml2-config', '--libs'    => \'%{.install.my_libs}'],
 ];
+
+plugin 'PkgConfig' => 'libxml-2.0';
 
 plugin 'Probe::CBuilder' => (
   cflags  => $_->{cflags},
@@ -78,6 +81,8 @@ meta->around_hook(
       my $version = $build->hook_prop->{version}                                    ||
                     $build->install_prop->{plugin_probe_cbuilder_gather}->{version} ||
                     $build->install_prop->{my_version};
+
+      $version =~ s/-.*$//g;
 
       unless(defined $version)
       {
@@ -132,27 +137,52 @@ share {
   );
 
   plugin Extract => 'tar.gz';
-  plugin 'Build::Autoconf' => ();
 
-  build [
-    '%{configure} --prefix=%{.install.autoconf_prefix} --without-python --disable-shared --enable-static',
-    '%{make}',
-    '%{make} install',
-  ];
+  if($^O eq 'MSWin32' && $Config{ccname} eq 'cl')
+  {
+    build [
+      sub { shift->install_prop->{prefix} =~ s/\//\\/g;},
+      'cd win32',
+      'cscript configure.js prefix=%{.install.prefix} iconv=no compiler=msvc static=yes',
+      'nmake -f Makefile.msvc',
+      'nmake -f Makefile.msvc install',
+    ];
 
-  plugin 'PkgConfig::MakeStatic' => ();
+    plugin 'Gather::IsolateDynamic';
+
+    gather sub {
+      my($build) = @_;
+      my $prefix = $build->runtime_prop->{prefix};
+      $build->runtime_prop->{cflags} = "-I$prefix/include/libxml2";
+      $build->runtime_prop->{libs}   = "-L$prefix/lib libxml2_a.lib";
+    };
+  }
+  else
+  {
+    plugin 'Build::Autoconf' => ();
+
+    build [
+      '%{configure} --prefix=%{.install.autoconf_prefix} --without-python --disable-shared --enable-static',
+      '%{make}',
+      '%{make} install',
+    ];
+
+    plugin 'PkgConfig::MakeStatic' => ();
+  }
 
 };
 
 sys {
 
-  gather sub {
-    my($build) = @_;
-    if($build->install_prop->{my_libs})
-    {
-      $build->runtime_prop->{$_} = $build->install_prop->{"my_$_"} for qw( version cflags libs );
-    }
-  };
+  meta->after_hook(
+    gather_system => sub {
+      my($build) = @_;
+      return if defined $build->runtime_prop->{libs};
+      if($build->install_prop->{my_libs})
+      {
+        $build->runtime_prop->{$_} = $build->install_prop->{"my_$_"} for qw( version cflags libs );
+      }
+    },
+  );
 
 };
-

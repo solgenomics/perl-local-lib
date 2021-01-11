@@ -164,7 +164,7 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Tools::IUPAC;
-$Bio::Tools::IUPAC::VERSION = '1.7.5';
+
 use strict;
 use base qw(Bio::Root::Root);
 use vars qw(%IUB %IUB_AMB %REV_IUB %IUP %IUP_AMB $AUTOLOAD);

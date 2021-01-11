@@ -91,7 +91,6 @@ message. You need to call them on a C<Bio::Tools::Run::Analysis> object instead.
 # Let the code begin...
 
 package Bio::AnalysisI;
-$Bio::AnalysisI::VERSION = '1.7.5';
 use strict;
 
 use base qw(Bio::Root::RootI);
@@ -417,7 +416,7 @@ sub wait_for { shift->throw_not_implemented(); }
 # -----------------------------------------------------------------------------
 
 package Bio::AnalysisI::JobI;
-$Bio::AnalysisI::JobI::VERSION = '1.7.5';
+
 =head1 Module Bio::AnalysisI::JobI
 
 An interface to the public methods provided by C<Bio::Tools::Run::Analysis::Job>

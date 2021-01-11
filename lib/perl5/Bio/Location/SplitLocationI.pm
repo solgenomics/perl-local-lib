@@ -77,7 +77,6 @@ methods. Internal methods are usually preceded with a _
 
 
 package Bio::Location::SplitLocationI;
-$Bio::Location::SplitLocationI::VERSION = '1.7.5';
 use strict;
 
 use Carp;

@@ -1,1 +1,1 @@
-{"provides":{"Class::ErrorHandler":{"version":"0.04","file":"lib/Class/ErrorHandler.pm"}},"dist":"Class-ErrorHandler-0.04","pathname":"T/TO/TOKUHIROM/Class-ErrorHandler-0.04.tar.gz","name":"Class::ErrorHandler","target":"Class::ErrorHandler","version":"0.04"}
+{"version":"0.04","name":"Class::ErrorHandler","target":"Class::ErrorHandler","pathname":"T/TO/TOKUHIROM/Class-ErrorHandler-0.04.tar.gz","dist":"Class-ErrorHandler-0.04","provides":{"Class::ErrorHandler":{"file":"lib/Class/ErrorHandler.pm","version":"0.04"}}}

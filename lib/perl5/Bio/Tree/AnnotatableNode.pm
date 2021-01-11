@@ -83,7 +83,6 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Tree::AnnotatableNode;
-$Bio::Tree::AnnotatableNode::VERSION = '1.7.5';
 use strict;
 
 use Bio::Annotation::Collection;

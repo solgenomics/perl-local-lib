@@ -1,1 +1,1 @@
-{"version":"0.13","name":"Class::Container","dist":"Class-Container-0.13","target":"Class::Container","provides":{"Class::Container":{"file":"lib/Class/Container.pm","version":"0.13"}},"pathname":"K/KW/KWILLIAMS/Class-Container-0.13.tar.gz"}
+{"dist":"Class-Container-0.13","pathname":"K/KW/KWILLIAMS/Class-Container-0.13.tar.gz","target":"Class::Container","provides":{"Class::Container":{"file":"lib/Class/Container.pm","version":"0.13"}},"version":"0.13","name":"Class::Container"}

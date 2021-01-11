@@ -74,7 +74,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::SearchIO::EventHandlerI;
-$Bio::SearchIO::EventHandlerI::VERSION = '1.7.5';
 use strict;
 use Carp;
 

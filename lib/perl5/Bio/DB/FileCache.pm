@@ -71,7 +71,7 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::DB::FileCache;
-$Bio::DB::FileCache::VERSION = '1.7.5';
+
 use DB_File;
 use Storable qw(freeze thaw);
 use Fcntl qw(O_CREAT O_RDWR O_RDONLY);

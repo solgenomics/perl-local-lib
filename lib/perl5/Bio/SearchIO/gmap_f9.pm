@@ -122,7 +122,6 @@ Internal methods are usually preceded with an underscore (_).
 
 
 package Bio::SearchIO::gmap_f9;
-$Bio::SearchIO::gmap_f9::VERSION = '1.7.5';
 use strict;
 use warnings;
 

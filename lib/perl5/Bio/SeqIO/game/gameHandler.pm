@@ -67,7 +67,7 @@ methods. Internal methods are usually preceded with a _
 =cut
 
 package Bio::SeqIO::game::gameHandler;
-$Bio::SeqIO::game::gameHandler::VERSION = '1.7.5';
+
 use Bio::SeqIO::game::seqHandler;
 use strict;
 use vars qw {};

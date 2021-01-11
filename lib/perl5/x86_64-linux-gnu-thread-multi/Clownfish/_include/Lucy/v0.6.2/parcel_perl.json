@@ -8,6 +8,13 @@
                 }
             }
         },
+        "Lucy::Index::Posting::ScorePosting": {
+            "methods": {
+                "Get_Prox": {
+                    "excluded": true
+                }
+            }
+        },
         "Lucy::Analysis::Token": {
             "methods": {
                 "Get_Text": {
@@ -31,13 +38,17 @@
                 }
             }
         },
-        "Lucy::Highlight::Highlighter": {
+        "Lucy::Index::SortCache": {
             "methods": {
-                "Raw_Excerpt": {
-                    "alias": "_raw_excerpt"
-                },
-                "Highlight_Excerpt": {
-                    "alias": "_highlight_excerpt"
+                "Value": {
+                    "excluded": true
+                }
+            }
+        },
+        "Lucy::Index::Similarity": {
+            "methods": {
+                "Get_Norm_Decoder": {
+                    "excluded": true
                 }
             }
         },
@@ -55,30 +66,19 @@
                 }
             }
         },
-        "Lucy::Index::Similarity": {
+        "Lucy::Highlight::Highlighter": {
             "methods": {
-                "Get_Norm_Decoder": {
-                    "excluded": true
-                }
-            }
-        },
-        "Lucy::Index::SortCache": {
-            "methods": {
-                "Value": {
-                    "excluded": true
+                "Raw_Excerpt": {
+                    "alias": "_raw_excerpt"
+                },
+                "Highlight_Excerpt": {
+                    "alias": "_highlight_excerpt"
                 }
             }
         },
         "Lucy::Store::InStream": {
             "methods": {
                 "Read_Raw_C64": {
-                    "excluded": true
-                }
-            }
-        },
-        "Lucy::Index::Posting::ScorePosting": {
-            "methods": {
-                "Get_Prox": {
                     "excluded": true
                 }
             }

@@ -17,6 +17,7 @@ Graph - graph data structures and algorithms
 
         $g->add_edge(...);
         $g->has_edge(...)
+        $g->any_edge(...)
         $g->delete_edge(...);
 
         $g->add_vertex(...);
@@ -78,7 +79,7 @@ A boolean option telling that an undirected graph should be created.
 One could also use the C<new()> constructor the Graph::Undirected class
 instead.
 
-Note that while often it is possible to think undirected graphs as
+Note that while often it is possible to think of undirected graphs as
 bidirectional graphs, or as directed graphs with edges going both ways,
 in this module directed graphs and undirected graphs are two different
 things that often behave differently.
@@ -113,7 +114,7 @@ I<connected components> of the graph (see L</is_connected>,
 L</connected_components>, L</connected_component_by_vertex>,
 L</connected_component_by_index>, and L</same_connected_components>).
 If C<unionfind> is used, adding edges (and vertices) becomes slower,
-but connectedness queries become faster.  You B<must not> delete egdes or
+but connectedness queries become faster.  You B<must not> delete edges or
 vertices of an unionfind graph, only add them.  You can test a graph for
 "union-findness" with
 
@@ -140,12 +141,12 @@ An array reference of array references of edge vertices to add.
 Create a shallow copy of the structure (vertices and edges) of the
 graph.  If you want a deep copy that includes attributes, see
 L</deep_copy>.  The copy will have the same directedness as the
-original, and if the original was a C<compat02> graph, the copy will be, too.
+original.
 
 Also the following vertex/edge attributes are copied:
 
-  refvertexed/hypervertexed/countvertexed/multivertexed
-  hyperedged/countedged/multiedged/omniedged
+  refvertexed/countvertexed/multivertexed
+  hyperedged/countedged/multiedged
 
 B<NOTE>: You can get an even shallower copy of a graph by
 
@@ -153,6 +154,11 @@ B<NOTE>: You can get an even shallower copy of a graph by
 
 This will copy only the graph properties (directed, and so forth),
 but none of the vertices or edges.
+
+As of 0.9712, you can also copy the graph properties of an existing
+object, I<but> with overrides:
+
+    my $c = $g->new(multiedged => 0);
 
 =item deep_copy
 
@@ -286,6 +292,11 @@ By default idempotent, but a graph can be created I<countedged>.
 
 An edge is also known as an I<arc>.
 
+For a hypergraph, the interface is different: if undirected, give a list
+of one or more vertices. If directed, give a list of two array-refs of
+vertices. As conceptually these are sets, the ordering of the contents
+is not important.
+
 =item has_vertex
 
     $g->has_vertex($v)
@@ -297,6 +308,15 @@ Return true if the vertex exists in the graph, false otherwise.
     $g->has_edge($u, $v)
 
 Return true if the edge exists in the graph, false otherwise.
+
+=item any_edge
+
+    $g->any_edge($u, $v)
+
+Return true if any edge in the graph connects the first vertex to the second,
+false otherwise. Note this is a different question from C<has_edge>. It
+will give the same result as checking the first vertex's L</successors>
+to see if any match the second one, but in a more efficient way.
 
 =item delete_vertex
 
@@ -318,7 +338,7 @@ of the vertices existed in the graph.
 
 If the graph has been created I<multivertexed> or I<countvertexed>
 and a vertex has been added multiple times, the vertex will require
-at least an equal number of deletions to become completely deleteted.
+at least an equal number of deletions to become completely deleted.
 
 =item delete_edge
 
@@ -327,7 +347,7 @@ at least an equal number of deletions to become completely deleteted.
 Delete the edge from the graph.  Returns the graph, even
 if the edge did not exist in the graph.
 
-If the graph has been created I<multivertexed> or I<countedged>
+If the graph has been created I<multiedged> or I<countedged>
 and an edge has been added multiple times, the edge will require
 at least an equal number of deletions to become completely deleted.
 
@@ -338,7 +358,7 @@ at least an equal number of deletions to become completely deleted.
 Delete the edges from the graph.  Returns the graph, even if none
 of the edges existed in the graph.
 
-If the graph has been created I<multivertexed> or I<countedged>
+If the graph has been created I<multiedged> or I<countedged>
 and an edge has been added multiple times, the edge will require
 at least an equal number of deletions to become completely deleted.
 
@@ -436,7 +456,7 @@ false otherwise.
 
    $g->delete_path($a, $b, $c, ..., $x, $y, $z)
 
-Delete all the edges edges $a-$b, $b-$c, ..., $x-$y, $y-$z
+Delete all the edges $a-$b, $b-$c, ..., $x-$y, $y-$z
 (regardless of whether they exist or not).  Returns the graph.
 
 =item add_cycle
@@ -462,7 +482,7 @@ L</find_a_cycle>.
 
    $g->delete_cycle($a, $b, $c, ..., $x, $y, $z)
 
-Delete all the edges edges $a-$b, $b-$c, ..., $x-$y, $y-$z, and $z-$a
+Delete all the edges $a-$b, $b-$c, ..., $x-$y, $y-$z, and $z-$a
 (regardless of whether they exist or not).  Returns the graph.
 
 =item has_a_cycle
@@ -553,6 +573,12 @@ Return true if the graph is transitive, false otherwise.
 
 Return the transitive closure graph of the graph.
 
+=item transitive_closure_matrix_clear_cache
+
+    $g->transitive_closure_matrix_clear_cache
+
+See L</"Clearing cached results">.
+
 =back
 
 You can query the reachability from $u to $v with
@@ -602,6 +628,34 @@ a list of array references, or as a list of vertices where the
 even (0th, 2nd, 4th, ...) items are start vertices and the odd
 (1st, 3rd, 5th, ...) are the corresponding end vertices.
 Returns the graph.
+
+For a hypergraph, each item in this list must be an array-ref of arguments
+suitable for C<add_edge> - so for undirected, of vertices;
+for directed, of two array-refs of vertices.
+
+=item rename_vertex
+
+    $g->rename_vertex('d', 'e')
+
+Renames a vertex. It retains all of its edges. Throws exception if
+doesn't exist.
+
+Returns the graph.
+
+=item rename_vertices
+
+    $g->rename_vertices(sub { uc $_[0] })
+
+Calls a function for each vertex-name, renaming it to the return value.
+
+Returns the graph.
+
+=item ingest
+
+    $g->ingest($g2)
+
+Ingests all the vertices and edges of the given graph, including
+attributes. Returns the ingesting graph.
 
 =back
 
@@ -671,7 +725,7 @@ Return true if the graph has any edges, false otherwise.
 
     $g->is_connected
 
-For an undirected graph, return true is the graph is connected, false
+For an undirected graph, return true if the graph is connected, false
 otherwise.  Being connected means that from every vertex it is possible
 to reach every other vertex.
 
@@ -898,7 +952,7 @@ L</biconnected_components>.
 For a directed graph, return the vertices of the ith connected
 component, the indexing starting from zero.  The order of vertices
 within a component is undefined, while the order of the connected
-components is the as from strongly_connected_components().
+components is as from strongly_connected_components().
 
 For the inverse, see L</strongly_connected_component_by_vertex>.
 
@@ -1043,7 +1097,7 @@ If you want also isolated vertices, use is_predecessorless_vertex().
 
     $g->is_successorless_vertex($v)
 
-Return true if the vertex $v has no succcessors (no edges
+Return true if the vertex $v has no successors (no edges
 leaving the vertex), false if it has.
 
 Isolated vertices will return true: if you do not want this,
@@ -1146,7 +1200,18 @@ vertices, recursively.
 
 For undirected graphs, see L</all_neighbours> and L</all_reachable>.
 
-See also L</successors>.
+See also L</successors>, L</successors_by_radius>.
+
+=item successors_by_radius
+
+    @s = $g->successors_by_radius(@v, $radius)
+
+For a directed graph, returns all successor vertices of the argument
+vertices, recursively.
+
+For undirected graphs, see L</all_neighbours> and L</all_reachable>.
+
+See also L</successors>, L</successors_by_radius>.
 
 =item neighbors
 
@@ -1157,7 +1222,7 @@ See also L</successors>.
 Return the neighboring/neighbouring vertices.  Also known as the
 I<adjacent vertices>.
 
-See also L</all_neighbours> and L</all_reachable>.
+See also L</all_neighbours> L</all_reachable>, and L</neighbours_by_radius>.
 
 =item all_neighbors
 
@@ -1170,19 +1235,36 @@ recursively.  For a directed graph, recurses up predecessors and down
 successors.  For an undirected graph, returns all the vertices
 reachable from the argument vertices: equivalent to C<all_reachable>.
 
-See also L</neighbours> and L</all_reachable>.
+See also L</neighbours>, L</all_reachable>, and L</neighbours_by_radius>.
+
+=item neighbors_by_radius
+
+=item neighbours_by_radius
+
+   @n = $g->neighbours_by_radius(@v, $radius)
+
+Return the neighboring/neighbouring vertices of the argument vertices,
+recursively, out to the given radius.
 
 =item all_reachable
 
     @r = $g->all_reachable(@v)
 
-Return all the vertices reachable from of the argument vertices,
-recursively.  For a directed graph, equivalent to C<all_successors>.
+Return all the vertices reachable from the argument vertices,
+recursively. For a directed graph, equivalent to C<all_successors>.
 For an undirected graph, equivalent to C<all_neighbours>.  The argument
 vertices are not included in the results unless there are explicit
 self-loops.
 
-See also L</neighbours>, L</all_neighbours>, and L</all_successors>.
+See also L</neighbours>, L</all_neighbours>, L</all_successors>, and
+L</reachable_by_radius>.
+
+=item reachable_by_radius
+
+    @r = $g->reachable_by_radius(@v, $radius)
+
+Return all the vertices reachable from the argument vertices,
+recursively, out to the given radius.
 
 =item predecessorful_vertices
 
@@ -1215,7 +1297,14 @@ vertices, recursively.
 
 For undirected graphs, see L</all_neighbours> and L</all_reachable>.
 
-See also L</predecessors>.
+See also L</predecessors>, L</predecessors_by_radius>.
+
+=item predecessors_by_radius
+
+    @p = $g->predecessors_by_radius(@v, $radius)
+
+For a directed graph, returns all predecessor vertices of the argument
+vertices, recursively, out to the given radius.
 
 =item isolated_vertices
 
@@ -1248,6 +1337,30 @@ See L</is_exterior_vertex> for the definition of an exterior vertex.
 Return the self-loop vertices of the graph.
 In scalar context return the number of self-loop vertices.
 See L</is_self_loop_vertex> for the definition of a self-loop vertex.
+
+=item as_hashes
+
+    ($nodes, $edges) = $g->as_hashes
+
+Return hash-refs which map vertices to their attributes, and for edges,
+a two-level hash mapping the predecessor to its successors, mapped to
+the attributes.
+
+If C<multivertexed> is true, the vertices hash will have the second-level
+values be the multivertex's ID, and the third level will be attributes
+as above.
+
+If C<multiedged> is true, similar will be true for the edges hash.
+
+For a hypergraph, the edges will instead be an array-ref of hashes with
+a key of C<attributes>, value a hash-ref (if C<multiedged>, two-level
+as above). Then with values of array-refs of vertex-names, for undirected:
+
+=over
+
+=item vertices
+
+=back
 
 =back
 
@@ -1334,7 +1447,7 @@ Related methods are
 
     @e = $g->edges_at($v)
 
-The union of edges from and edges to at the vertex.
+The union of edges from, and edges to, the vertex.
 
 =item edges_from
 
@@ -1683,7 +1796,7 @@ use C<next_root => sub { undef }>.  The rest of these options are
 booleans.  If none of them are true, a random unvisited vertex will be
 selected.
 
-The first start vertex is be available as the graph attribute
+The first start vertex is available as the graph attribute
 C<SPT_Dijkstra_root>).
 
 The result weights of vertices can be retrieved from the result graph by
@@ -1730,7 +1843,7 @@ See L</"Clearing cached results">.
 Return as a graph the single-source shortest paths of the graph using
 Bellman-Ford's algorithm.  The graph can contain negative edges but
 not negative cycles (negative cycles cause the algorithm to abort
-with an error message C<Graph::SPT_Bellman_Ford: negative cycle exists/>).
+with an error message C<Graph::SPT_Bellman_Ford: negative cycle exists>).
 
 You can choose the start vertex of the result with either a single
 vertex argument or with $opt{ first_root }, otherwise a random vertex
@@ -1739,7 +1852,7 @@ is chosen.
 B<NOTE>: note that all the vertices might not be reachable from the
 selected (explicit or random) start vertex.
 
-The start vertex is be available as the graph attribute
+The start vertex is available as the graph attribute
 C<SPT_Bellman_Ford_root>).
 
 The result weights of vertices can be retrieved from the result graph by
@@ -1755,7 +1868,7 @@ can be retrieved by
 vertex can have several successors.  You can first find the
 C<neighbors()> vertices and then remove the predecessor vertex.)
 
-If you want to find the shortes path between two vertices,
+If you want to find the shortest path between two vertices,
 see L</SP_Bellman_Ford>.
 
 =item SSSP_Bellman_Ford
@@ -1798,10 +1911,11 @@ that makes the vertices the same.
     my $apsp = $g->APSP_Floyd_Warshall(...);
 
 Return the all-pairs shortest path object computed from the graph
-using Floyd-Warshall's algorithm.  The length of a path between two
-vertices is the sum of weight attribute of the edges along the
-shortest path between the two vertices.  If no weight attribute name
-is specified explicitly
+using the Floyd-Warshall algorithm, of class L<Graph::TransitiveClosure>.
+
+The length of a path between two vertices is the sum of weight attribute
+of the edges along the shortest path between the two vertices.  If no
+weight attribute name is specified explicitly
 
     $g->APSP_Floyd_Warshall(attribute_name => 'height');
 
@@ -1826,15 +1940,17 @@ Return the length of the shortest path between the two vertices.
 
 Return the list of vertices along the shortest path.
 
-=item path_predecessor
+=item path_successor
 
-   my $u = $apsp->path_predecessor($v);
+   my $u = $apsp->path_successor($u, $v);
 
-Returns the predecessor of vertex $v in the all-pairs shortest paths.
+Returns the successor of vertex $u in the all-pairs shortest path to $v.
 
-=back
+=item all_paths
 
-=over 8
+    my @paths = $apsp->all_paths($u, $v);
+
+Return list of array-refs with all the paths from $u to $v.
 
 =item average_path_length
 
@@ -1847,8 +1963,10 @@ Returns the predecessor of vertex $v in the all-pairs shortest paths.
 
     my $apl = $g->average_path_length(undef, $v); # To $v.
 
-Return the average (shortest) path length over all the vertex pairs of
-the graph, from a vertex, between two vertices, and to a vertex.
+Return the average (shortest) path length over all the non-zero paths
+between vertex pairs of the graph's transitive closure. Depending on
+the arguments, this can be from a vertex, between two vertices, or to
+a vertex. An undefined (or not-given) vertex will match all.
 
 =item longest_path
 
@@ -1948,10 +2066,10 @@ recomputing the potentially expensive operation, and this also gives
 additional determinism (once a correct result has been computed, the
 same result will always be given).
 
-However, sometimes the exact opposite is desireable, and the possible
+However, sometimes the exact opposite is desirable, and the possible
 alternative results are wanted (within the limits of the pseudorandomness:
 not all the possible solutions are guaranteed to be returned, usually only
-a subset is retuned).  To undo the caching, the following methods are
+a subset is returned).  To undo the caching, the following methods are
 available:
 
 =over 4
@@ -2162,7 +2280,8 @@ reserved for the internal use of the Graph module.
 
     $attr = $g->get_vertex_attributes($v)
 
-Return all the attributes of the vertex as an anonymous hash.
+Return all the attributes of the vertex as an anonymous hash, or C<undef>
+if no such vertex.
 
 =item get_vertex_attribute_names
 
@@ -2274,7 +2393,8 @@ reserved for the internal use of the Graph module.
 
     $attr = $g->get_edge_attributes($u, $v)
 
-Return all the attributes of the edge as an anonymous hash.
+Return all the attributes of the edge as an anonymous hash, or C<undef>
+if no such edge.
 
 =item get_edge_attribute_names
 
@@ -2545,17 +2665,20 @@ and based on the algorithm from:
 
 Returns the clustering coefficient gamma as described in
 
-    Duncan J. Watts and Steven Strogatz, Collective dynamics of 'small-world' networks, http://audiophile.tam.cornell.edu/SS_nature_smallworld.pdf
+    Duncan J. Watts and Steven Strogatz, Collective dynamics of 'small-world' networks, https://web.archive.org/web/20120616204225/http://audiophile.tam.cornell.edu/SS_nature_smallworld.pdf
 
 In scalar context returns just the average gamma, in list context
 returns the average gamma and a hash of vertices to clustering
 coefficients.
 
+Returns an empty list (and therefore undefined in scalar context) if
+the graph has no vertices.
+
 =item subgraph_by_radius
 
-    $s = $g->subgraph_by_radius($n, $radius);
+    $s = $g->subgraph_by_radius(@v, $radius);
 
-Returns a subgraph representing the ball of $radius around node $n
+Returns a subgraph representing the ball of $radius around the given vertices
 (breadth-first search).
 
 =back
@@ -2573,15 +2696,21 @@ graph call is not as expected.
 
 =item expect_hyperedged
 
-=item expect_hypervertexed
+=item expect_multiedge
 
 =item expect_multiedged
+
+=item expect_multivertex
 
 =item expect_multivertexed
 
 =item expect_no_args
 
+=item expect_non_multiedge
+
 =item expect_non_multiedged
+
+=item expect_non_multivertex
 
 =item expect_non_multivertexed
 
@@ -2620,7 +2749,7 @@ The numbers are for a 32-bit platform and for Perl 5.8.8.
 Roughly, the above numbers mean that in a megabyte of memory you can
 fit for example a graph of about 1000 vertices and about 2500 edges.
 
-=head2 Hyperedges, hypervertices, hypergraphs
+=head2 Hyperedges, hypergraphs
 
 B<BEWARE>: this is a rather thinly tested feature, and the theory
 is even less so.  Do not expect this to stay as it is (or at all)
@@ -2633,43 +2762,16 @@ Caveat emptor.
 Hyperedges are edges that connect a number of vertices different
 from the usual two.
 
-Hypervertices are vertices that consist of a number of vertices
-different from the usual one.
-
-Note that for hypervertices there is an asymmetry: when adding
-hypervertices, the single vertices are also implicitly added.
-
 Hypergraphs are graphs with hyperedges.
 
 To enable hyperness when constructing Graphs use the C<hyperedged>
-and C<hypervertexed> attributes:
+attribute:
 
-   my $h = Graph->new(hyperedged => 1, hypervertexed => 1);
-
-To add hypervertexes, either explicitly use more than one vertex (or,
-indeed, I<no> vertices) when using add_vertex()
-
-   $h->add_vertex("a", "b")
-   $h->add_vertex()
-
-or implicitly with array references when using add_edge()
-
-   $h->add_edge(["a", "b"], "c")
-   $h->add_edge()
-
-Testing for existence and deletion of hypervertices and hyperedges
-works similarly.
+   my $h = Graph->new(hyperedged => 1);
 
 To test for hyperness of a graph use the
 
 =over 4
-
-=item is_hypervertexed
-
-=item hypervertexed
-
-    $g->is_hypervertexed
-    $g->hypervertexed
 
 =item is_hyperedged
 
@@ -2680,234 +2782,18 @@ To test for hyperness of a graph use the
 
 =back
 
-Since hypervertices consist of more than one vertex:
-
-=over 4
-
-=item vertices_at
-
-    $g->vertices_at($v)
-
-=back
-
-Return the vertices at the vertex.  This may return just the vertex
-or also other vertices.
-
-To go with the concept of undirected in normal (non-hyper) graphs,
-there is a similar concept of omnidirected I<(this is my own coinage,
-"all-directions")> for hypergraphs, and you can naturally test for it by
-
-=over 4
-
-=item is_omnidirected
-
-=item omnidirected
-
-=item is_omniedged
-
-=item omniedged
-
-   $g->is_omniedged
-
-   $g->omniedged
-
-   $g->is_omnidirected
-
-   $g->omnidirected
-
-Return true if the graph is omnidirected (edges have no direction),
-false if not.
-
-=back
-
-You may be wondering why on earth did I make up this new concept, why
-didn't the "undirected" work for me?  Well, because of this:
-
-   $g = Graph->new(hypervertexed => 1, omnivertexed => 1);
-
-That's right, vertices can be omni, too - and that is indeed the
-default.  You can turn it off and then $g->add_vertex(qw(a b)) no
-more means adding also the (hyper)vertex qw(b a).  In other words,
-the "directivity" is orthogonal to (or independent of) the number of
-vertices in the vertex/edge.
-
-=over 4
-
-=item is_omnivertexed
-
-=item omnivertexed
-
-=back
-
-Another oddity that fell out of the implementation is the uniqueness
-attribute, that comes naturally in C<uniqedged> and C<uniqvertexed>
-flavours.  It does what it sounds like, to unique or not the vertices
-participating in edges and vertices (is the hypervertex qw(a b a) the
-same as the hypervertex qw(a b), for example).  Without too much
-explanation:
-
-=over 4
-
-=item is_uniqedged
-
-=item uniqedged
-
-=item is_uniqvertexed
-
-=item uniqvertexed
-
-=back
-
-=head2 Backward compatibility with Graph 0.2
-
-The Graph 0.2 (and 0.2xxxx) had the following features
-
-=over 4
-
-=item *
-
-vertices() always sorted the vertex list, which most of the time is
-unnecessary and wastes CPU.
-
-=item *
-
-edges() returned a flat list where the begin and end vertices of the
-edges were intermingled: every even index had an edge begin vertex,
-and every odd index had an edge end vertex.  This had the unfortunate
-consequence of C<scalar(@e = edges)> being twice the number of edges,
-and complicating any algorithm walking through the edges.
-
-=item *
-
-The vertex list returned by edges() was sorted, the primary key being
-the edge begin vertices, and the secondary key being the edge end vertices.
-
-=item *
-
-The attribute API was oddly position dependent and dependent
-on the number of arguments.  Use ..._graph_attribute(),
-..._vertex_attribute(), ..._edge_attribute() instead.
-
-=back
-
-B<In future releases of Graph (any release after 0.50) the 0.2xxxx
-compatibility will be removed.  Upgrade your code now.>
-
-If you want to continue using these (mis)features you can use the
-C<compat02> flag when creating a graph:
-
-    my $g = Graph->new(compat02 => 1);
-
-This will change the vertices() and edges() appropriately.  This,
-however, is not recommended, since it complicates all the code using
-vertices() and edges().  Instead it is recommended that the
-vertices02() and edges02() methods are used.  The corresponding new
-style (unsorted, and edges() returning a list of references) methods
-are called vertices05() and edges05().
-
-To test whether a graph has the compatibility turned on
-
-=over 4
-
-=item is_compat02
-
-=item compat02
-
-    $g->is_compat02
-    $g->compat02
-
-=back
-
-The following are not backward compatibility methods, strictly
-speaking, because they did not exist before.
-
-=over 4
-
-=item edges02
-
-Return the edges as a flat list of vertices, elements at even indices
-being the start vertices and elements at odd indices being the end
-vertices.
-
-=item edges05
-
-Return the edges as a list of array references, each element
-containing the vertices of each edge.  (This is not a backward
-compatibility interface as such since it did not exist before.)
-
-=item vertices02
-
-Return the vertices in sorted order.
-
-=item vertices05
-
-Return the vertices in random order.
-
-=back
-
-For the attributes the recommended way is to use the new API.
-
-Do not expect new methods to work for compat02 graphs.
-
-The following compatibility methods exist:
-
-=over 4
-
-=item has_attribute
-
-=item has_attributes
-
-=item get_attribute
-
-=item get_attributes
-
-=item set_attribute
-
-=item set_attributes
-
-=item delete_attribute
-
-=item delete_attributes
-
-Do not use the above, use the new attribute interfaces instead.
-
-=item vertices_unsorted
-
-Alias for vertices() (or rather, vertices05()) since the vertices()
-now always returns the vertices in an unsorted order.  You can also
-use the unsorted_vertices import, but only with a true value (false
-values will cause an error).
-
-=item density_limits
-
-    my ($sparse, $dense, $complete) = $g->density_limits;
-
-Return the "density limits" used to classify graphs as "sparse" or "dense".
-The first limit is C/4 and the second limit is 3C/4, where C is the number
-of edges in a complete graph (the last "limit").
-
-=item density
-
-    my $density = $g->density;
-
-Return the density of the graph, the ratio of the number of edges to the
-number of edges in a complete graph.
-
-=item vertex
-
-    my $v = $g->vertex($v);
-
-Return the vertex if the graph has the vertex, undef otherwise.
-
-=item out_edges
-
-=item in_edges
-
-=item edges($v)
-
-This is now called edges_at($v).
-
-=back
+For more information on directed hypergraphs, see
+L<Directed Hypergraphs and Applications|https://static.aminer.org/pdf/PDF/000/836/884/directed_hypergraphs_and_applications.pdf>.
+It defines hyperarcs (directed edges in a hypergraph) as ordered pairs
+of subsets of V, and hyperedges (undirected) as single subsets of
+V. Since sets are unordered and elements within them are unique, this
+implies that the only valuable use for hypergraphs is where in a given
+connection entity (edge or arc), each vertex only appears at most once.
+Additionally, how the C<hyper> property of edges works may
+change. The underpinning notion is that each edge will be considered
+an entry in an incidence matrix (dimensions |V| x |E|), with values of
+either (0, 1=participating) for undirected (hyperedges), or (-1=tail,
+0, 1=head) for directed (hyperarcs) against each vertex.
 
 =head2 DIAGNOSTICS
 
@@ -2976,11 +2862,7 @@ Graphs, Networks and Algorithms, Dieter Jungnickel, Springer
 =head1 SEE ALSO
 
 Persistent/Serialized graphs?  You want to read/write Graphs?  See the
-Graph::Reader and Graph::Writer in CPAN.
-
-=head1 REPOSITORY
-
-L<https://github.com/neilbowers/Graph>
+L<Graph::Reader> and L<Graph::Writer> in CPAN.
 
 =head1 AUTHOR
 

@@ -477,23 +477,23 @@ Latvian Latvia locale.
    1995-12-22T09:05:02 = piektd., 22. decembris
   -0010-09-15T04:44:23 = sestd., 15. septembris
 
-=head3 MMMMW-count-one (MMMM W. 'nedēļa')
+=head3 MMMMW-count-one (MMMM, W. 'nedēļa')
 
-   2008-02-05T18:30:30 = februāris 1. nedēļa
-   1995-12-22T09:05:02 = decembris 3. nedēļa
-  -0010-09-15T04:44:23 = septembris 2. nedēļa
+   2008-02-05T18:30:30 = februāris, 1. nedēļa
+   1995-12-22T09:05:02 = decembris, 3. nedēļa
+  -0010-09-15T04:44:23 = septembris, 2. nedēļa
 
-=head3 MMMMW-count-other (MMMM W. 'nedēļa')
+=head3 MMMMW-count-other (MMMM, W. 'nedēļa')
 
-   2008-02-05T18:30:30 = februāris 1. nedēļa
-   1995-12-22T09:05:02 = decembris 3. nedēļa
-  -0010-09-15T04:44:23 = septembris 2. nedēļa
+   2008-02-05T18:30:30 = februāris, 1. nedēļa
+   1995-12-22T09:05:02 = decembris, 3. nedēļa
+  -0010-09-15T04:44:23 = septembris, 2. nedēļa
 
-=head3 MMMMW-count-zero (MMMM W. 'nedēļa')
+=head3 MMMMW-count-zero (MMMM, W. 'nedēļa')
 
-   2008-02-05T18:30:30 = februāris 1. nedēļa
-   1995-12-22T09:05:02 = decembris 3. nedēļa
-  -0010-09-15T04:44:23 = septembris 2. nedēļa
+   2008-02-05T18:30:30 = februāris, 1. nedēļa
+   1995-12-22T09:05:02 = decembris, 3. nedēļa
+  -0010-09-15T04:44:23 = septembris, 2. nedēļa
 
 =head3 MMMMd (d. MMMM)
 
@@ -649,6 +649,26 @@ Yes
 =head3 Local first day of the week
 
 1 (Pirmdiena)
+
+=head2 Strftime Patterns
+
+=head3 %c (%A, %Y. gada %e. %B, %H:%M:%S) - date time format
+
+   2008-02-05T18:30:30 = otrdiena, 2008. gada  5. februāris, 18:30:30
+   1995-12-22T09:05:02 = piektdiena, 1995. gada 22. decembris, 09:05:02
+  -0010-09-15T04:44:23 = sestdiena, -10. gada 15. septembris, 04:44:23
+
+=head3 %x (%Y.%m.%d.) - date format
+
+   2008-02-05T18:30:30 = 2008.02.05.
+   1995-12-22T09:05:02 = 1995.12.22.
+  -0010-09-15T04:44:23 = -10.09.15.
+
+=head3 %X (%T) - time format
+
+   2008-02-05T18:30:30 = 18:30:30
+   1995-12-22T09:05:02 = 09:05:02
+  -0010-09-15T04:44:23 = 04:44:23
 
 =head1 SUPPORT
 

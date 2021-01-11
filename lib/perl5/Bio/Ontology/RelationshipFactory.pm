@@ -93,7 +93,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Ontology::RelationshipFactory;
-$Bio::Ontology::RelationshipFactory::VERSION = '1.7.5';
 use strict;
 
 use Bio::Root::Root;

@@ -109,7 +109,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Seq::QualI;
-$Bio::Seq::QualI::VERSION = '1.7.5';
 use strict;
 use Carp;
 
@@ -544,5 +543,37 @@ sub _attempt_to_load_Seq{
    }
 
 }
+
+
+=head2 qualtype()
+
+ Title   : qualtype()
+ Usage   : if( $obj->qualtype eq 'phd' ) { /Do Something/ }
+ Function: At this time, this function is not used for 
+	Bio::Seq::PrimaryQual objects. In fact, now it is a month later and
+	I just completed the Bio::Seq::SeqWithQuality object and this is
+	definitely deprecated.
+ Returns : Nothing. (not implemented)
+ Args    : none
+ Status  : Virtual
+
+
+=cut
+
+sub qualtype {
+   my ($self,@args) = @_;
+   if( $self->can('throw') ) {
+	# $self->throw("Bio::Seq::QualI definition of qual - implementing class did not provide this method");
+       $self->throw("qualtypetype is not used with quality objects.");
+   } else {
+	# confess("Bio::Seq::QualI definition of qual - implementing class did not provide this method");
+	confess("qualtype is not used with quality objects.");
+   }
+
+
+}
+
+
+
 
 1;

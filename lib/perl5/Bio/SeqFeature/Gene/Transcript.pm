@@ -67,7 +67,6 @@ The rest of the documentation details each of the object methods. Internal metho
 # Let the code begin...
 
 package Bio::SeqFeature::Gene::Transcript;
-$Bio::SeqFeature::Gene::Transcript::VERSION = '1.7.5';
 use strict;
 
 

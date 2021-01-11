@@ -3,15 +3,16 @@ package Moo;
 use Moo::_strictures;
 use Moo::_mro;
 use Moo::_Utils qw(
+  _check_tracked
   _getglob
   _getstash
   _install_coderef
   _install_modifier
+  _install_tracked
   _load_module
   _set_loaded
   _unimport_coderefs
 );
-use Scalar::Util qw(reftype);
 use Carp qw(croak);
 BEGIN {
   our @CARP_NOT = qw(
@@ -23,7 +24,7 @@ BEGIN {
   );
 }
 
-our $VERSION = '2.003004';
+our $VERSION = '2.004004';
 $VERSION =~ tr/_//d;
 
 require Moo::sification;
@@ -31,67 +32,38 @@ Moo::sification->import;
 
 our %MAKERS;
 
-sub _install_tracked {
-  my ($target, $name, $code) = @_;
-  $MAKERS{$target}{exports}{$name} = $code;
-  _install_coderef "${target}::${name}" => "Moo::${name}" => $code;
-}
-
 sub import {
   my $target = caller;
   my $class = shift;
+  if ($INC{'Role/Tiny.pm'} and Role::Tiny->is_role($target)) {
+    croak "Cannot import Moo into a role";
+  }
+
   _set_loaded(caller);
 
   strict->import;
   warnings->import;
 
-  if ($INC{'Role/Tiny.pm'} and Role::Tiny->is_role($target)) {
-    croak "Cannot import Moo into a role";
-  }
-  $MAKERS{$target} ||= {};
-  _install_tracked $target => extends => sub {
-    $class->_set_superclasses($target, @_);
-    $class->_maybe_reset_handlemoose($target);
-    return;
-  };
-  _install_tracked $target => with => sub {
-    require Moo::Role;
-    Moo::Role->apply_roles_to_package($target, @_);
-    $class->_maybe_reset_handlemoose($target);
-  };
-  _install_tracked $target => has => sub {
-    my $name_proto = shift;
-    my @name_proto = ref $name_proto eq 'ARRAY' ? @$name_proto : $name_proto;
-    if (@_ % 2 != 0) {
-      croak "Invalid options for " . join(', ', map "'$_'", @name_proto)
-        . " attribute(s): even number of arguments expected, got " . scalar @_;
-    }
-    my %spec = @_;
-    foreach my $name (@name_proto) {
-      # Note that when multiple attributes specified, each attribute
-      # needs a separate \%specs hashref
-      my $spec_ref = @name_proto > 1 ? +{%spec} : \%spec;
-      $class->_constructor_maker_for($target)
-            ->register_attribute_specs($name, $spec_ref);
-      $class->_accessor_maker_for($target)
-            ->generate_method($target, $name, $spec_ref);
-      $class->_maybe_reset_handlemoose($target);
-    }
-    return;
-  };
-  foreach my $type (qw(before after around)) {
-    _install_tracked $target => $type => sub {
-      _install_modifier($target, $type, @_);
-      return;
-    };
-  }
-  return if $MAKERS{$target}{is_class}; # already exported into this package
+  $class->_install_subs($target, @_);
+  $class->make_class($target);
+  return;
+}
+
+sub make_class {
+  my ($me, $target) = @_;
+
+  my $makers = $MAKERS{$target} ||= {};
+  return $target if $makers->{is_class};
+
   my $stash = _getstash($target);
-  my @not_methods = map +(
-    !ref($_) ? *$_{CODE}||() : reftype($_) eq 'CODE' ? $_ : ()
-  ), values %$stash;
-  @{$MAKERS{$target}{not_methods}={}}{@not_methods} = @not_methods;
-  $MAKERS{$target}{is_class} = 1;
+  $makers->{non_methods} = {
+    map +($_ => \&{"${target}::${_}"}),
+    grep exists &{"${target}::${_}"},
+    grep !/::\z/ && !/\A\(/,
+    keys %$stash
+  };
+
+  $makers->{is_class} = 1;
   {
     no strict 'refs';
     @{"${target}::ISA"} = do {
@@ -101,11 +73,70 @@ sub import {
   if ($INC{'Moo/HandleMoose.pm'} && !$Moo::sification::disabled) {
     Moo::HandleMoose::inject_fake_metaclass_for($target);
   }
+  return $target;
+}
+
+sub is_class {
+  my ($me, $class) = @_;
+  return $MAKERS{$class} && $MAKERS{$class}{is_class};
+}
+
+sub _install_subs {
+  my ($me, $target) = @_;
+  my %install = $me->_gen_subs($target);
+  _install_tracked $target => $_ => $install{$_}
+    for sort keys %install;
+  return;
+}
+
+sub _gen_subs {
+  my ($me, $target) = @_;
+  return (
+    extends => sub {
+      $me->_set_superclasses($target, @_);
+      $me->_maybe_reset_handlemoose($target);
+      return;
+    },
+    with => sub {
+      require Moo::Role;
+      Moo::Role->apply_roles_to_package($target, @_);
+      $me->_maybe_reset_handlemoose($target);
+    },
+    has => sub {
+      my $name_proto = shift;
+      my @name_proto = ref $name_proto eq 'ARRAY' ? @$name_proto : $name_proto;
+      if (@_ % 2 != 0) {
+        croak "Invalid options for " . join(', ', map "'$_'", @name_proto)
+          . " attribute(s): even number of arguments expected, got " . scalar @_;
+      }
+      my %spec = @_;
+      foreach my $name (@name_proto) {
+        # Note that when multiple attributes specified, each attribute
+        # needs a separate \%specs hashref
+        my $spec_ref = @name_proto > 1 ? +{%spec} : \%spec;
+        $me->_constructor_maker_for($target)
+              ->register_attribute_specs($name, $spec_ref);
+        $me->_accessor_maker_for($target)
+              ->generate_method($target, $name, $spec_ref);
+        $me->_maybe_reset_handlemoose($target);
+      }
+      return;
+    },
+    (map {
+      my $type = $_;
+      (
+        $type => sub {
+          _install_modifier($target, $type, @_);
+          return;
+        },
+      )
+    } qw(before after around)),
+  );
 }
 
 sub unimport {
   my $target = caller;
-  _unimport_coderefs($target, $MAKERS{$target});
+  _unimport_coderefs($target);
 }
 
 sub _set_superclasses {
@@ -145,17 +176,17 @@ sub _accessor_maker_for {
   return unless $MAKERS{$target};
   $MAKERS{$target}{accessor} ||= do {
     my $maker_class = do {
+      no strict 'refs';
       if (my $m = do {
-            require Sub::Defer;
-            if (my $defer_target =
-                  (Sub::Defer::defer_info($target->can('new'))||[])->[0]
-              ) {
-              my ($pkg) = ($defer_target =~ /^(.*)::[^:]+$/);
-              $MAKERS{$pkg} && $MAKERS{$pkg}{accessor};
-            } else {
-              undef;
-            }
-          }) {
+        my @isa = @{mro::get_linear_isa($target)};
+        shift @isa;
+        if (my ($parent_new) = grep +(defined &{$_.'::new'}), @isa) {
+          $MAKERS{$parent_new} && $MAKERS{$parent_new}{accessor};
+        }
+        else {
+          undef;
+        }
+      }) {
         ref($m);
       } else {
         require Method::Generate::Accessor;
@@ -234,18 +265,28 @@ sub _constructor_maker_for {
 sub _concrete_methods_of {
   my ($me, $class) = @_;
   my $makers = $MAKERS{$class};
-  # grab class symbol table
+
+  my $non_methods = $makers->{non_methods} || {};
   my $stash = _getstash($class);
-  # reverse so our keys become the values (captured coderefs) in case
-  # they got copied or re-used since
-  my $not_methods = { reverse %{$makers->{not_methods}||{}} };
-  +{
-    # grab all code entries that aren't in the not_methods list
+
+  my $subs = {
     map {;
       no strict 'refs';
-      my $code = exists &{"${class}::$_"} ? \&{"${class}::$_"} : undef;
-      ( ! $code or exists $not_methods->{$code} ) ? () : ($_ => $code)
-    } grep +(!ref($stash->{$_}) || reftype($stash->{$_}) eq 'CODE'), keys %$stash
+      ${"${class}::${_}"} = ${"${class}::${_}"};
+      ($_ => \&{"${class}::${_}"});
+    }
+    grep exists &{"${class}::${_}"},
+    grep !/::\z/,
+    keys %$stash
+  };
+
+  my %tracked = map +($_ => 1), _check_tracked($class, [ keys %$subs ]);
+
+  return {
+    map +($_ => \&{"${class}::${_}"}),
+    grep !($non_methods->{$_} && $non_methods->{$_} == $subs->{$_}),
+    grep !exists $tracked{$_},
+    keys %$subs
   };
 }
 
@@ -314,7 +355,8 @@ optimised for rapid startup.
 
 C<Moo> avoids depending on any XS modules to allow for simple deployments.  The
 name C<Moo> is based on the idea that it provides almost -- but not quite --
-two thirds of L<Moose>.
+two thirds of L<Moose>.  As such, the L<Moose::Manual> can serve as an effective
+guide to C<Moo> aside from the MOP and Types sections.
 
 Unlike L<Mouse> this module does not aim at full compatibility with
 L<Moose>'s surface syntax, preferring instead to provide full interoperability
@@ -404,7 +446,7 @@ dependencies but is also fully usable by L<Moose> users, you should be using
 L<Moo>.
 
 For a full explanation, see the article
-L<http://shadow.cat/blog/matt-s-trout/moo-versus-any-moose> which explains
+L<https://shadow.cat/blog/matt-s-trout/moo-versus-any-moose> which explains
 the differing strategies in more detail and provides a direct example of
 where L<Moo> succeeds and L<Any::Moose> fails.
 
@@ -893,9 +935,17 @@ Anything imported or declared after will be still be available.
 
   1;
 
-If you were to import C<md5_hex> after L<namespace::clean> you would
-be able to call C<< ->md5_hex() >> on your C<Record> instances (and it
-probably wouldn't do what you expect!).
+For example if you were to import these subroutines after
+L<namespace::clean> like this
+
+  use namespace::clean;
+
+  use Digest::MD5 qw(md5_hex);
+  use Moo;
+
+then any C<Record> C<$r> would have methods such as C<< $r->md5_hex() >>, 
+C<< $r->has() >> and C<< $r->around() >> - almost certainly not what you
+intend!
 
 L<Moo::Role>s behave slightly differently.  Since their methods are
 composed into the consuming class, they can do a little more for you
@@ -911,6 +961,8 @@ using version 0.16 or newer.
 
 =head1 INCOMPATIBILITIES WITH MOOSE
 
+=head2 TYPES
+
 There is no built-in type system.  C<isa> is verified with a coderef; if you
 need complex types, L<Type::Tiny> can provide types, type libraries, and
 will work seamlessly with both L<Moo> and L<Moose>.  L<Type::Tiny> can be
@@ -920,17 +972,11 @@ that you can write
   use Types::Standard qw(Int);
   has days_to_live => (is => 'ro', isa => Int);
 
+=head2 API INCOMPATIBILITIES
+
 C<initializer> is not supported in core since the author considers it to be a
 bad idea and Moose best practices recommend avoiding it. Meanwhile C<trigger> or
 C<coerce> are more likely to be able to fulfill your needs.
-
-There is no meta object.  If you need this level of complexity you need
-L<Moose> - Moo is small because it explicitly does not provide a metaprotocol.
-However, if you load L<Moose>, then
-
-  Class::MOP::class_of($moo_class_or_role)
-
-will return an appropriate metaclass pre-populated by L<Moo>.
 
 No support for C<super>, C<override>, C<inner>, or C<augment> - the author
 considers augment to be a bad idea, and override can be translated:
@@ -950,7 +996,7 @@ considers augment to be a bad idea, and override can be translated:
 
 The C<dump> method is not provided by default. The author suggests loading
 L<Devel::Dwarn> into C<main::> (via C<perl -MDevel::Dwarn ...> for example) and
-using C<$obj-E<gt>$::Dwarn()> instead.
+using C<< $obj->$::Dwarn() >> instead.
 
 L</default> only supports coderefs and plain scalars, because passing a hash
 or array reference as a default is almost always incorrect since the value is
@@ -1001,6 +1047,18 @@ or, if you're inheriting from a non-Moose class,
   use warnings FATAL => "all";
   use MooseX::AttributeShortcuts;
 
+=head2 META OBJECT
+
+There is no meta object.  If you need this level of complexity you need
+L<Moose> - Moo is small because it explicitly does not provide a metaprotocol.
+However, if you load L<Moose>, then
+
+  Class::MOP::class_of($moo_class_or_role)
+
+will return an appropriate metaclass pre-populated by L<Moo>.
+
+=head2 IMMUTABILITY
+
 Finally, Moose requires you to call
 
   __PACKAGE__->meta->make_immutable;
@@ -1012,17 +1070,31 @@ on your class. (C<make_immutable> is a no-op in Moo to ease migration.)
 An extension L<MooX::late> exists to ease translating Moose packages
 to Moo by providing a more Moose-like interface.
 
+=head1 COMPATIBILITY WITH OLDER PERL VERSIONS
+
+Moo is compatible with perl versions back to 5.6.  When running on older
+versions, additional prerequisites will be required.  If you are packaging a
+script with its dependencies, such as with L<App::FatPacker>, you will need to
+be certain that the extra prerequisites are included.
+
+=over 4
+
+=item L<MRO::Compat>
+
+Required on perl versions prior to 5.10.0.
+
+=item L<Devel::GlobalDestruction>
+
+Required on perl versions prior to 5.14.0.
+
+=back
+
 =head1 SUPPORT
 
-Users' IRC: #moose on irc.perl.org
+IRC: #moose on irc.perl.org
 
 =for :html
-L<(click for instant chatroom login)|http://chat.mibbit.com/#moose@irc.perl.org>
-
-Development and contribution IRC: #web-simple on irc.perl.org
-
-=for :html
-L<(click for instant chatroom login)|http://chat.mibbit.com/#web-simple@irc.perl.org>
+L<(click for instant chatroom login)|https://chat.mibbit.com/#moose@irc.perl.org>
 
 Bugtracker: L<https://rt.cpan.org/Public/Dist/Display.html?Name=Moo>
 
@@ -1078,6 +1150,6 @@ as listed above.
 =head1 LICENSE
 
 This library is free software and may be distributed under the same terms
-as perl itself. See L<http://dev.perl.org/licenses/>.
+as perl itself. See L<https://dev.perl.org/licenses/>.
 
 =cut

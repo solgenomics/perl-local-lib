@@ -2,13 +2,14 @@ package Alien::Build::Plugin::Extract::ArchiveTar;
 
 use strict;
 use warnings;
+use 5.008004;
 use Alien::Build::Plugin;
 use File::chdir;
 use File::Temp ();
 use Path::Tiny ();
 
 # ABSTRACT: Plugin to extract a tarball using Archive::Tar
-our $VERSION = '1.69'; # VERSION
+our $VERSION = '2.37'; # VERSION
 
 
 has '+format' => 'tar';
@@ -17,17 +18,17 @@ has '+format' => 'tar';
 sub handles
 {
   my(undef, $ext) = @_;
-  
+
   return 1 if $ext =~ /^(tar|tar.gz|tar.bz2|tbz|taz)$/;
-  
-  return;
+
+  return 0;
 }
 
 
 sub available
 {
   my(undef, $ext) = @_;
-  
+
   if($ext eq 'tar.gz')
   {
     return !! eval { require Archive::Tar; Archive::Tar->has_zlib_support };
@@ -45,7 +46,7 @@ sub available
 sub init
 {
   my($self, $meta) = @_;
-  
+
   $meta->add_requires('share' => 'Archive::Tar' => 0);
   if($self->format eq 'tar.gz' || $self->format eq 'tgz')
   {
@@ -56,7 +57,7 @@ sub init
     $meta->add_requires('share' => 'IO::Uncompress::Bunzip2' => 0);
     $meta->add_requires('share' => 'IO::Compress::Bzip2' => 0);
   }
-  
+
   $meta->register_hook(
     extract => sub {
       my($build, $src) = @_;
@@ -102,7 +103,7 @@ Alien::Build::Plugin::Extract::ArchiveTar - Plugin to extract a tarball using Ar
 
 =head1 VERSION
 
-version 1.69
+version 2.37
 
 =head1 SYNOPSIS
 
@@ -155,7 +156,7 @@ Contributors:
 
 Diab Jerius (DJERIUS)
 
-Roy Storey
+Roy Storey (KIWIROY)
 
 Ilya Pavlov
 
@@ -205,9 +206,11 @@ Shawn Laffan (SLAFFAN)
 
 Paul Evans (leonerd, PEVANS)
 
+Håkon Hægland (hakonhagland, HAKONH)
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2019 by Graham Ollis.
+This software is copyright (c) 2011-2020 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -143,7 +143,7 @@ The rest of the documentation details each of the object methods. Internal metho
 # Let the code begin...
 
 package Bio::Tools::GFF;
-$Bio::Tools::GFF::VERSION = '1.7.5';
+
 use vars qw($HAS_HTML_ENTITIES);
 use strict;
 

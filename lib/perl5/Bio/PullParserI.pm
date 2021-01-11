@@ -130,7 +130,7 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::PullParserI;
-$Bio::PullParserI::VERSION = '1.7.5';
+
 use vars qw($AUTOLOAD $FORCE_TEMP_FILE);
 use strict;
 

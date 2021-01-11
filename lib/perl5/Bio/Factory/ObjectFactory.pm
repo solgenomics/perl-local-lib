@@ -96,7 +96,6 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Factory::ObjectFactory;
-$Bio::Factory::ObjectFactory::VERSION = '1.7.5';
 use strict;
 
 

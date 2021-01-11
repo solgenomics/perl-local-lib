@@ -75,7 +75,6 @@ Email skirov@utk.edu
 
 # Let the code begin...
 package Bio::Matrix::PSM::IO::masta;
-$Bio::Matrix::PSM::IO::masta::VERSION = '1.7.5';
 use Bio::Matrix::PSM::SiteMatrix;
 use vars qw(@HEADER);
 use strict;

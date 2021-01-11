@@ -90,7 +90,6 @@ Email birney@ebi.ac.uk
 =cut
 
 package Bio::IdentifiableI;
-$Bio::IdentifiableI::VERSION = '1.7.5';
 use strict;
 
 

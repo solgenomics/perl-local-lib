@@ -87,7 +87,7 @@ methods. Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Root::HTTPget;
-$Bio::Root::HTTPget::VERSION = '1.7.5';
+
 use strict;
 use warnings;
 use IO::Socket qw(:DEFAULT :crlf);
