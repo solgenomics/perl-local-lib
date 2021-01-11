@@ -1,0 +1,1 @@
+{"provides":{"Email::Send::SMTP::Gmail":{"version":"1.35","file":"lib/Email/Send/SMTP/Gmail.pm"}},"target":"Email::Send::SMTP::Gmail","dist":"Email-Send-SMTP-Gmail-1.35","version":"1.35","pathname":"P/PE/PECO/Email-Send-SMTP-Gmail-1.35.tar.gz","name":"Email::Send::SMTP::Gmail"}

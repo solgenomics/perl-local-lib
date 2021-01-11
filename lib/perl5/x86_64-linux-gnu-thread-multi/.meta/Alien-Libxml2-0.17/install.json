@@ -1,0 +1,1 @@
+{"version":"0.17","name":"Alien::Libxml2","target":"Alien::Libxml2","pathname":"P/PL/PLICEASE/Alien-Libxml2-0.17.tar.gz","provides":{"Alien::Libxml2":{"version":"0.17","file":"lib/Alien/Libxml2.pm"}},"dist":"Alien-Libxml2-0.17"}

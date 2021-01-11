@@ -1,0 +1,60 @@
+{
+   "abstract" : "Sends emails with attachments supporting Auth over TLS or SSL (for example: Google's SMTP and AWS SES).",
+   "author" : [
+      "Juan JosÃ© 'Peco' San MartÃ­n <peco@cpan.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "ExtUtils::MakeMaker version 7.34, CPAN::Meta::Converter version 2.150010",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "Email-Send-SMTP-Gmail",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Authen::SASL" : "0",
+            "Email::Date::Format" : "0",
+            "File::Spec" : "0",
+            "LWP::MediaTypes" : "0",
+            "MIME::Base64" : "0",
+            "Net::SMTP" : "3.1",
+            "Net::SMTP_auth" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Test::More" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/xpeco/Email-Send-SMTP-Gmail.git",
+         "web" : "https://github.com/xpeco/Email-Send-SMTP-Gmail"
+      }
+   },
+   "version" : "1.35",
+   "x_serialization_backend" : "JSON::PP version 2.97001"
+}

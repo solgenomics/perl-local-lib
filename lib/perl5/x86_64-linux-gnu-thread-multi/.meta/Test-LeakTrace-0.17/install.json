@@ -1,0 +1,1 @@
+{"version":"0.17","pathname":"L/LE/LEEJO/Test-LeakTrace-0.17.tar.gz","name":"Test::LeakTrace","target":"Test::LeakTrace","dist":"Test-LeakTrace-0.17","provides":{"Test::LeakTrace":{"version":"0.17","file":"lib/Test/LeakTrace.pm"},"Test::LeakTrace::Script":{"file":"lib/Test/LeakTrace/Script.pm"}}}

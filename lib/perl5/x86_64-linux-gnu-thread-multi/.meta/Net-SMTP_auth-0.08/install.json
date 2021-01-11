@@ -1,0 +1,1 @@
+{"name":"Net::SMTP_auth","pathname":"A/AP/APLEINER/Net-SMTP_auth-0.08.tar.gz","dist":"Net-SMTP_auth-0.08","target":"Net::SMTP_auth","provides":{"Net::SMTP_auth":{"file":"SMTP_auth.pm","version":"0.08"}},"version":"0.08"}
