@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 
-# xlscat:  show XLS/SXC file as Text
+# xlscat:  show supported spreadsheet file as Text
 # xlsgrep: grep pattern
-#	   (m)'18 [2018-06-27] Copyright H.M.Brand 2005-2018
+#	   (m)'21 [2021-02-02] Copyright H.M.Brand 2005-2021
 
 use strict;
 use warnings;
 
-our $VERSION = "3.14";
+our $VERSION = "3.20";
 
 my $is_grep = $0 =~ m/grep$/;
 
@@ -22,10 +22,12 @@ sub usage {
 	"    Generic options:\n",
 	"       -v[#]       Set verbose level (xlscat/xlsgrep)\n",
 	"       -d[#]       Set debug   level (Spreadsheet::Read)\n",
+	"       --list      Show supported spreadsheet formats and exit\n",
 	"       -u          Use unformatted values\n",
 	"       --strip[=#] Strip leading and/or traing spaces of all cells\n",
 	"       --noclip    Do not strip empty sheets and\n",
 	"                   trailing empty rows and columns\n",
+	"	--no-nl[=R] Replace all newlines in cells with R (default space)\n",
 	"       -e <enc>    Set encoding for input and output\n",
 	"       -b <enc>    Set encoding for input\n",
 	"       -a <enc>    Set encoding for output\n",
@@ -40,6 +42,7 @@ sub usage {
 	"       --formulas  Show the formula instead of the value\n",
 	"    Output Text (default):\n",
 	"       -s <sep>    Use separator <sep>. Default '|', \\n allowed\n",
+	"                   Overrules ',' when used with --csv\n",
 	"       -L          Line up the columns\n",
 	"       -n [skip]   Number lines (prefix with column number)\n",
 	"                   optionally skip <skip> (header) lines\n",
@@ -79,6 +82,10 @@ sub usage {
     exit $err;
     } # usage
 
+use Data::Dumper;
+use Encode qw( encode decode );
+use Spreadsheet::Read;
+
 use Getopt::Long qw(:config bundling noignorecase passthrough);
 my $opt_c;		# Generate CSV
 my $opt_F = "";		# Fields to print
@@ -108,7 +115,7 @@ GetOptions (
     # Output
     "i|index".
      "|ignore-case!"	=> \my $opt_i,	# Index (cat) | ignore_case (grep) 
-    "s|separator".
+    "s|separator|sep".
      "|outsepchar".
      "|out-sep".
      "|out-sep-char=s"	=> \my $opt_s,	# Text separator
@@ -129,6 +136,8 @@ GetOptions (
       "noclip"		=> sub { $clip = 0 },
       "strip:3"		=> \my $strip,
       "sort=s"		=> \my $sort_order,
+    "N|no-nl:s"		=> \my $opt_N,
+      "list!"		=> \my $list,
 
     # Encoding
     "e|encoding=s"	=> sub { $enc_i = $enc_o = $_[1] },
@@ -141,6 +150,16 @@ GetOptions (
     "h|header:1"	=> \$opt_h,
     ) or usage 1, "GetOpt: $@";
 
+if ($list) {
+    print "Ext   Parser module             Req   Has Def\n";
+    print "----- ----------------------- ----- ----- ---\n";
+    for (Spreadsheet::Read::parsers ()) {
+	printf "%-5s %-23s %5s %5s %s\n",
+	    $_->{ext}, $_->{mod}, $_->{min}, $_->{vsn}, $_->{def} ? "<==" : "";
+	}
+    exit 0;
+    }
+
 unless ($is_grep) {
 $opt_i && $opt_L and usage 1, "Options i and L are mutually exclusive";
 $opt_i && $opt_s and usage 1, "Options i and s are mutually exclusive";
@@ -152,17 +171,22 @@ $opt_i && $opt_C and usage 1, "Options i and C are mutually exclusive";
 $opt_i && $opt_F and usage 1, "Options i and F are mutually exclusive";
 $opt_i && $opt_H and usage 1, "Options i and H are mutually exclusive";
 }
-$opt_c && $opt_s and usage 1, "Options c and s are mutually exclusive";
 $opt_c && $opt_H and usage 1, "Options c and H are mutually exclusive";
 $opt_s && $opt_H and usage 1, "Options s and H are mutually exclusive";
 
-defined $opt_s or $opt_s = "|"; eval "\$opt_s = qq{$opt_s}";
+my %e = (a => "\a", b => "\b", e => "\e", f => "\f", n => "\n", r => "\r", t => "\t");
+$opt_s and $opt_s =~ s/\\+([abefnrt])/$e{$1}/g;
 defined $opt_S or $opt_S = $opt_i || $is_grep ? "all" : "1";
+defined $opt_N && !length $opt_N  and $opt_N = " ";
 $opt_i && !$is_grep && $opt_v < 1 and $opt_v = 1;
 $opt_f and $opt_A = 1;
 
 if ($opt_c) {
     $opt_L = 0;	# Cannot align CSV
+    if ($opt_s) {
+	$opt_c = $opt_s;
+	$opt_s = undef;
+	}
     $opt_c =~ m/^1?$/ and $opt_c = ",";
     $opt_c = Text::CSV_XS->new ({
 	binary   => 1,
@@ -172,8 +196,7 @@ if ($opt_c) {
     }
 
 # Debugging. Prefer Data::Peek over Data::Dumper if available
-{   use Data::Dumper;
-    my $dp = 0;
+{   my $dp = 0;
     eval q{
 	use Data::Peek;
 	$dp = 1;
@@ -211,9 +234,6 @@ else {
     $opt_v > 1 and warn "Working as a pipe\n";
     $file = *ARGV;
     }
-
-use Encode qw( encode decode );
-use Spreadsheet::Read;
 
 if ($opt_c) {
     Spreadsheet::Read::parses ("csv") or die "No CSV module found\n";
@@ -418,6 +438,9 @@ foreach my $si (1 .. $sc) {
 	    my ($uval, $fval) = map {
 		defined $_ ? $enc_i ? decode ($enc_i, $_) : $_ : $undef
 		} $s->{cell}[$_][$r], $s->{$cell};
+	    if (defined $opt_N) {
+		s/\n/$opt_N/go for grep { defined } $uval, $fval;
+		}
 	    $opt_v > 2 and warn "$_:$r '$uval' / '$fval'\n";
 	    $opt_A and 
 		push @att, [ @{$s->{attr}[$_][$r]}{qw( fgcolor bgcolor bold uline halign )} ];
@@ -432,13 +455,6 @@ foreach my $si (1 .. $sc) {
 	    ddumper ($opt_D == 1 ? \@row :
 		{ map { $s->{cell}[$_ + 1][1] => $row[$_] } 0 .. $#row });
 	    next;
-	    }
-	if ($opt_L) {
-	    foreach my $c (0 .. $#row) {
-		my $l = length $row[$c];
-		$l > $w[$c] and $w[$c] = $l;
-		$row[$c] =~ m/\D/ and $align[$c] = "-";
-		}
 	    }
 	if ($opt_H) {	# HTML
 	    print "  <tr>";
@@ -514,6 +530,18 @@ foreach my $si (1 .. $sc) {
 	unshift @align, "";
 	}
     $opt_n = 0;
+    if ($opt_L) {
+	foreach my $r (0 .. $#data) {
+	    my $R = $data[$r][0];
+	    foreach my $c (0 .. $#$R) {
+		my $d = $R->[$c];
+		my $l = length $d;
+		$l > $w[$c] and $w[$c] = $l;
+		$r && $d =~ m/\S/ or next;
+		$d =~ m/^\s*(?:-\s*)?[0-9][0-9 .,]*$/ or $align[$c] = "-";
+		}
+	    }
+	}
     for (@data) {
 	my ($row, $att) = @$_;
 	my @row = @$row;
@@ -521,7 +549,7 @@ foreach my $si (1 .. $sc) {
 	    my $l = length $row[$_];
 	    my $w = $l < $w[$_] ? " " x ($w[$_] - $l) : "";
 	    if ($align[$_]) {
-		$_ ==  $#row or $row[$_] .= $w;
+		$_ == $#row or $row[$_] .= $w;
 		}
 	    else {
 		substr $row[$_], 0, 0, $w;
@@ -538,7 +566,7 @@ foreach my $si (1 .. $sc) {
 $opt_H and print "</body>\n</html>\n";
 
 sub line {
-    my $sep  = shift;
+    my $sep  = shift || " \x{2502} ";
     my $line = join $sep => @_;
     !$enc_o && Encode::is_utf8 ($line) and $line = encode ("utf-8", $line);
     print "$line\n";

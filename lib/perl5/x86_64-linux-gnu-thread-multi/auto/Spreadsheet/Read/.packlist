@@ -1,6 +1,7 @@
-/home/production/cxgn/sgn/../local-lib/bin/ss2tk
-/home/production/cxgn/sgn/../local-lib/bin/ssdiff
-/home/production/cxgn/sgn/../local-lib/bin/xls2csv
-/home/production/cxgn/sgn/../local-lib/bin/xlscat
-/home/production/cxgn/sgn/../local-lib/bin/xlsgrep
-/home/production/cxgn/sgn/../local-lib/lib/perl5/Spreadsheet/Read.pm
+/home/production/cxgn/ontology-scripts/scripts/../../local-lib/bin/ss2tk
+/home/production/cxgn/ontology-scripts/scripts/../../local-lib/bin/ssdiff
+/home/production/cxgn/ontology-scripts/scripts/../../local-lib/bin/xls2csv
+/home/production/cxgn/ontology-scripts/scripts/../../local-lib/bin/xlscat
+/home/production/cxgn/ontology-scripts/scripts/../../local-lib/bin/xlsgrep
+/home/production/cxgn/ontology-scripts/scripts/../../local-lib/bin/xlsx2csv
+/home/production/cxgn/ontology-scripts/scripts/../../local-lib/lib/perl5/Spreadsheet/Read.pm

@@ -11312,3 +11312,69 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Sat Dec 11 00:22:03 2021: C<Module> L<Spreadsheet::Read|Spreadsheet::Read>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/ontology-scripts/scripts/../../local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.84>
+
+=item *
+
+C<EXE_FILES: scripts/xlscat scripts/xlsgrep scripts/ss2tk scripts/ssdiff scripts/xls2csv scripts/xlsx2csv>
+
+=back
+
+=head2 Sat Dec 11 00:23:24 2021: C<Module> L<Spreadsheet::XLSX|Spreadsheet::XLSX>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/ontology-scripts/scripts/../../local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.17>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sat Dec 11 23:30:21 2021: C<Module> L<Excel::Writer::XLSX|Excel::Writer::XLSX>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/ontology-scripts/scripts/../../local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.09>
+
+=item *
+
+C<EXE_FILES: bin/extract_vba>
+
+=back
+
