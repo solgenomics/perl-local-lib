@@ -889,5 +889,5 @@
       "Zefram <zefram@fysh.org>"
    ],
    "x_generated_by_perl" : "v5.26.1",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

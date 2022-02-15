@@ -1,1 +1,1 @@
-{"target":"XML::NamespaceSupport","version":"1.12","dist":"XML-NamespaceSupport-1.12","name":"XML::NamespaceSupport","provides":{"XML::NamespaceSupport":{"file":"lib/XML/NamespaceSupport.pm","version":"1.12"}},"pathname":"P/PE/PERIGRIN/XML-NamespaceSupport-1.12.tar.gz"}
+{"name":"XML::NamespaceSupport","target":"XML::NamespaceSupport","provides":{"XML::NamespaceSupport":{"version":"1.12","file":"lib/XML/NamespaceSupport.pm"}},"pathname":"P/PE/PERIGRIN/XML-NamespaceSupport-1.12.tar.gz","version":"1.12","dist":"XML-NamespaceSupport-1.12"}

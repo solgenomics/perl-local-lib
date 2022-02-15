@@ -1069,5 +1069,5 @@
       "Todd Hepler <thepler@employees.org>"
    ],
    "x_permissions_from_module" : "MooseX::Object::Pluggable",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

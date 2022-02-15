@@ -1,1 +1,1 @@
-{"name":"Switch","target":"Switch","pathname":"C/CH/CHORNY/Switch-2.17.tar.gz","version":"2.17","dist":"Switch-2.17","provides":{"Switch":{"version":"2.17","file":"Switch.pm"}}}
+{"version":"2.17","pathname":"C/CH/CHORNY/Switch-2.17.tar.gz","provides":{"Switch":{"version":"2.17","file":"Switch.pm"}},"target":"Switch","dist":"Switch-2.17","name":"Switch"}

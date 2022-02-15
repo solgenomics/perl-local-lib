@@ -8,7 +8,7 @@ use File::chdir;
 use Path::Tiny ();
 
 # ABSTRACT: Plugin for fetching a local directory
-our $VERSION = '2.37'; # VERSION
+our $VERSION = '2.46'; # VERSION
 
 
 has root => undef;
@@ -45,7 +45,9 @@ sub init
 
   $meta->register_hook(
     fetch => sub {
-      my($build, $path) = @_;
+      my($build, $path, %options) = @_;
+
+      $build->log("plugin Fetch::LocalDir does not support http_headers option") if $options{http_headers};
 
       $path ||= $url;
 
@@ -92,7 +94,7 @@ Alien::Build::Plugin::Fetch::LocalDir - Plugin for fetching a local directory
 
 =head1 VERSION
 
-version 2.37
+version 2.46
 
 =head1 SYNOPSIS
 
@@ -182,7 +184,7 @@ Juan Julián Merelo Guervós (JJ)
 
 Joel Berger (JBERGER)
 
-Petr Pisar (ppisar)
+Petr Písař (ppisar)
 
 Lance Wicks (LANCEW)
 
@@ -199,6 +201,8 @@ Shawn Laffan (SLAFFAN)
 Paul Evans (leonerd, PEVANS)
 
 Håkon Hægland (hakonhagland, HAKONH)
+
+nick nauwelaerts (INPHOBIA)
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -4,14 +4,14 @@ use strict;
 use warnings;
 use 5.008004;
 use Alien::Build;
-use base qw( Exporter );
+use Exporter ();
 use Path::Tiny ();
 use Carp ();
 
 sub _path { Path::Tiny::path(@_) }
 
 # ABSTRACT: Specification for defining an external dependency for CPAN
-our $VERSION = '2.37'; # VERSION
+our $VERSION = '2.46'; # VERSION
 
 
 our @EXPORT = qw( requires on plugin probe configure share sys download fetch decode prefer extract patch patch_ffi build build_ffi gather gather_ffi meta_prop ffi log test start_url before after );
@@ -369,7 +369,7 @@ alienfile - Specification for defining an external dependency for CPAN
 
 =head1 VERSION
 
-version 2.37
+version 2.46
 
 =head1 SYNOPSIS
 
@@ -509,7 +509,7 @@ Examples:
  plugin '=Badly::Named::Plugin::Not::In::Alien::Build::Namespace';
  
  # explicitly loads Alien::Build::Plugin::Prefer::SortVersions
- plugin 'Prefer::SortVersions => (
+ plugin 'Prefer::SortVersions' => (
    filter => qr/^gcc-.*\.tar\.gz$/,
    version => qr/([0-9\.]+)/,
  );
@@ -824,7 +824,7 @@ Juan Julián Merelo Guervós (JJ)
 
 Joel Berger (JBERGER)
 
-Petr Pisar (ppisar)
+Petr Písař (ppisar)
 
 Lance Wicks (LANCEW)
 
@@ -841,6 +841,8 @@ Shawn Laffan (SLAFFAN)
 Paul Evans (leonerd, PEVANS)
 
 Håkon Hægland (hakonhagland, HAKONH)
+
+nick nauwelaerts (INPHOBIA)
 
 =head1 COPYRIGHT AND LICENSE
 

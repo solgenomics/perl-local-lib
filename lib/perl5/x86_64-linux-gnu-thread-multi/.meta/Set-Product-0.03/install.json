@@ -1,1 +1,1 @@
-{"name":"Set::Product","dist":"Set-Product-0.03","pathname":"G/GR/GRAY/Set-Product-0.03.tar.gz","target":"Set::Product","version":"0.03","provides":{"Set::Product":{"file":"lib/Set/Product.pm","version":"0.03"},"Set::Product::PP":{"file":"lib/Set/Product/PP.pm"}}}
+{"name":"Set::Product","pathname":"G/GR/GRAY/Set-Product-0.03.tar.gz","provides":{"Set::Product":{"version":"0.03","file":"lib/Set/Product.pm"},"Set::Product::PP":{"file":"lib/Set/Product/PP.pm"}},"target":"Set::Product","dist":"Set-Product-0.03","version":"0.03"}

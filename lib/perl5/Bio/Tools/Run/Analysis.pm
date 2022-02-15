@@ -209,7 +209,7 @@ with an underscore _.
 # Let the code begin...
 
 package Bio::Tools::Run::Analysis;
-$Bio::Tools::Run::Analysis::VERSION = '1.7.7';
+$Bio::Tools::Run::Analysis::VERSION = '1.7.8';
 use vars qw(@ISA $Revision);
 use strict;
 
@@ -521,7 +521,7 @@ sub _save_result {
 # -----------------------------------------------------------------------------
 
 package Bio::Tools::Run::Analysis::Job;
-$Bio::Tools::Run::Analysis::Job::VERSION = '1.7.7';
+$Bio::Tools::Run::Analysis::Job::VERSION = '1.7.8';
 
 =head1 Module Bio::Tools::Run::Analysis::Job
 
@@ -658,7 +658,7 @@ sub id { shift->{'_id'}; }
 # ---------------------------------------------------------------------
 
 package Bio::Tools::Run::Analysis::Utils;
-$Bio::Tools::Run::Analysis::Utils::VERSION = '1.7.7';
+$Bio::Tools::Run::Analysis::Utils::VERSION = '1.7.8';
 
 =head1 Module Bio::Tools::Run::Analysis::Utils
 

@@ -1,18 +1,17 @@
 {
-   "alien_build_version" : "2.37",
-   "cflags" : "-I/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2/include/libxml2 ",
-   "cflags_static" : "-I/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2/include/libxml2 ",
-   "install_type" : "share",
+   "alien_build_version" : "2.46",
+   "cflags" : "-I/usr/include/libxml2",
+   "cflags_static" : "-I/usr/include/libxml2",
+   "install_type" : "system",
    "legacy" : {
       "finished_installing" : 1,
-      "install_type" : "share",
-      "name" : "libxml-2.0",
-      "original_prefix" : "/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2",
+      "install_type" : "system",
+      "original_prefix" : "/home/production/cxgn/local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2",
       "version" : "2.9.10"
    },
-   "libs" : "-L/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2/lib -lxml2 -lz -llzma -lm ",
-   "libs_static" : "-L/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2/lib -lxml2 -lz -llzma -lm ",
+   "libs" : "-lxml2",
+   "libs_static" : "-lxml2",
    "perl_module_version" : "0.17",
-   "prefix" : "/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2",
+   "prefix" : "/home/production/cxgn/local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2",
    "version" : "2.9.10"
 }

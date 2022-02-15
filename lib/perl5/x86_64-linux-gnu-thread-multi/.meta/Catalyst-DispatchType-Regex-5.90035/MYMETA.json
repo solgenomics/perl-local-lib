@@ -65,7 +65,7 @@
       }
    },
    "version" : "5.90035",
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_serialization_backend" : "JSON::PP version 4.04",
    "x_test_requires" : {
       "Data::Dumper" : "0",
       "MRO::Compat" : "0",

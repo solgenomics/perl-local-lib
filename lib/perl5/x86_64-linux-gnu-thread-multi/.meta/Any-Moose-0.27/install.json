@@ -1,1 +1,1 @@
-{"provides":{"Any::Moose":{"version":"0.27","file":"lib/Any/Moose.pm"}},"version":"0.27","pathname":"E/ET/ETHER/Any-Moose-0.27.tar.gz","dist":"Any-Moose-0.27","target":"Any::Moose","name":"Any::Moose"}
+{"provides":{"Any::Moose":{"file":"lib/Any/Moose.pm","version":"0.27"}},"version":"0.27","dist":"Any-Moose-0.27","target":"Any::Moose","pathname":"E/ET/ETHER/Any-Moose-0.27.tar.gz","name":"Any::Moose"}

@@ -1,1 +1,1 @@
-{"version":"1.06","provides":{"Test::Memory::Cycle":{"file":"Cycle.pm","version":"1.06"}},"name":"Test::Memory::Cycle","pathname":"P/PE/PETDANCE/Test-Memory-Cycle-1.06.tar.gz","dist":"Test-Memory-Cycle-1.06","target":"Test::Memory::Cycle"}
+{"provides":{"Test::Memory::Cycle":{"version":"1.06","file":"Cycle.pm"}},"pathname":"P/PE/PETDANCE/Test-Memory-Cycle-1.06.tar.gz","version":"1.06","target":"Test::Memory::Cycle","dist":"Test-Memory-Cycle-1.06","name":"Test::Memory::Cycle"}

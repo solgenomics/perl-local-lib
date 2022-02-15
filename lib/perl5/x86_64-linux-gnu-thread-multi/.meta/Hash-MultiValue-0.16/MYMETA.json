@@ -71,5 +71,5 @@
       "Peter Rabbitson <ribasushi@cpan.org>",
       "Tatsuhiko Miyagawa <miyagawa@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

@@ -1,1 +1,1 @@
-{"provides":{"Spiffy":{"file":"lib/Spiffy.pm","version":"0.46"},"Spiffy::mixin":{"file":"lib/Spiffy/mixin.pm"}},"pathname":"I/IN/INGY/Spiffy-0.46.tar.gz","version":"0.46","target":"Spiffy","dist":"Spiffy-0.46","name":"Spiffy"}
+{"dist":"Spiffy-0.46","version":"0.46","pathname":"I/IN/INGY/Spiffy-0.46.tar.gz","provides":{"Spiffy":{"version":"0.46","file":"lib/Spiffy.pm"},"Spiffy::mixin":{"file":"lib/Spiffy/mixin.pm"}},"target":"Spiffy","name":"Spiffy"}

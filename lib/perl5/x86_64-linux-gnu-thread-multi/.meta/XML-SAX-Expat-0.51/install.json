@@ -1,1 +1,1 @@
-{"target":"XML::SAX::Expat","version":"0.51","dist":"XML-SAX-Expat-0.51","name":"XML::SAX::Expat","provides":{"XML::SAX::Expat":{"file":"Expat.pm","version":"0.51"}},"pathname":"B/BJ/BJOERN/XML-SAX-Expat-0.51.tar.gz"}
+{"target":"XML::SAX::Expat","name":"XML::SAX::Expat","provides":{"XML::SAX::Expat":{"version":"0.51","file":"Expat.pm"}},"pathname":"B/BJ/BJOERN/XML-SAX-Expat-0.51.tar.gz","dist":"XML-SAX-Expat-0.51","version":"0.51"}

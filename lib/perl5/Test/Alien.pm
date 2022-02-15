@@ -10,7 +10,7 @@ use Alien::Build::Temp;
 use File::Copy qw( move );
 use Text::ParseWords qw( shellwords );
 use Test2::API qw( context run_subtest );
-use base qw( Exporter );
+use Exporter qw( import );
 use Path::Tiny qw( path );
 use Alien::Build::Util qw( _dump );
 use Config;
@@ -18,7 +18,7 @@ use Config;
 our @EXPORT = qw( alien_ok run_ok xs_ok ffi_ok with_subtest synthetic helper_ok interpolate_template_is );
 
 # ABSTRACT: Testing tools for Alien modules
-our $VERSION = '2.37'; # VERSION
+our $VERSION = '2.46'; # VERSION
 
 
 our @aliens;
@@ -131,6 +131,11 @@ sub run_ok
     $run->{fail} = 'command not found';
   }
 
+  unless(@aliens)
+  {
+    $ctx->diag("run_ok called without any aliens, you may want to call alien_ok");
+  }
+
   $ctx->release;
 
   $run;
@@ -193,7 +198,7 @@ sub xs_ok
   my @diag;
   my $dir = Alien::Build::Temp->newdir(
     TEMPLATE => 'test-alien-XXXXXX',
-    CLEANUP  => $^O =~ /^(MSWin32|cygwin)$/ ? 0 : 1,
+    CLEANUP  => $^O =~ /^(MSWin32|cygwin|msys)$/ ? 0 : 1,
   );
   my $xs_filename = path($dir)->child('test.xs')->stringify;
   my $c_filename  = path($dir)->child("test.@{[ $xs->{c_ext} ]}")->stringify;
@@ -205,7 +210,8 @@ sub xs_ok
   {
     our $count;
     $count = 0 unless defined $count;
-    my $name = sprintf "Test::Alien::XS::Mod%s", $count++;
+    my $name = sprintf "Test::Alien::XS::Mod%s%s", $count, chr(65 + $count % 26 ) x 4;
+    $count++;
     my $code = $xs->{xs};
     $code =~ s{\bTA_MODULE\b}{$name}g;
     $xs->{xs} = $code;
@@ -260,6 +266,8 @@ sub xs_ok
       push @diag, "    $_" for split /\r?\n/, $out;
     }
   }
+
+  push @diag, "xs_ok called without any aliens, you may want to call alien_ok" unless @aliens;
 
   if($ok)
   {
@@ -508,6 +516,11 @@ sub ffi_ok
     }
   }
 
+  unless(@aliens)
+  {
+    push @diag, 'ffi_ok called without any aliens, you may want to call alien_ok';
+  }
+
   if($ok)
   {
     $ffi = FFI::Platypus->new(
@@ -597,6 +610,7 @@ sub helper_ok
 
   my $ctx = context();
   $ctx->ok($ok, $message);
+  $ctx->diag("helper_ok called without any aliens, you may want to call alien_ok") unless @aliens;
   $ctx->release;
 
   $ok;
@@ -635,6 +649,7 @@ sub interpolate_template_is
 
   my $ctx = context();
   $ctx->ok($ok, $message, [@diag]);
+  $ctx->diag('interpolate_template_is called without any aliens, you may want to call alien_ok') unless @aliens;
   $ctx->release;
 
   $ok;
@@ -654,7 +669,7 @@ Test::Alien - Testing tools for Alien modules
 
 =head1 VERSION
 
-version 2.37
+version 2.46
 
 =head1 SYNOPSIS
 
@@ -1041,7 +1056,7 @@ Juan Julián Merelo Guervós (JJ)
 
 Joel Berger (JBERGER)
 
-Petr Pisar (ppisar)
+Petr Písař (ppisar)
 
 Lance Wicks (LANCEW)
 
@@ -1058,6 +1073,8 @@ Shawn Laffan (SLAFFAN)
 Paul Evans (leonerd, PEVANS)
 
 Håkon Hægland (hakonhagland, HAKONH)
+
+nick nauwelaerts (INPHOBIA)
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -914,5 +914,5 @@
    ],
    "x_deprecated" : 1,
    "x_permissions_from_module" : "Directory::Scratch",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

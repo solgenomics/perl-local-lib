@@ -7,7 +7,7 @@ use Alien::Build::Plugin;
 use Carp ();
 
 # ABSTRACT: Plugin for fetching files using LWP
-our $VERSION = '2.37'; # VERSION
+our $VERSION = '2.46'; # VERSION
 
 
 has '+url' => '';
@@ -31,12 +31,25 @@ sub init
   }
 
   $meta->register_hook( fetch => sub {
-    my(undef, $url) = @_;
+    my($build, $url, %options) = @_;
     $url ||= $self->url;
+
+    my @headers;
+    if(my $headers = $options{http_headers})
+    {
+      if(ref $headers eq 'ARRAY')
+      {
+        @headers = @$headers;
+      }
+      else
+      {
+        $build->log("Fetch for $url with http_headers that is not an array reference");
+      }
+    }
 
     my $ua = LWP::UserAgent->new;
     $ua->env_proxy;
-    my $res = $ua->get($url);
+    my $res = $ua->get($url, @headers);
 
     die "error fetching $url: @{[ $res->status_line ]}"
       unless $res->is_success;
@@ -90,7 +103,7 @@ Alien::Build::Plugin::Fetch::LWP - Plugin for fetching files using LWP
 
 =head1 VERSION
 
-version 2.37
+version 2.46
 
 =head1 SYNOPSIS
 
@@ -169,7 +182,7 @@ Juan Julián Merelo Guervós (JJ)
 
 Joel Berger (JBERGER)
 
-Petr Pisar (ppisar)
+Petr Písař (ppisar)
 
 Lance Wicks (LANCEW)
 
@@ -186,6 +199,8 @@ Shawn Laffan (SLAFFAN)
 Paul Evans (leonerd, PEVANS)
 
 Håkon Hægland (hakonhagland, HAKONH)
+
+nick nauwelaerts (INPHOBIA)
 
 =head1 COPYRIGHT AND LICENSE
 

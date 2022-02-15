@@ -75,5 +75,5 @@
       "x_IRC" : "irc://irc.perl.org/#moops"
    },
    "version" : "1.002002",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

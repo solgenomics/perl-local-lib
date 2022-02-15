@@ -1,10 +1,26 @@
 {
     "host_module": "Lucy",
     "classes": {
-        "Lucy::Simple": {
+        "Lucy::Document::Doc": {
             "methods": {
-                "Add_Doc": {
+                "Store": {
                     "excluded": true
+                },
+                "Set_Fields": {
+                    "excluded": true
+                },
+                "Get_Fields": {
+                    "excluded": true
+                }
+            }
+        },
+        "Lucy::Highlight::Highlighter": {
+            "methods": {
+                "Raw_Excerpt": {
+                    "alias": "_raw_excerpt"
+                },
+                "Highlight_Excerpt": {
+                    "alias": "_highlight_excerpt"
                 }
             }
         },
@@ -25,29 +41,9 @@
                 }
             }
         },
-        "Lucy::Document::Doc": {
-            "methods": {
-                "Store": {
-                    "excluded": true
-                },
-                "Set_Fields": {
-                    "excluded": true
-                },
-                "Get_Fields": {
-                    "excluded": true
-                }
-            }
-        },
         "Lucy::Index::SortCache": {
             "methods": {
                 "Value": {
-                    "excluded": true
-                }
-            }
-        },
-        "Lucy::Index::Similarity": {
-            "methods": {
-                "Get_Norm_Decoder": {
                     "excluded": true
                 }
             }
@@ -59,6 +55,13 @@
                 }
             }
         },
+        "Lucy::Index::Similarity": {
+            "methods": {
+                "Get_Norm_Decoder": {
+                    "excluded": true
+                }
+            }
+        },
         "Lucy::Index::Indexer": {
             "methods": {
                 "Add_Doc": {
@@ -66,19 +69,16 @@
                 }
             }
         },
-        "Lucy::Highlight::Highlighter": {
-            "methods": {
-                "Raw_Excerpt": {
-                    "alias": "_raw_excerpt"
-                },
-                "Highlight_Excerpt": {
-                    "alias": "_highlight_excerpt"
-                }
-            }
-        },
         "Lucy::Store::InStream": {
             "methods": {
                 "Read_Raw_C64": {
+                    "excluded": true
+                }
+            }
+        },
+        "Lucy::Simple": {
+            "methods": {
+                "Add_Doc": {
                     "excluded": true
                 }
             }

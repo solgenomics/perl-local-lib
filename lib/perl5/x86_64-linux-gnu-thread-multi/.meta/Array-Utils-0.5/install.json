@@ -1,1 +1,1 @@
-{"version":"0.5","dist":"Array-Utils-0.5","provides":{"Array::Utils":{"version":"0.5","file":"Utils.pm"}},"pathname":"Z/ZM/ZMIJ/Array/Array-Utils-0.5.tar.gz","name":"Array::Utils","target":"Array::Utils"}
+{"provides":{"Array::Utils":{"version":"0.5","file":"Utils.pm"}},"name":"Array::Utils","target":"Array::Utils","pathname":"Z/ZM/ZMIJ/Array/Array-Utils-0.5.tar.gz","version":"0.5","dist":"Array-Utils-0.5"}

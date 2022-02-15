@@ -1,1 +1,1 @@
-{"provides":{"MooseX::Types::Structured":{"file":"lib/MooseX/Types/Structured.pm","version":"0.36"}},"target":"MooseX::Types::Structured","name":"MooseX::Types::Structured","dist":"MooseX-Types-Structured-0.36","version":"0.36","pathname":"E/ET/ETHER/MooseX-Types-Structured-0.36.tar.gz"}
+{"pathname":"E/ET/ETHER/MooseX-Types-Structured-0.36.tar.gz","target":"MooseX::Types::Structured","dist":"MooseX-Types-Structured-0.36","name":"MooseX::Types::Structured","version":"0.36","provides":{"MooseX::Types::Structured":{"version":"0.36","file":"lib/MooseX/Types/Structured.pm"}}}

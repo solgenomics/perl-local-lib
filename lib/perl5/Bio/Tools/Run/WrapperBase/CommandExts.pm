@@ -408,7 +408,7 @@ Internal methods are usually preceded with a _
 # Let the code begin...
 
 package Bio::Tools::Run::WrapperBase; # need these methods in WrapperBase/maj
-$Bio::Tools::Run::WrapperBase::VERSION = '1.7.7';
+$Bio::Tools::Run::WrapperBase::VERSION = '1.7.8';
 use strict;
 use warnings;
 no warnings qw(redefine);

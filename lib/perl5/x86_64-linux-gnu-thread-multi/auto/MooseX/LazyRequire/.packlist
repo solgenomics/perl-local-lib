@@ -1,2 +1,2 @@
-/home/nmorales/cxgn/perl-local-lib/lib/perl5/MooseX/LazyRequire.pm
-/home/nmorales/cxgn/perl-local-lib/lib/perl5/MooseX/LazyRequire/Meta/Attribute/Trait/LazyRequire.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/LazyRequire.pm
+/home/production/cxgn/local-lib/lib/perl5/MooseX/LazyRequire/Meta/Attribute/Trait/LazyRequire.pm

@@ -59,7 +59,7 @@
       "x_MailingList" : "mailto:dbi-dev@perl.org"
    },
    "version" : "1.643",
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_serialization_backend" : "JSON::PP version 4.04",
    "x_suggests" : {
       "Clone" : 0.34,
       "DB_File" : 0,

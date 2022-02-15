@@ -1,1 +1,1 @@
-{"name":"Term::Size::Any","pathname":"F/FE/FERREIRA/Term-Size-Any-0.002.tar.gz","target":"Term::Size::Any","version":"0.002","dist":"Term-Size-Any-0.002","provides":{"Term::Size::Any":{"version":"0.002","file":"lib/Term/Size/Any.pm"}}}
+{"name":"Term::Size::Any","provides":{"Term::Size::Any":{"version":"0.002","file":"lib/Term/Size/Any.pm"}},"pathname":"F/FE/FERREIRA/Term-Size-Any-0.002.tar.gz","dist":"Term-Size-Any-0.002","target":"Term::Size::Any","version":"0.002"}

@@ -46,5 +46,5 @@
       "x_MailingList" : "http://groups.google.com/group/spreadsheet-writeexcel"
    },
    "version" : "2.40",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

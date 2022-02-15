@@ -163,5 +163,5 @@
       "Reaction" : "<= 0.001999",
       "Test::WWW::Mechanize::Catalyst" : "<= 0.53"
    },
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

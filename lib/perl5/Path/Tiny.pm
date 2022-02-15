@@ -5,7 +5,7 @@ use warnings;
 package Path::Tiny;
 # ABSTRACT: File path utility
 
-our $VERSION = '0.114';
+our $VERSION = '0.122';
 
 # Dependencies
 use Config;
@@ -323,6 +323,8 @@ sub rootdir { path( File::Spec->rootdir ) }
 #pod
 #pod     $temp = Path::Tiny->tempfile( @options );
 #pod     $temp = Path::Tiny->tempdir( @options );
+#pod     $temp = $dirpath->tempfile( @options );
+#pod     $temp = $dirpath->tempdir( @options );
 #pod     $temp = tempfile( @options ); # optional export
 #pod     $temp = tempdir( @options );  # optional export
 #pod
@@ -352,6 +354,17 @@ sub rootdir { path( File::Spec->rootdir ) }
 #pod Both C<tempfile> and C<tempdir> may be exported on request and used as
 #pod functions instead of as methods.
 #pod
+#pod The methods can be called on an instances representing a
+#pod directory. In this case, the directory is used as the base to create the
+#pod temporary file/directory, setting the C<DIR> option in File::Temp.
+#pod
+#pod     my $target_dir = path('/to/destination');
+#pod     my $tempfile = $target_dir->tempfile('foobarXXXXXX');
+#pod     $tempfile->spew('A lot of data...');  # not atomic
+#pod     $tempfile->rename($target_dir->child('foobar')); # hopefully atomic
+#pod
+#pod In this case, any value set for option C<DIR> is ignored.
+#pod
 #pod B<Note>: for tempfiles, the filehandles from File::Temp are closed and not
 #pod reused.  This is not as secure as using File::Temp handles directly, but is
 #pod less prone to deadlocks or access problems on some platforms.  Think of what
@@ -372,16 +385,14 @@ sub rootdir { path( File::Spec->rootdir ) }
 #pod Keeping a reference to, or modifying the cached object may break the
 #pod behavior documented above and is not supported.  Use at your own risk.
 #pod
-#pod Current API available since 0.097.
+#pod Current API available since 0.119.
 #pod
 #pod =cut
 
 sub tempfile {
-    shift if @_ && $_[0] eq 'Path::Tiny'; # called as method
-    my $opts = ( @_ && ref $_[0] eq 'HASH' ) ? shift @_ : {};
-    $opts = _get_args( $opts, qw/realpath/ );
+    my ( $opts, $maybe_template, $args )
+        = _parse_file_temp_args(tempfile => @_);
 
-    my ( $maybe_template, $args ) = _parse_file_temp_args(@_);
     # File::Temp->new demands TEMPLATE
     $args->{TEMPLATE} = $maybe_template->[0] if @$maybe_template;
 
@@ -394,13 +405,9 @@ sub tempfile {
 }
 
 sub tempdir {
-    shift if @_ && $_[0] eq 'Path::Tiny'; # called as method
-    my $opts = ( @_ && ref $_[0] eq 'HASH' ) ? shift @_ : {};
-    $opts = _get_args( $opts, qw/realpath/ );
+    my ( $opts, $maybe_template, $args )
+        = _parse_file_temp_args(tempdir => @_);
 
-    my ( $maybe_template, $args ) = _parse_file_temp_args(@_);
-
-    # File::Temp->newdir demands leading template
     require File::Temp;
     my $temp = File::Temp->newdir( @$maybe_template, TMPDIR => 1, %$args );
     my $self = $opts->{realpath} ? path($temp)->realpath : path($temp)->absolute;
@@ -414,6 +421,18 @@ sub tempdir {
 
 # normalize the various ways File::Temp does templates
 sub _parse_file_temp_args {
+    my $called_as = shift;
+    if ( @_ && $_[0] eq 'Path::Tiny' ) { shift } # class method
+    elsif ( @_ && eval{$_[0]->isa('Path::Tiny')} ) {
+        my $dir = shift;
+        if (! $dir->is_dir) {
+            $dir->_throw( $called_as, $dir, "is not a directory object" );
+        }
+        push @_, DIR => $dir->stringify; # no overriding
+    }
+    my $opts = ( @_ && ref $_[0] eq 'HASH' ) ? shift @_ : {};
+    $opts = _get_args( $opts, qw/realpath/ );
+
     my $leading_template = ( scalar(@_) % 2 == 1 ? shift(@_) : '' );
     my %args = @_;
     %args = map { uc($_), $args{$_} } keys %args;
@@ -422,7 +441,8 @@ sub _parse_file_temp_args {
         : $leading_template      ? $leading_template
         :                          ()
     );
-    return ( \@template, \%args );
+
+    return ( $opts, \@template, \%args );
 }
 
 #--------------------------------------------------------------------------#
@@ -1752,6 +1772,75 @@ sub sibling {
     return path( $self->parent->[PATH], @_ );
 }
 
+#pod =method size, size_human
+#pod
+#pod     my $p = path("foo"); # with size 1025 bytes
+#pod
+#pod     $p->size;                            # "1025"
+#pod     $p->size_human;                      # "1.1 K"
+#pod     $p->size_human( {format => "iec"} ); # "1.1 KiB"
+#pod
+#pod Returns the size of a file.  The C<size> method is just a wrapper around C<-s>.
+#pod
+#pod The C<size_human> method provides a human-readable string similar to
+#pod C<ls -lh>.  Like C<ls>, it rounds upwards and provides one decimal place for
+#pod single-digit sizes and no decimal places for larger sizes.  The only available
+#pod option is C<format>, which has three valid values:
+#pod
+#pod =for :list
+#pod * 'ls' (the default): base-2 sizes, with C<ls> style single-letter suffixes (K, M, etc.)
+#pod * 'iec': base-2 sizes, with IEC binary suffixes (KiB, MiB, etc.)
+#pod * 'si': base-10 sizes, with SI decimal suffixes (kB, MB, etc.)
+#pod
+#pod If C<-s> would return C<undef>, C<size_human> returns the empty string.
+#pod
+#pod Current API available since 0.122.
+#pod
+#pod =cut
+
+sub size { -s $_[0]->[PATH] }
+
+my %formats = (
+    'ls'  => [ 1024, log(1024), [ "", map { " $_" } qw/K M G T/ ] ],
+    'iec' => [ 1024, log(1024), [ "", map { " $_" } qw/KiB MiB GiB TiB/ ] ],
+    'si'  => [ 1000, log(1000), [ "", map { " $_" } qw/kB MB GB TB/ ] ],
+);
+
+sub _formats { return $formats{$_[0]} }
+
+sub size_human {
+    my $self     = shift;
+    my $args     = _get_args( shift, qw/format/ );
+    my $format   = defined $args->{format} ? $args->{format} : "ls";
+    my $fmt_opts = $formats{$format}
+      or Carp::croak("Invalid format '$format' for size_human()");
+    my $size = -s $self->[PATH];
+    return defined $size ? _human_size( $size, @$fmt_opts ) : "";
+}
+
+sub _ceil {
+    return $_[0] == int($_[0]) ? $_[0] : int($_[0]+1);
+}
+
+sub _human_size {
+    my ( $size, $base, $log_base, $suffixes ) = @_;
+    return "0" if $size == 0;
+
+    my $mag = int( log($size) / $log_base );
+    $size /= $base**$mag;
+    $size =
+        $mag == 0               ? $size
+      : length( int($size) ) == 1 ? _ceil( $size * 10 ) / 10
+      :                             _ceil($size);
+    if ( $size >= $base ) {
+        $size /= $base;
+        $mag++;
+    }
+
+    my $fmt = ( $mag == 0 || length( int($size) ) > 1 ) ? "%.0f%s" : "%.1f%s";
+    return sprintf( $fmt, $size, $suffixes->[$mag] );
+}
+
 #pod =method slurp, slurp_raw, slurp_utf8
 #pod
 #pod     $data = path("foo.txt")->slurp;
@@ -2156,7 +2245,7 @@ Path::Tiny - File path utility
 
 =head1 VERSION
 
-version 0.114
+version 0.122
 
 =head1 SYNOPSIS
 
@@ -2309,6 +2398,8 @@ Current API available since 0.018.
 
     $temp = Path::Tiny->tempfile( @options );
     $temp = Path::Tiny->tempdir( @options );
+    $temp = $dirpath->tempfile( @options );
+    $temp = $dirpath->tempdir( @options );
     $temp = tempfile( @options ); # optional export
     $temp = tempdir( @options );  # optional export
 
@@ -2338,6 +2429,17 @@ C<< File::Temp->newdir >> instead.
 Both C<tempfile> and C<tempdir> may be exported on request and used as
 functions instead of as methods.
 
+The methods can be called on an instances representing a
+directory. In this case, the directory is used as the base to create the
+temporary file/directory, setting the C<DIR> option in File::Temp.
+
+    my $target_dir = path('/to/destination');
+    my $tempfile = $target_dir->tempfile('foobarXXXXXX');
+    $tempfile->spew('A lot of data...');  # not atomic
+    $tempfile->rename($target_dir->child('foobar')); # hopefully atomic
+
+In this case, any value set for option C<DIR> is ignored.
+
 B<Note>: for tempfiles, the filehandles from File::Temp are closed and not
 reused.  This is not as secure as using File::Temp handles directly, but is
 less prone to deadlocks or access problems on some platforms.  Think of what
@@ -2358,7 +2460,7 @@ B<Note 4>: The cached object may be accessed with the L</cached_temp> method.
 Keeping a reference to, or modifying the cached object may break the
 behavior documented above and is not supported.  Use at your own risk.
 
-Current API available since 0.097.
+Current API available since 0.119.
 
 =head1 METHODS
 
@@ -2938,6 +3040,41 @@ This is slightly more efficient than C<< $path->parent->child(...) >>.
 
 Current API available since 0.058.
 
+=head2 size, size_human
+
+    my $p = path("foo"); # with size 1025 bytes
+
+    $p->size;                            # "1025"
+    $p->size_human;                      # "1.1 K"
+    $p->size_human( {format => "iec"} ); # "1.1 KiB"
+
+Returns the size of a file.  The C<size> method is just a wrapper around C<-s>.
+
+The C<size_human> method provides a human-readable string similar to
+C<ls -lh>.  Like C<ls>, it rounds upwards and provides one decimal place for
+single-digit sizes and no decimal places for larger sizes.  The only available
+option is C<format>, which has three valid values:
+
+=over 4
+
+=item *
+
+'ls' (the default): base-2 sizes, with C<ls> style single-letter suffixes (K, M, etc.)
+
+=item *
+
+'iec': base-2 sizes, with IEC binary suffixes (KiB, MiB, etc.)
+
+=item *
+
+'si': base-10 sizes, with SI decimal suffixes (kB, MB, etc.)
+
+=back
+
+If C<-s> would return C<undef>, C<size_human> returns the empty string.
+
+Current API available since 0.122.
+
 =head2 slurp, slurp_raw, slurp_utf8
 
     $data = path("foo.txt")->slurp;
@@ -3310,7 +3447,7 @@ David Golden <dagolden@cpan.org>
 
 =head1 CONTRIBUTORS
 
-=for stopwords Alex Efros Aristotle Pagaltzis Chris Williams Dan Book Dave Rolsky David Steinbrunner Doug Bell Gabor Szabo Gabriel Andrade George Hartzell Geraud Continsouzas Goro Fuji Graham Knop Ollis Ian Sillitoe James Hunt John Karr Karen Etheridge Mark Ellis Martin H. Sluka Kjeldsen Michael G. Schwern Nigel Gregoire Philippe Bruhat (BooK) Regina Verbae Roy Ivy III Shlomi Fish Smylers Tatsuhiko Miyagawa Toby Inkster Yanick Champoux 김도형 - Keedi Kim
+=for stopwords Alex Efros Aristotle Pagaltzis Chris Williams Dan Book Dave Rolsky David Steinbrunner Doug Bell Flavio Poletti Gabor Szabo Gabriel Andrade George Hartzell Geraud Continsouzas Goro Fuji Graham Knop Ollis Ian Sillitoe James Hunt John Karr Karen Etheridge Mark Ellis Martin H. Sluka Kjeldsen Michael G. Schwern Nigel Gregoire Philippe Bruhat (BooK) regina-verbae Roy Ivy III Shlomi Fish Smylers Tatsuhiko Miyagawa Toby Inkster Yanick Champoux 김도형 - Keedi Kim
 
 =over 4
 
@@ -3341,6 +3478,10 @@ David Steinbrunner <dsteinbrunner@pobox.com>
 =item *
 
 Doug Bell <madcityzen@gmail.com>
+
+=item *
+
+Flavio Poletti <flavio@polettix.it>
 
 =item *
 
@@ -3412,7 +3553,7 @@ Philippe Bruhat (BooK) <book@cpan.org>
 
 =item *
 
-Regina Verbae <regina-verbae@users.noreply.github.com>
+regina-verbae <regina-verbae@users.noreply.github.com>
 
 =item *
 

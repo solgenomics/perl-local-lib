@@ -1,1 +1,1 @@
-{"name":"B::COW","version":"0.004","target":"B::COW","dist":"B-COW-0.004","provides":{"B::COW":{"file":"lib/B/COW.pm","version":"0.004"}},"pathname":"A/AT/ATOOMIC/B-COW-0.004.tar.gz"}
+{"provides":{"B::COW":{"file":"lib/B/COW.pm","version":"0.004"}},"pathname":"A/AT/ATOOMIC/B-COW-0.004.tar.gz","name":"B::COW","target":"B::COW","version":"0.004","dist":"B-COW-0.004"}

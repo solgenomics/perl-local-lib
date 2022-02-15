@@ -1,1 +1,1 @@
-{"version":"0.02","target":"Tie::UrlEncoder","provides":{"Tie::UrlEncoder":{"file":"UrlEncoder.pm","version":"0.02"}},"pathname":"D/DA/DAVIDNICO/handy_tied_functions/Tie-UrlEncoder-0.02.tar.gz","name":"Tie::UrlEncoder","dist":"Tie-UrlEncoder-0.02"}
+{"target":"Tie::UrlEncoder","provides":{"Tie::UrlEncoder":{"version":"0.02","file":"UrlEncoder.pm"}},"name":"Tie::UrlEncoder","dist":"Tie-UrlEncoder-0.02","pathname":"D/DA/DAVIDNICO/handy_tied_functions/Tie-UrlEncoder-0.02.tar.gz","version":"0.02"}

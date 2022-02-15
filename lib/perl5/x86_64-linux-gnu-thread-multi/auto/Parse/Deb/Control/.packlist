@@ -1,3 +1,3 @@
-/home/nmorales/cxgn/perl-local-lib/bin/deb-control-key-values
-/home/nmorales/cxgn/perl-local-lib/bin/deb-control-prefix-perl
-/home/nmorales/cxgn/perl-local-lib/lib/perl5/Parse/Deb/Control.pm
+/home/production/cxgn/local-lib/bin/deb-control-key-values
+/home/production/cxgn/local-lib/bin/deb-control-prefix-perl
+/home/production/cxgn/local-lib/lib/perl5/Parse/Deb/Control.pm

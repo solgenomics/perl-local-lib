@@ -1,7 +1,7 @@
-/home/nmorales/cxgn/sgn/../perl-local-lib/bin/xml_grep
-/home/nmorales/cxgn/sgn/../perl-local-lib/bin/xml_merge
-/home/nmorales/cxgn/sgn/../perl-local-lib/bin/xml_pp
-/home/nmorales/cxgn/sgn/../perl-local-lib/bin/xml_spellcheck
-/home/nmorales/cxgn/sgn/../perl-local-lib/bin/xml_split
-/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/XML/Twig.pm
-/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/XML/Twig/XPath.pm
+/home/production/cxgn/local-lib/bin/xml_grep
+/home/production/cxgn/local-lib/bin/xml_merge
+/home/production/cxgn/local-lib/bin/xml_pp
+/home/production/cxgn/local-lib/bin/xml_spellcheck
+/home/production/cxgn/local-lib/bin/xml_split
+/home/production/cxgn/local-lib/lib/perl5/XML/Twig.pm
+/home/production/cxgn/local-lib/lib/perl5/XML/Twig/XPath.pm

@@ -64,5 +64,5 @@
    },
    "version" : "0.10023",
    "x_authority" : "cpan:BOBTFISH",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

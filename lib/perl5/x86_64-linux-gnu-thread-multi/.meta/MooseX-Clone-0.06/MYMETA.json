@@ -1071,5 +1071,5 @@
       "Evan Carroll <me@evancarroll.com>"
    ],
    "x_permissions_from_module" : "MooseX::Clone",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

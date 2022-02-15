@@ -1,1 +1,1 @@
-{"dist":"JSAN-Parse-FileDeps-1.00","pathname":"A/AD/ADAMK/JSAN-Parse-FileDeps-1.00.tar.gz","target":"JSAN::Parse::FileDeps","version":"1.00","name":"JSAN::Parse::FileDeps","provides":{"JSAN::Parse::FileDeps":{"file":"lib/JSAN/Parse/FileDeps.pm","version":"1.00"}}}
+{"name":"JSAN::Parse::FileDeps","target":"JSAN::Parse::FileDeps","provides":{"JSAN::Parse::FileDeps":{"file":"lib/JSAN/Parse/FileDeps.pm","version":"1.00"}},"dist":"JSAN-Parse-FileDeps-1.00","pathname":"A/AD/ADAMK/JSAN-Parse-FileDeps-1.00.tar.gz","version":"1.00"}

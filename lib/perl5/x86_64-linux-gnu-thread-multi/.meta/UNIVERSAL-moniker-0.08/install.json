@@ -1,1 +1,1 @@
-{"dist":"UNIVERSAL-moniker-0.08","target":"UNIVERSAL::moniker","provides":{"UNIVERSAL":{"file":"moniker.pm","version":"0.08"},"UNIVERSAL::moniker":{"file":"moniker.pm","version":"0.08"}},"pathname":"K/KA/KASEI/UNIVERSAL-moniker-0.08.tar.gz","name":"UNIVERSAL::moniker","version":"0.08"}
+{"name":"UNIVERSAL::moniker","provides":{"UNIVERSAL::moniker":{"version":"0.08","file":"moniker.pm"},"UNIVERSAL":{"version":"0.08","file":"moniker.pm"}},"dist":"UNIVERSAL-moniker-0.08","target":"UNIVERSAL::moniker","pathname":"K/KA/KASEI/UNIVERSAL-moniker-0.08.tar.gz","version":"0.08"}

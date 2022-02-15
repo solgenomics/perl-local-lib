@@ -1,1 +1,1 @@
-{"version":"0.09","provides":{"IO::Any":{"file":"lib/IO/Any.pm","version":"0.09"}},"dist":"IO-Any-0.09","target":"IO::Any","name":"IO::Any","pathname":"J/JK/JKUTEJ/IO-Any-0.09.tar.gz"}
+{"pathname":"J/JK/JKUTEJ/IO-Any-0.09.tar.gz","version":"0.09","target":"IO::Any","dist":"IO-Any-0.09","provides":{"IO::Any":{"version":"0.09","file":"lib/IO/Any.pm"}},"name":"IO::Any"}

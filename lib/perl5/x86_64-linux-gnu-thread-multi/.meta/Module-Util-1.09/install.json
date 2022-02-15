@@ -1,1 +1,1 @@
-{"pathname":"M/MA/MATTLAW/Module-Util-1.09.tar.gz","dist":"Module-Util-1.09","provides":{"Module::Util":{"version":"1.09","file":"lib/Module/Util.pm"}},"version":"1.09","name":"Module::Util","target":"Module::Util"}
+{"name":"Module::Util","dist":"Module-Util-1.09","version":"1.09","pathname":"M/MA/MATTLAW/Module-Util-1.09.tar.gz","target":"Module::Util","provides":{"Module::Util":{"version":"1.09","file":"lib/Module/Util.pm"}}}

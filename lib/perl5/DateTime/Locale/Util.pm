@@ -6,7 +6,7 @@ use namespace::autoclean 0.19 -except => ['import'];
 
 use Exporter qw( import );
 
-our $VERSION = '1.31';
+our $VERSION = '1.33';
 
 our @EXPORT_OK = 'parse_locale_code';
 
@@ -66,7 +66,7 @@ DateTime::Locale::Util - Utility code for DateTime::Locale
 
 =head1 VERSION
 
-version 1.31
+version 1.33
 
 =head1 DESCRIPTION
 
@@ -79,8 +79,6 @@ Bugs may be submitted at L<https://github.com/houseabsolute/DateTime-Locale/issu
 There is a mailing list available for users of this distribution,
 L<mailto:datetime@perl.org>.
 
-I am also usually active on IRC as 'autarch' on C<irc://irc.perl.org>.
-
 =head1 SOURCE
 
 The source code repository for DateTime-Locale can be found at L<https://github.com/houseabsolute/DateTime-Locale>.
@@ -91,7 +89,7 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2003 - 2020 by Dave Rolsky.
+This software is copyright (c) 2003 - 2021 by Dave Rolsky.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

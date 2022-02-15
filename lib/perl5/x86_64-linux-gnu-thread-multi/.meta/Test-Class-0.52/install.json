@@ -1,0 +1,1 @@
+{"pathname":"S/SZ/SZABGAB/Test-Class-0.52.tar.gz","name":"Test::Class","dist":"Test-Class-0.52","provides":{"Test::Class::MethodInfo":{"version":"0.52","file":"lib/Test/Class/MethodInfo.pm"},"Test::Class::Load":{"file":"lib/Test/Class/Load.pm","version":"0.52"},"Test::Class":{"version":"0.52","file":"lib/Test/Class.pm"}},"target":"Test::Class","version":"0.52"}

@@ -1,1 +1,1 @@
-{"provides":{"Check::ISA":{"file":"lib/Check/ISA.pm","version":"0.09"}},"version":"0.09","target":"Check::ISA","dist":"Check-ISA-0.09","pathname":"M/MA/MANWAR/Check-ISA-0.09.tar.gz","name":"Check::ISA"}
+{"pathname":"M/MA/MANWAR/Check-ISA-0.09.tar.gz","version":"0.09","dist":"Check-ISA-0.09","target":"Check::ISA","name":"Check::ISA","provides":{"Check::ISA":{"file":"lib/Check/ISA.pm","version":"0.09"}}}

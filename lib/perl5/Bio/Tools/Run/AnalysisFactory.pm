@@ -145,7 +145,7 @@ with an underscore _.
 # Let the code begin...
 
 package Bio::Tools::Run::AnalysisFactory;
-$Bio::Tools::Run::AnalysisFactory::VERSION = '1.7.7';
+$Bio::Tools::Run::AnalysisFactory::VERSION = '1.7.8';
 use vars qw(@ISA $Revision);
 use strict;
 

@@ -3,12 +3,12 @@ package Alien::Build::Util;
 use strict;
 use warnings;
 use 5.008004;
-use base qw( Exporter );
+use Exporter qw( import );
 use Path::Tiny qw( path );
 use Config;
 
 # ABSTRACT: Private utility functions for Alien::Build
-our $VERSION = '2.37'; # VERSION
+our $VERSION = '2.46'; # VERSION
 
 
 our @EXPORT_OK = qw( _mirror _dump _destdir_prefix _perl_config _ssl_reqs _has_ssl );
@@ -38,18 +38,7 @@ sub _mirror
       return if "$src" eq '.';
       my $dst = $dst_root->child("$src");
       $src = $src->absolute($src_root);
-      if(-d "$src")
-      {
-        if($opt->{empty_directory})
-        {
-          unless(-d $dst)
-          {
-            Alien::Build->log("mkdir $dst") if $opt->{verbose};
-            mkdir($dst) || die "unable to create directory $dst: $!";
-          }
-        }
-      }
-      elsif(-l "$src")
+      if(-l "$src")
       {
         unless(-d $dst->parent)
         {
@@ -62,6 +51,17 @@ sub _mirror
         my $target = readlink "$src";
         Alien::Build->log("ln -s $target $dst") if $opt->{verbose};
         symlink($target, $dst) || die "unable to symlink $target => $dst";
+      }
+      elsif(-d "$src")
+      {
+        if($opt->{empty_directory})
+        {
+          unless(-d $dst)
+          {
+            Alien::Build->log("mkdir $dst") if $opt->{verbose};
+            mkdir($dst) || die "unable to create directory $dst: $!";
+          }
+        }
       }
       elsif(-f "$src")
       {
@@ -149,7 +149,7 @@ Alien::Build::Util - Private utility functions for Alien::Build
 
 =head1 VERSION
 
-version 2.37
+version 2.46
 
 =head1 DESCRIPTION
 
@@ -207,7 +207,7 @@ Juan Julián Merelo Guervós (JJ)
 
 Joel Berger (JBERGER)
 
-Petr Pisar (ppisar)
+Petr Písař (ppisar)
 
 Lance Wicks (LANCEW)
 
@@ -224,6 +224,8 @@ Shawn Laffan (SLAFFAN)
 Paul Evans (leonerd, PEVANS)
 
 Håkon Hægland (hakonhagland, HAKONH)
+
+nick nauwelaerts (INPHOBIA)
 
 =head1 COPYRIGHT AND LICENSE
 

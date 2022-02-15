@@ -9,7 +9,7 @@ use Alien::Build::Util qw( _ssl_reqs );
 use Carp ();
 
 # ABSTRACT: Plugin for fetching files using HTTP::Tiny
-our $VERSION = '2.37'; # VERSION
+our $VERSION = '2.46'; # VERSION
 
 
 has '+url' => '';
@@ -41,11 +41,35 @@ sub init
   }
 
   $meta->register_hook( fetch => sub {
-    my($build, $url) = @_;
+    my($build, $url, %options) = @_;
     $url ||= $self->url;
 
-    my $ua = HTTP::Tiny->new;
-    my $res = $ua->get($url);
+    my %headers;
+    if(my $headers = $options{http_headers})
+    {
+      if(ref $headers eq 'ARRAY')
+      {
+        my @headers = @$headers;
+        while(@headers)
+        {
+          my $key = shift @headers;
+          my $value = shift @headers;
+          unless(defined $key && defined $value)
+          {
+            $build->log("Fetch for $url with http_headers contains undef key or value");
+            next;
+          }
+          push @{ $headers{$key} }, $value;
+        }
+      }
+      else
+      {
+        $build->log("Fetch for $url with http_headers that is not an array reference");
+      }
+    }
+
+    my $ua = HTTP::Tiny->new( agent => "Alien-Build/@{[ $Alien::Build::VERSION || 'dev' ]} " );
+    my $res = $ua->get($url, { headers => \%headers });
 
     unless($res->{success})
     {
@@ -128,7 +152,7 @@ Alien::Build::Plugin::Fetch::HTTPTiny - Plugin for fetching files using HTTP::Ti
 
 =head1 VERSION
 
-version 2.37
+version 2.46
 
 =head1 SYNOPSIS
 
@@ -207,7 +231,7 @@ Juan Julián Merelo Guervós (JJ)
 
 Joel Berger (JBERGER)
 
-Petr Pisar (ppisar)
+Petr Písař (ppisar)
 
 Lance Wicks (LANCEW)
 
@@ -224,6 +248,8 @@ Shawn Laffan (SLAFFAN)
 Paul Evans (leonerd, PEVANS)
 
 Håkon Hægland (hakonhagland, HAKONH)
+
+nick nauwelaerts (INPHOBIA)
 
 =head1 COPYRIGHT AND LICENSE
 

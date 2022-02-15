@@ -1,1 +1,1 @@
-{"pathname":"R/RO/ROKR/Getopt-Usaginator-0.0012.tar.gz","provides":{"Getopt::Usaginator":{"version":"0.0012","file":"lib/Getopt/Usaginator.pm"}},"version":"0.0012","target":"Getopt::Usaginator","name":"Getopt::Usaginator","dist":"Getopt-Usaginator-0.0012"}
+{"pathname":"R/RO/ROKR/Getopt-Usaginator-0.0012.tar.gz","target":"Getopt::Usaginator","dist":"Getopt-Usaginator-0.0012","version":"0.0012","name":"Getopt::Usaginator","provides":{"Getopt::Usaginator":{"version":"0.0012","file":"lib/Getopt/Usaginator.pm"}}}

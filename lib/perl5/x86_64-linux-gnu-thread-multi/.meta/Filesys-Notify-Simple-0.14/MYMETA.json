@@ -79,6 +79,6 @@
       "Yasutaka ATARASHI <yakex@cpan.org>"
    ],
    "x_generated_by_perl" : "v5.20.1",
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_serialization_backend" : "JSON::PP version 4.04",
    "x_static_install" : 1
 }

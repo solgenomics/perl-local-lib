@@ -109,5 +109,5 @@
       "Tokuhiro Matsuno <tokuhirom@cpan.org>",
       "Tom Wyant <wyant@cpan.org>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

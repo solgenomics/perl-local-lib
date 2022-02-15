@@ -8,11 +8,11 @@ use File::Which qw( which );
 use Path::Tiny qw( path );
 use Capture::Tiny qw( capture );
 use File::Temp qw( tempdir );
-use List::Util 1.33 qw( any );
+use List::Util 1.33 qw( any pairmap );
 use File::chdir;
 
 # ABSTRACT: Plugin for fetching files using curl
-our $VERSION = '2.37'; # VERSION
+our $VERSION = '2.46'; # VERSION
 
 
 sub curl_command
@@ -82,7 +82,7 @@ sub init
 
   $meta->register_hook(
     fetch => sub {
-      my($build, $url) = @_;
+      my($build, $url, %options) = @_;
       $url ||= $self->url;
 
       my($scheme) = $url =~ /^([a-z0-9]+):/i;
@@ -100,10 +100,24 @@ sub init
         $build->log("writeout: $_\\n") for @writeout;
         path('writeout')->spew(join("\\n", @writeout));
 
+        my @headers;
+        if(my $headers = $options{http_headers})
+        {
+          if(ref $headers eq 'ARRAY')
+          {
+            @headers = pairmap { -H => "$a: $b" } @$headers;
+          }
+          else
+          {
+            $build->log("Fetch for $url with http_headers that is not an array reference");
+          }
+        }
+
         my @command = (
           $self->curl_command,
           '-L', '-f', '-O', '-J',
           -w => '@writeout',
+          @headers,
         );
 
         push @command, -D => 'head' if $self->_see_headers;
@@ -239,7 +253,7 @@ Alien::Build::Plugin::Fetch::CurlCommand - Plugin for fetching files using curl
 
 =head1 VERSION
 
-version 2.37
+version 2.46
 
 =head1 SYNOPSIS
 
@@ -330,7 +344,7 @@ Juan Julián Merelo Guervós (JJ)
 
 Joel Berger (JBERGER)
 
-Petr Pisar (ppisar)
+Petr Písař (ppisar)
 
 Lance Wicks (LANCEW)
 
@@ -347,6 +361,8 @@ Shawn Laffan (SLAFFAN)
 Paul Evans (leonerd, PEVANS)
 
 Håkon Hægland (hakonhagland, HAKONH)
+
+nick nauwelaerts (INPHOBIA)
 
 =head1 COPYRIGHT AND LICENSE
 

@@ -1,1 +1,1 @@
-{"version":"3.300","provides":{"Image::Size":{"version":"3.300","file":"lib/Image/Size.pm"}},"pathname":"R/RJ/RJRAY/Image-Size-3.300.tar.gz","dist":"Image-Size-3.300","name":"Image::Size","target":"Image::Size"}
+{"pathname":"R/RJ/RJRAY/Image-Size-3.300.tar.gz","dist":"Image-Size-3.300","name":"Image::Size","version":"3.300","provides":{"Image::Size":{"version":"3.300","file":"lib/Image/Size.pm"}},"target":"Image::Size"}

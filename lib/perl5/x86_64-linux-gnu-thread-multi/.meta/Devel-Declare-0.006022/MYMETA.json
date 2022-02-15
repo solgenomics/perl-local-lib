@@ -76,5 +76,5 @@
       "Yanick Champoux <yanick@babyl.dyndns.org>"
    ],
    "x_deprecated" : 1,
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

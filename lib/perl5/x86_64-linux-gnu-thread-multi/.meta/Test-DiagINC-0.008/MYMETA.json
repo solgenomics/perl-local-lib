@@ -105,5 +105,5 @@
       "Peter Rabbitson <ribasushi@cpan.org>",
       "Roy Ivy III <rivy.dev@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

@@ -1,5 +1,5 @@
 package Selenium::Remote::WDKeys;
-$Selenium::Remote::WDKeys::VERSION = '1.39';
+$Selenium::Remote::WDKeys::VERSION = '1.46';
 # ABSTRACT: Representation of keystrokes used by Selenium::Remote::WebDriver
 
 
@@ -85,36 +85,101 @@ Selenium::Remote::WDKeys - Representation of keystrokes used by Selenium::Remote
 
 =head1 VERSION
 
-version 1.39
+version 1.46
+
+=head1 SYNOPSIS
+
+   use Selenium::Remote::WDKeys;
+
+   my $space_key = KEYS->{'space'};
+   my $enter_key = KEYS->{'enter'};
 
 =head1 DESCRIPTION
 
 The constant KEYS is defined here.
 
-=head1 SEE ALSO
+=head1 CONSTANT KEYS
 
-Please see those modules/websites for more information related to this module.
+  null
+  cancel
+  help
+  backspace
+  tab
+  clear
+  return
+  enter
+  shift
+  control
+  alt
+  pause
+  escape
+  space
+  page_up
+  page_down
+  end
+  home
+  left_arrow
+  up_arrow
+  right_arrow
+  down_arrow
+  insert
+  delete
+  semicolon
+  equals
+  numpad_0
+  numpad_1
+  numpad_2
+  numpad_3
+  numpad_4
+  numpad_5
+  numpad_6
+  numpad_7
+  numpad_8
+  numpad_9
+  multiply
+  add
+  separator
+  subtract
+  decimal
+  divide
+  f1
+  f2
+  f3
+  f4
+  f5
+  f6
+  f7
+  f8
+  f9
+  f10
+  f11
+  f12
+  command_meta
+  ZenkakuHankaku
+
+=head1 FUNCTIONS
+
+Functions of Selenium::Remote::WDKeys.
+
+=head2 KEYS
+
+  my $keys = KEYS();
+
+A hash reference that contains constant keys. This function is exported by default.
+
+=head1 AUTHORS
+
+Current Maintainers:
 
 =over 4
 
 =item *
 
-L<Selenium::Remote::Driver|Selenium::Remote::Driver>
+George S. Baugh <george@troglodyne.net>
 
 =back
 
-=head1 BUGS
-
-Please report any bugs or feature requests on the bugtracker website
-L<https://github.com/teodesian/Selenium-Remote-Driver/issues>
-
-When submitting a bug or request, please include a test-file or a
-patch to an existing test-file that illustrates the bug or desired
-feature.
-
-=head1 AUTHORS
-
-Current Maintainers:
+Previous maintainers:
 
 =over 4
 
@@ -125,12 +190,6 @@ Daniel Gempesaw <gempesaw@gmail.com>
 =item *
 
 Emmanuel Peroumalnaïk <peroumalnaik.emmanuel@gmail.com>
-
-=back
-
-Previous maintainers:
-
-=over 4
 
 =item *
 
@@ -157,6 +216,8 @@ Aditya Ivaturi <ivaturi@gmail.com>
 Copyright (c) 2010-2011 Aditya Ivaturi, Gordon Child
 
 Copyright (c) 2014-2017 Daniel Gempesaw
+
+Copyright (c) 2018-2021 George S. Baugh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

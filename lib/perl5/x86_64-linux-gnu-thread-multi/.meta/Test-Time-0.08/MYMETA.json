@@ -79,5 +79,5 @@
       "Gianni Ceccarelli <gianni.ceccarelli@broadbean.com>",
       "Alexandr Ciornii <alexchorny@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

@@ -1172,5 +1172,5 @@
       "Tom Wyant <wyant@cpan.org>"
    ],
    "x_generated_by_perl" : "v5.26.2",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

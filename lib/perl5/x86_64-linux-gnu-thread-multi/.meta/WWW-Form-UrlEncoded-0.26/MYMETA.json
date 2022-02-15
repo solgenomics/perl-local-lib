@@ -71,6 +71,6 @@
       "Graham Knop <haarg@haarg.org>",
       "Mikko Johannes Koivunalho <mikko.koivunalho@iki.fi>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_serialization_backend" : "JSON::PP version 4.04",
    "x_static_install" : 0
 }

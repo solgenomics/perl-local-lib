@@ -1,1 +1,1 @@
-{"version":"0.06","dist":"Sort-Maker-0.06","provides":{"Sort::Maker":{"file":"Sort/Maker.pm","version":"0.06"}},"pathname":"U/UR/URI/Sort-Maker-0.06.tar.gz","name":"Sort","target":"Sort::Maker"}
+{"provides":{"Sort::Maker":{"file":"Sort/Maker.pm","version":"0.06"}},"version":"0.06","pathname":"U/UR/URI/Sort-Maker-0.06.tar.gz","dist":"Sort-Maker-0.06","name":"Sort","target":"Sort::Maker"}

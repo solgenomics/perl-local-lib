@@ -1,1 +1,1 @@
-{"pathname":"G/GR/GRANTM/XML-Simple-2.25.tar.gz","provides":{"XML::Simple":{"file":"lib/XML/Simple.pm","version":"2.25"}},"name":"XML::Simple","dist":"XML-Simple-2.25","target":"XML::Simple","version":"2.25"}
+{"version":"2.25","dist":"XML-Simple-2.25","provides":{"XML::Simple":{"version":"2.25","file":"lib/XML/Simple.pm"}},"pathname":"G/GR/GRANTM/XML-Simple-2.25.tar.gz","name":"XML::Simple","target":"XML::Simple"}

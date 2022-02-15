@@ -6,7 +6,7 @@ use strict;
 use warnings;
 use namespace::autoclean;
 
-our $VERSION = '2.46';
+our $VERSION = '2.51';
 
 # Note that while we make use of DateTime::Duration in this module if we
 # actually try to load it here all hell breaks loose with circular
@@ -620,7 +620,7 @@ DateTime::TimeZone - Time zone object base class and factory
 
 =head1 VERSION
 
-version 2.46
+version 2.51
 
 =head1 SYNOPSIS
 
@@ -891,8 +891,6 @@ datetime@perl.org list.
 
 datetime@perl.org mailing list
 
-http://datetime.perl.org/
-
 The tools directory of the DateTime::TimeZone distribution includes
 two scripts that may be of interest to some people.  They are
 parse_olson and tests_from_zdump.  Please run them with the --help
@@ -900,16 +898,9 @@ flag to see what they can be used for.
 
 =head1 SUPPORT
 
-Support for this module is provided via the datetime@perl.org email list. See
-http://datetime.perl.org/wiki/datetime/page/Mailing_List for details.
-
-Please submit bugs to the CPAN RT system at
-http://rt.cpan.org/NoAuth/ReportBug.html?Queue=datetime%3A%3Atimezone
-or via email at bug-datetime-timezone@rt.cpan.org.
+Support for this module is provided via the datetime@perl.org email list.
 
 Bugs may be submitted at L<https://github.com/houseabsolute/DateTime-TimeZone/issues>.
-
-I am also usually active on IRC as 'autarch' on C<irc://irc.perl.org>.
 
 =head1 SOURCE
 
@@ -1018,7 +1009,7 @@ Tom Wyant <wyant@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2020 by Dave Rolsky.
+This software is copyright (c) 2021 by Dave Rolsky.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

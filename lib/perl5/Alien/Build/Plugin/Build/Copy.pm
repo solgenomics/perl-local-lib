@@ -7,7 +7,7 @@ use Alien::Build::Plugin;
 use Path::Tiny ();
 
 # ABSTRACT: Copy plugin for Alien::Build
-our $VERSION = '2.37'; # VERSION
+our $VERSION = '2.46'; # VERSION
 
 
 sub init
@@ -21,14 +21,29 @@ sub init
     $meta->register_hook(build => sub {
       my($build) = @_;
       my $stage = Path::Tiny->new($build->install_prop->{stage})->canonpath;
-      $build->system("xcopy . $stage /E");
+      $build->system(qq{xcopy . "$stage" /E});
     });
+  }
+  elsif($^O eq 'darwin')
+  {
+    # On recent macOS -pPR is the same as -aR
+    # on older Mac OS X (10.5 at least) -a is not supported but -pPR is.
+
+    # Looks like -pPR should also work on coreutils if for some reason
+    # someone is using  coreutils on macOS, although there are semantic
+    # differences between -pPR and -aR on coreutils, that may or may not be
+    # important enough to care about.
+
+    $meta->register_hook(build => [
+      'cp -pPR * "%{.install.stage}"',
+    ]);
   }
   else
   {
+    # TODO: some platforms might not support -a
+    # I think most platforms will support -r
     $meta->register_hook(build => [
-      'cp -aR * %{.install.stage}',  # TODO: some platforms might not support -a
-                                     # I think most platforms will support -r
+      'cp -aR * "%{.install.stage}"',
     ]);
   }
 }
@@ -47,7 +62,7 @@ Alien::Build::Plugin::Build::Copy - Copy plugin for Alien::Build
 
 =head1 VERSION
 
-version 2.37
+version 2.46
 
 =head1 SYNOPSIS
 
@@ -147,7 +162,7 @@ Juan Julián Merelo Guervós (JJ)
 
 Joel Berger (JBERGER)
 
-Petr Pisar (ppisar)
+Petr Písař (ppisar)
 
 Lance Wicks (LANCEW)
 
@@ -164,6 +179,8 @@ Shawn Laffan (SLAFFAN)
 Paul Evans (leonerd, PEVANS)
 
 Håkon Hægland (hakonhagland, HAKONH)
+
+nick nauwelaerts (INPHOBIA)
 
 =head1 COPYRIGHT AND LICENSE
 

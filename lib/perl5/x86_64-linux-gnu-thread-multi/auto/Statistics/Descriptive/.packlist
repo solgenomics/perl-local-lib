@@ -1,6 +1,6 @@
-/home/nmorales/cxgn/perl-local-lib/lib/perl5/Statistics/Descriptive.pm
-/home/nmorales/cxgn/perl-local-lib/lib/perl5/Statistics/Descriptive/Full.pm
-/home/nmorales/cxgn/perl-local-lib/lib/perl5/Statistics/Descriptive/Smoother.pm
-/home/nmorales/cxgn/perl-local-lib/lib/perl5/Statistics/Descriptive/Smoother/Exponential.pm
-/home/nmorales/cxgn/perl-local-lib/lib/perl5/Statistics/Descriptive/Smoother/Weightedexponential.pm
-/home/nmorales/cxgn/perl-local-lib/lib/perl5/Statistics/Descriptive/Sparse.pm
+/home/production/cxgn/local-lib/lib/perl5/Statistics/Descriptive.pm
+/home/production/cxgn/local-lib/lib/perl5/Statistics/Descriptive/Full.pm
+/home/production/cxgn/local-lib/lib/perl5/Statistics/Descriptive/Smoother.pm
+/home/production/cxgn/local-lib/lib/perl5/Statistics/Descriptive/Smoother/Exponential.pm
+/home/production/cxgn/local-lib/lib/perl5/Statistics/Descriptive/Smoother/Weightedexponential.pm
+/home/production/cxgn/local-lib/lib/perl5/Statistics/Descriptive/Sparse.pm

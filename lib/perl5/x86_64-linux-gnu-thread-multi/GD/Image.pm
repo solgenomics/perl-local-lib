@@ -5,7 +5,7 @@ use strict;
 use GD;
 use Symbol 'gensym','qualify_to_ref';
 use vars '$VERSION';
-$VERSION = '2.73';
+$VERSION = '2.75';
 
 =head1 NAME
 
@@ -16,6 +16,42 @@ GD::Image - Image class for the GD image library
 See L<GD>
 
 =head1 DESCRIPTION
+
+Supported Image formats:
+
+=over 4
+
+=item Png
+
+=item Gif
+
+=item Gd
+
+=item Gd2
+
+=item Jpeg
+
+=item Tiff
+
+=item Xpm
+
+=item WBMP
+
+=item GifAnim
+
+=item Webp
+
+=back
+
+Unsupported Image formats:
+
+=over 4
+
+=item Heif
+
+=item Avif
+
+=back
 
 See L<GD>
 
@@ -96,30 +132,6 @@ sub newPalette {
   return $pack->_new(@_, 0);
 }
 
-sub newFromGd {
-    croak("Usage: newFromGd(class,filehandle)") unless @_==2;
-    my($class,$f) = @_;
-    my $fh = $class->_make_filehandle($f);
-    binmode($fh);
-    $class->_newFromGd($fh);
-}
-
-sub newFromGd2 {
-    croak("Usage: newFromGd2(class,filehandle)") unless @_==2;
-    my($class,$f) = @_;
-    my $fh = $class->_make_filehandle($f);
-    binmode($fh);
-    $class->_newFromGd2($fh);
-}
-
-sub newFromGd2Part {
-    croak("Usage: newFromGd2(class,filehandle,srcX,srcY,width,height)") unless @_==6;
-    my($class,$f) = splice(@_,0,2);
-    my $fh = $class->_make_filehandle($f);
-    binmode($fh);
-    $class->_newFromGd2Part($fh,@_);
-}
-
 sub ellipse ($$$$$) {
   my ($self,$cx,$cy,$width,$height,$color) = @_;
   $self->arc($cx,$cy,$width,$height,0,360,$color);
@@ -154,7 +166,20 @@ sub _image_type {
     ord(substr($data,3,1)) >= 0xc0);
   return 'Gif'  if $magic eq "GIF8";
   return 'Gd2'  if $magic eq "gd2\000";
-  return 'Xpm'  if substr($data,0,9) eq "/* XPM */";
+  return 'Tiff' if $magic eq "\x4d\x4d\x00\x2a" or
+    $magic eq "\x49\x49\x2a\x00" or
+    $magic eq "IIN1";
+  return 'Webp' if substr($data,0,12) eq "RIFF2\0\0\0WEBP";
+  return 'Heif' if $magic eq '\000\000\000\030'
+                and substr($data,4,4) eq "ftyp"
+                and (substr($data,8,4) eq "heic"
+                  or substr($data,8,4) eq "heix");
+  return 'Avif' if $magic eq '\000\000\000\030'
+                and substr($data,4,4) eq "ftyp"
+                and (substr($data,8,4) eq "avif"
+                  or substr($data,8,4) eq "mif1");
+  return 'Xpm'  if substr($data,0,9) eq "/* XPM */" or $magic eq '/* X';
+  return 'Xbm'  if substr($data,0,8) eq "#define " or $magic eq "#def";
   return;
 }
 
@@ -178,6 +203,29 @@ sub newFromPng {
     $class->_newFromPng($fh,@_);
 }
 
+sub newFromGd {
+    croak("Usage: newFromGd(class,filehandle)") unless @_==2;
+    my($class,$f) = @_;
+    my $fh = $class->_make_filehandle($f);
+    binmode($fh);
+    $class->_newFromGd($fh);
+}
+
+sub newFromGd2 {
+    croak("Usage: newFromGd2(class,filehandle)") unless @_==2;
+    my($class,$f) = @_;
+    my $fh = $class->_make_filehandle($f);
+    binmode($fh);
+    $class->_newFromGd2($fh);
+}
+
+sub newFromGd2Part {
+    croak("Usage: newFromGd2(class,filehandle,srcX,srcY,width,height)") unless @_==6;
+    my($class,$f) = splice(@_,0,2);
+    my $fh = $class->_make_filehandle($f);
+    binmode($fh);
+    $class->_newFromGd2Part($fh,@_);
+}
 sub newFromJpeg {
     croak("Usage: newFromJpeg(class,filehandle,[truecolor])") unless @_>=2;
     my($class) = shift;
@@ -188,7 +236,7 @@ sub newFromJpeg {
 }
 
 sub newFromGif {
-    croak("Usage: newFromGif(class,filehandle,[truecolor])") unless @_>=2;
+    croak("Usage: newFromGif(class,filehandle)") unless @_==2;
     my($class) = shift;
     my($f)     = shift;
     my $fh = $class->_make_filehandle($f);
@@ -196,8 +244,32 @@ sub newFromGif {
     $class->_newFromGif($fh,@_);
 }
 
+sub newFromTiff {
+    croak("Usage: newFromTiff(class,filehandle)") unless @_==2;
+    my($class,$f) = @_;
+    my $fh = $class->_make_filehandle($f);
+    binmode($fh);
+    $class->_newFromTiff($fh);
+}
+
+sub newFromXbm {
+    croak("Usage: newFromXbm(class,filehandle)") unless @_==2;
+    my($class,$f) = @_;
+    my $fh = $class->_make_filehandle($f);
+    binmode($fh);
+    $class->_newFromXbm($fh);
+}
+
+sub newFromWebp {
+    croak("Usage: newFromWebp(class,filehandle)") unless @_==2;
+    my($class,$f) = @_;
+    my $fh = $class->_make_filehandle($f);
+    binmode($fh);
+    $class->_newFromWebp($fh);
+}
+
 sub newFromWBMP {
-    croak("Usage: newFromWBMP(class,filehandle,[truecolor])") unless @_>=2;
+    croak("Usage: newFromWBMP(class,filehandle)") unless @_==2;
     my($class) = shift;
     my($f)     = shift;
     my $fh = $class->_make_filehandle($f);

@@ -1,1 +1,1 @@
-{"name":"Carp::Always","version":"0.16","target":"Carp::Always","dist":"Carp-Always-0.16","provides":{"Carp::Always":{"version":"0.16","file":"lib/Carp/Always.pm"}},"pathname":"F/FE/FERREIRA/Carp-Always-0.16.tar.gz"}
+{"dist":"Carp-Always-0.16","version":"0.16","name":"Carp::Always","target":"Carp::Always","pathname":"F/FE/FERREIRA/Carp-Always-0.16.tar.gz","provides":{"Carp::Always":{"version":"0.16","file":"lib/Carp/Always.pm"}}}

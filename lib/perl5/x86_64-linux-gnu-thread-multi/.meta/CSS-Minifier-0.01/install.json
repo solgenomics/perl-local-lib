@@ -1,1 +1,1 @@
-{"target":"CSS::Minifier","version":"0.01","pathname":"P/PM/PMICHAUX/CSS-Minifier-0.01.tar.gz","dist":"CSS-Minifier-0.01","name":"CSS::Minifier","provides":{"CSS::Minifier":{"file":"lib/CSS/Minifier.pm","version":"0.01"}}}
+{"name":"CSS::Minifier","target":"CSS::Minifier","provides":{"CSS::Minifier":{"file":"lib/CSS/Minifier.pm","version":"0.01"}},"dist":"CSS-Minifier-0.01","pathname":"P/PM/PMICHAUX/CSS-Minifier-0.01.tar.gz","version":"0.01"}

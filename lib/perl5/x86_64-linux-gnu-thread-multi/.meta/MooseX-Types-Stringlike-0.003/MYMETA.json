@@ -95,5 +95,5 @@
    "x_contributors" : [
       "Karen Etheridge <ether@cpan.org>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

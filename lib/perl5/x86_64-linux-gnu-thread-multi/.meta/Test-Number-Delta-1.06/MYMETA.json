@@ -95,5 +95,5 @@
    },
    "version" : "1.06",
    "x_authority" : "cpan:DAGOLDEN",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

@@ -1230,5 +1230,5 @@
       "Jonathan Rockway <jon@jrock.us>",
       "Hans Dieter Pearcey <hdp@weftsoar.net>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

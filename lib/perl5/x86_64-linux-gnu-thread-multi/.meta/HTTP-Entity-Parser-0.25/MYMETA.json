@@ -106,6 +106,6 @@
       "jrubinator <jjrs.pam+github@gmail.com>",
       "moznion <moznion@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_serialization_backend" : "JSON::PP version 4.04",
    "x_static_install" : 1
 }

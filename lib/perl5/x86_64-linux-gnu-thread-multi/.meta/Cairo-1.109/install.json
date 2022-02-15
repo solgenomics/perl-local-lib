@@ -1,0 +1,1 @@
+{"pathname":"X/XA/XAOC/Cairo-1.109.tar.gz","version":"1.109","name":"Cairo","dist":"Cairo-1.109","provides":{"Cairo::Install::Files":{"file":"build/IFiles.pm"},"Cairo":{"version":"1.109","file":"lib/Cairo.pm"}},"target":"Cairo"}

@@ -1,1 +1,1 @@
-{"version":"1.003002","name":"Package::Variant","pathname":"M/MS/MSTROUT/Package-Variant-1.003002.tar.gz","target":"Package::Variant","dist":"Package-Variant-1.003002","provides":{"Package::Variant":{"version":"1.003002","file":"lib/Package/Variant.pm"}}}
+{"pathname":"M/MS/MSTROUT/Package-Variant-1.003002.tar.gz","dist":"Package-Variant-1.003002","version":"1.003002","name":"Package::Variant","provides":{"Package::Variant":{"version":"1.003002","file":"lib/Package/Variant.pm"}},"target":"Package::Variant"}

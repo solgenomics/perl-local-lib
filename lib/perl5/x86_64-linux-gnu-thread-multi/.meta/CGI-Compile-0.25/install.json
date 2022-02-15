@@ -1,1 +1,1 @@
-{"provides":{"CGI::Compile":{"file":"lib/CGI/Compile.pm","version":"0.25"}},"dist":"CGI-Compile-0.25","version":"0.25","pathname":"R/RK/RKITOVER/CGI-Compile-0.25.tar.gz","name":"CGI::Compile","target":"CGI::Compile"}
+{"dist":"CGI-Compile-0.25","name":"CGI::Compile","target":"CGI::Compile","provides":{"CGI::Compile":{"version":"0.25","file":"lib/CGI/Compile.pm"}},"pathname":"R/RK/RKITOVER/CGI-Compile-0.25.tar.gz","version":"0.25"}

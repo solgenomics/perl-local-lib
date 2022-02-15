@@ -33,7 +33,7 @@
       "runtime" : {
          "requires" : {
             "Class::Accessor::Fast" : "0",
-            "ExtUtils::MakeMaker" : "7.34",
+            "ExtUtils::MakeMaker" : "7.44",
             "Path::Abstract" : "0",
             "Path::Class" : "0",
             "Scalar::Util" : "0",
@@ -52,5 +52,5 @@
       }
    },
    "version" : "0.072",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

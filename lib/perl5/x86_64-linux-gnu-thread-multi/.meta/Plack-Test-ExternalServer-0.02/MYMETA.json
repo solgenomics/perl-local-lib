@@ -1042,5 +1042,5 @@
       "Karen Etheridge <ether@cpan.org>"
    ],
    "x_permissions_from_module" : "Plack::Test::ExternalServer",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

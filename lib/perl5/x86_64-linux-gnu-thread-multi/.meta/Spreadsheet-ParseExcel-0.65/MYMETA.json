@@ -53,5 +53,5 @@
       "x_MailingList" : "http://groups.google.com/group/spreadsheet-parseexcel"
    },
    "version" : "0.65",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

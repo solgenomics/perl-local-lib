@@ -1,1 +1,1 @@
-{"dist":"Imager-QRCode-0.035","name":"Imager::QRCode","target":"Imager::QRCode","pathname":"K/KU/KURIHARA/Imager-QRCode-0.035.tar.gz","version":"0.035","provides":{"Imager::QRCode":{"file":"lib/Imager/QRCode.pm","version":"0.035"}}}
+{"pathname":"K/KU/KURIHARA/Imager-QRCode-0.035.tar.gz","version":"0.035","target":"Imager::QRCode","name":"Imager::QRCode","dist":"Imager-QRCode-0.035","provides":{"Imager::QRCode":{"version":"0.035","file":"lib/Imager/QRCode.pm"}}}

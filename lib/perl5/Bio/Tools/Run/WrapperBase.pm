@@ -85,7 +85,7 @@ Internal methods are usually preceded with a _
 
 
 package Bio::Tools::Run::WrapperBase;
-$Bio::Tools::Run::WrapperBase::VERSION = '1.7.7';
+$Bio::Tools::Run::WrapperBase::VERSION = '1.7.8';
 use strict;
 
 # Object preamble - inherits from Bio::Root::Root

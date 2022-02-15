@@ -82,5 +82,5 @@
       "Vincent Pit <perl@profvince.com>",
       "tokuhirom <tokuhirom@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

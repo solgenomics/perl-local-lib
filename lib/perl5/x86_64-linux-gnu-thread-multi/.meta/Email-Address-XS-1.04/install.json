@@ -1,1 +1,1 @@
-{"dist":"Email-Address-XS-1.04","target":"Email::Address::XS","provides":{"Email::Address::XS":{"version":"1.04","file":"lib/Email/Address/XS.pm"}},"name":"Email::Address::XS","version":"1.04","pathname":"P/PA/PALI/Email-Address-XS-1.04.tar.gz"}
+{"dist":"Email-Address-XS-1.04","version":"1.04","target":"Email::Address::XS","name":"Email::Address::XS","pathname":"P/PA/PALI/Email-Address-XS-1.04.tar.gz","provides":{"Email::Address::XS":{"file":"lib/Email/Address/XS.pm","version":"1.04"}}}

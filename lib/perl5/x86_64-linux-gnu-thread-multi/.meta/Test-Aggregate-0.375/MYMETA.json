@@ -74,5 +74,5 @@
       "Shlomi Fish <shlomif@cpan.org>",
       "Randy Stauner <rwstauner@cpan.org>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

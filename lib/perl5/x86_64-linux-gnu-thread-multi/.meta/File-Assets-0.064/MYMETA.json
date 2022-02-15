@@ -43,7 +43,7 @@
             "Digest::MD5" : "0",
             "Digest::SHA" : "0",
             "Directory::Scratch" : "0",
-            "ExtUtils::MakeMaker" : "7.34",
+            "ExtUtils::MakeMaker" : "7.44",
             "HTML::Declare" : "0",
             "IO::Scalar" : "0",
             "MIME::Types" : "0",
@@ -68,5 +68,5 @@
       }
    },
    "version" : "0.064",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

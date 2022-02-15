@@ -1,1 +1,1 @@
-{"provides":{"JSAN::ServerSide":{"version":"0.06","file":"lib/JSAN/ServerSide.pm"}},"dist":"JSAN-ServerSide-0.06","pathname":"D/DR/DROLSKY/JSAN-ServerSide-0.06.tar.gz","target":"JSAN::ServerSide","name":"JSAN::ServerSide","version":"0.06"}
+{"pathname":"D/DR/DROLSKY/JSAN-ServerSide-0.06.tar.gz","dist":"JSAN-ServerSide-0.06","version":"0.06","name":"JSAN::ServerSide","target":"JSAN::ServerSide","provides":{"JSAN::ServerSide":{"version":"0.06","file":"lib/JSAN/ServerSide.pm"}}}

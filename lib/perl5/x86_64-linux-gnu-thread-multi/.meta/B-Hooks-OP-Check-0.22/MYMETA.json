@@ -1191,6 +1191,6 @@
       "Zefram <zefram@fysh.org>",
       "Alexandr Ciornii <alexchorny@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_serialization_backend" : "JSON::PP version 4.04",
    "x_use_unsafe_inc" : 0
 }

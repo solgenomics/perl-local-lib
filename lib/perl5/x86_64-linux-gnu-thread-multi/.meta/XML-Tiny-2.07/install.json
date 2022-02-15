@@ -1,1 +1,1 @@
-{"target":"XML::Tiny","version":"2.07","dist":"XML-Tiny-2.07","pathname":"D/DC/DCANTRELL/XML-Tiny-2.07.tar.gz","name":"XML::Tiny","provides":{"XML::Tiny":{"file":"lib/XML/Tiny.pm","version":"2.07"}}}
+{"name":"XML::Tiny","pathname":"D/DC/DCANTRELL/XML-Tiny-2.07.tar.gz","dist":"XML-Tiny-2.07","version":"2.07","provides":{"XML::Tiny":{"file":"lib/XML/Tiny.pm","version":"2.07"}},"target":"XML::Tiny"}

@@ -1051,5 +1051,5 @@
       "Karen Etheridge <ether@cpan.org>"
    ],
    "x_permissions_from_module" : "Class::C3::Adopt::NEXT",
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

@@ -60,5 +60,5 @@
       "Graham Knop <haarg@haarg.org>",
       "David Steinbrunner <dsteinbrunner@pobox.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

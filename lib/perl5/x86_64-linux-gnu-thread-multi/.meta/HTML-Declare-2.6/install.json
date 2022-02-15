@@ -1,1 +1,1 @@
-{"pathname":"B/BI/BINGOS/HTML-Declare-2.6.tar.gz","dist":"HTML-Declare-2.6","target":"HTML::Declare","version":"2.6","provides":{"HTML::Declare":{"version":"2.6","file":"lib/HTML/Declare.pm"}},"name":"HTML::Declare"}
+{"name":"HTML::Declare","version":"2.6","pathname":"B/BI/BINGOS/HTML-Declare-2.6.tar.gz","dist":"HTML-Declare-2.6","provides":{"HTML::Declare":{"file":"lib/HTML/Declare.pm","version":"2.6"}},"target":"HTML::Declare"}

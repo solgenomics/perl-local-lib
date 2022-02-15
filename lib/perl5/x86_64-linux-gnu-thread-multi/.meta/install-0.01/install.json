@@ -1,1 +1,1 @@
-{"provides":{"install":{"version":"0.01","file":"lib/install.pm"}},"dist":"install-0.01","target":"install","name":"install","version":"0.01","pathname":"D/DA/DAGOLDEN/install-0.01.tar.gz"}
+{"provides":{"install":{"version":"0.01","file":"lib/install.pm"}},"name":"install","dist":"install-0.01","version":"0.01","pathname":"D/DA/DAGOLDEN/install-0.01.tar.gz","target":"install"}

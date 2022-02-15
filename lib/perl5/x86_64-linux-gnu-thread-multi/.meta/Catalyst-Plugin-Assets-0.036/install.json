@@ -1,1 +1,1 @@
-{"target":"Catalyst::Plugin::Assets","version":"0.036","dist":"Catalyst-Plugin-Assets-0.036","pathname":"R/RK/RKRIMEN/Catalyst-Plugin-Assets-0.036.tar.gz","name":"Catalyst::Plugin::Assets","provides":{"Catalyst::Plugin::Assets":{"version":"0.036","file":"lib/Catalyst/Plugin/Assets.pm"}}}
+{"name":"Catalyst::Plugin::Assets","version":"0.036","pathname":"R/RK/RKRIMEN/Catalyst-Plugin-Assets-0.036.tar.gz","dist":"Catalyst-Plugin-Assets-0.036","provides":{"Catalyst::Plugin::Assets":{"file":"lib/Catalyst/Plugin/Assets.pm","version":"0.036"}},"target":"Catalyst::Plugin::Assets"}

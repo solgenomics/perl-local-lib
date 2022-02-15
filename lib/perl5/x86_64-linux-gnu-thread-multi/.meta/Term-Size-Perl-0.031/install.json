@@ -1,1 +1,1 @@
-{"provides":{"Term::Size::Perl":{"file":"Perl.pm","version":"0.031"}},"dist":"Term-Size-Perl-0.031","version":"0.031","target":"Term::Size::Perl","pathname":"F/FE/FERREIRA/Term-Size-Perl-0.031.tar.gz","name":"Term::Size::Perl"}
+{"target":"Term::Size::Perl","version":"0.031","provides":{"Term::Size::Perl":{"version":"0.031","file":"Perl.pm"}},"pathname":"F/FE/FERREIRA/Term-Size-Perl-0.031.tar.gz","dist":"Term-Size-Perl-0.031","name":"Term::Size::Perl"}

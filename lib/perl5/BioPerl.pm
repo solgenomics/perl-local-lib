@@ -1,5 +1,5 @@
 package BioPerl;
-$BioPerl::VERSION = '1.7.7';
+$BioPerl::VERSION = '1.7.8';
 use utf8;
 use strict;
 use warnings;
@@ -25,7 +25,7 @@ BioPerl - Perl modules for biology
 
 =head1 VERSION
 
-version 1.7.7
+version 1.7.8
 
 =head1 SYNOPSIS
 

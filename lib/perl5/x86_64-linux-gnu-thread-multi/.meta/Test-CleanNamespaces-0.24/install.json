@@ -1,1 +1,1 @@
-{"target":"Test::CleanNamespaces","dist":"Test-CleanNamespaces-0.24","pathname":"E/ET/ETHER/Test-CleanNamespaces-0.24.tar.gz","version":"0.24","name":"Test::CleanNamespaces","provides":{"Test::CleanNamespaces":{"file":"lib/Test/CleanNamespaces.pm","version":"0.24"}}}
+{"target":"Test::CleanNamespaces","pathname":"E/ET/ETHER/Test-CleanNamespaces-0.24.tar.gz","version":"0.24","provides":{"Test::CleanNamespaces":{"file":"lib/Test/CleanNamespaces.pm","version":"0.24"}},"name":"Test::CleanNamespaces","dist":"Test-CleanNamespaces-0.24"}

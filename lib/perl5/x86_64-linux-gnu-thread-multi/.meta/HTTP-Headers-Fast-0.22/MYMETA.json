@@ -86,6 +86,6 @@
       "tokuhirom <tokuhirom@d0d07461-0603-4401-acd4-de1884942a52>",
       "yappo <yappo@d0d07461-0603-4401-acd4-de1884942a52>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_serialization_backend" : "JSON::PP version 4.04",
    "x_static_install" : 1
 }

@@ -1,1 +1,1 @@
-{"provides":{"Tie::Function":{"version":"0.02","file":"Function.pm"}},"version":"0.02","dist":"Tie-Function-0.02","pathname":"D/DA/DAVIDNICO/handy_tied_functions/Tie-Function-0.02.tar.gz","name":"Tie::Function","target":"Tie::Function"}
+{"name":"Tie::Function","provides":{"Tie::Function":{"file":"Function.pm","version":"0.02"}},"version":"0.02","target":"Tie::Function","dist":"Tie-Function-0.02","pathname":"D/DA/DAVIDNICO/handy_tied_functions/Tie-Function-0.02.tar.gz"}

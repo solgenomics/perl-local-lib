@@ -1,1 +1,1 @@
-{"dist":"Test-DiagINC-0.008","target":"Test::DiagINC","pathname":"D/DA/DAGOLDEN/Test-DiagINC-0.008.tar.gz","name":"Test::DiagINC","provides":{"Test::DiagINC":{"version":"0.008","file":"lib/Test/DiagINC.pm"}},"version":"0.008"}
+{"pathname":"D/DA/DAGOLDEN/Test-DiagINC-0.008.tar.gz","dist":"Test-DiagINC-0.008","version":"0.008","provides":{"Test::DiagINC":{"version":"0.008","file":"lib/Test/DiagINC.pm"}},"target":"Test::DiagINC","name":"Test::DiagINC"}

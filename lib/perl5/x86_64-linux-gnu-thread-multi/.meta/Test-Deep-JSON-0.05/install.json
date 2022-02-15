@@ -1,1 +1,1 @@
-{"pathname":"M/MO/MOTEMEN/Test-Deep-JSON-0.05.tar.gz","name":"Test::Deep::JSON","target":"Test::Deep::JSON","dist":"Test-Deep-JSON-0.05","version":"0.05","provides":{"Test::Deep::JSON":{"file":"lib/Test/Deep/JSON.pm","version":"0.05"}}}
+{"name":"Test::Deep::JSON","provides":{"Test::Deep::JSON":{"version":"0.05","file":"lib/Test/Deep/JSON.pm"}},"target":"Test::Deep::JSON","dist":"Test-Deep-JSON-0.05","version":"0.05","pathname":"M/MO/MOTEMEN/Test-Deep-JSON-0.05.tar.gz"}

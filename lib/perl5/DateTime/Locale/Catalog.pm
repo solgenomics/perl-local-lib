@@ -3,7 +3,7 @@ package DateTime::Locale::Catalog;
 use strict;
 use warnings;
 
-our $VERSION = '1.31';
+our $VERSION = '1.33';
 
 1;
 
@@ -21,7 +21,7 @@ DateTime::Locale::Catalog - Provides a catalog of all valid locale names
 
 =head1 VERSION
 
-version 1.31
+version 1.33
 
 =head1 DESCRIPTION
 
@@ -31,12 +31,12 @@ This module contains a list of all known locales.
 
 Any method taking locale code or name arguments should use one of the values
 listed below. Codes and names are case sensitive. The code starts with the
-ISO639-1 language code, and may also include information identifying any or
-all of territory, script, or variant.
+ISO639-1 language code, and may also include information identifying any or all
+of territory, script, or variant.
 
-Always select the closest matching locale - for example, French Canadians
-would choose C<fr-CA> over fr - and B<always> use locale codes in preference
-to names; locale codes offer greater compatibility when using localized third
+Always select the closest matching locale - for example, French Canadians would
+choose C<fr-CA> over fr - and B<always> use locale codes in preference to
+names; locale codes offer greater compatibility when using localized third
 party modules.
 
 The available locales are:
@@ -59,7 +59,7 @@ The available locales are:
  am               Amharic                                     አማርኛ
  am-ET            Amharic Ethiopia                            አማርኛ ኢትዮጵያ
  ar               Arabic                                      العربية
- ar-001           Arabic World                                العربية العالم
+ ar-001           Arabic world                                العربية العالم
  ar-AE            Arabic United Arab Emirates                 العربية الإمارات العربية المتحدة
  ar-BH            Arabic Bahrain                              العربية البحرين
  ar-DJ            Arabic Djibouti                             العربية جيبوتي
@@ -102,6 +102,7 @@ The available locales are:
  bas-CM           Basaa Cameroon                              Ɓàsàa Kàmɛ̀rûn
  be               Belarusian                                  беларуская
  be-BY            Belarusian Belarus                          беларуская Беларусь
+ be-tarask        Belarusian                                  беларуская
  bem              Bemba                                       Ichibemba
  bem-ZM           Bemba Zambia                                Ichibemba Zambia
  bez              Bena                                        Hibena
@@ -128,7 +129,7 @@ The available locales are:
  ca               Catalan                                     català
  ca-AD            Catalan Andorra                             català Andorra
  ca-ES            Catalan Spain                               català Espanya
- ca-ES-VALENCIA   Catalan Spain Valencian                     català Espanya valencià
+ ca-ES-valencia   Catalan Spain Valencian                     català Espanya valencià
  ca-FR            Catalan France                              català França
  ca-IT            Catalan Italy                               català Itàlia
  ccp              Chakma                                      𑄌𑄋𑄴𑄟𑄳𑄦
@@ -183,7 +184,7 @@ The available locales are:
  el-CY            Greek Cyprus                                Ελληνικά Κύπρος
  el-GR            Greek Greece                                Ελληνικά Ελλάδα
  en               English                                     English
- en-001           English World                               English World
+ en-001           English world                               English world
  en-150           English Europe                              English Europe
  en-AE            English United Arab Emirates                English United Arab Emirates
  en-AG            English Antigua & Barbuda                   English Antigua & Barbuda
@@ -280,7 +281,6 @@ The available locales are:
  en-UG            English Uganda                              English Uganda
  en-UM            English U.S. Outlying Islands               English U.S. Outlying Islands
  en-US            English United States                       English United States
- en-US-POSIX      English United States Computer              English United States Computer
  en-VC            English St. Vincent & Grenadines            English St. Vincent & Grenadines
  en-VG            English British Virgin Islands              English British Virgin Islands
  en-VI            English U.S. Virgin Islands                 English U.S. Virgin Islands
@@ -290,7 +290,7 @@ The available locales are:
  en-ZM            English Zambia                              English Zambia
  en-ZW            English Zimbabwe                            English Zimbabwe
  eo               Esperanto                                   esperanto
- eo-001           Esperanto World                             esperanto Mondo
+ eo-001           Esperanto world                             esperanto Mondo
  es               Spanish                                     español
  es-419           Spanish Latin America                       español Latinoamérica
  es-AR            Spanish Argentina                           español Argentina
@@ -451,7 +451,7 @@ The available locales are:
  hy               Armenian                                    հայերեն
  hy-AM            Armenian Armenia                            հայերեն Հայաստան
  ia               Interlingua                                 interlingua
- ia-001           Interlingua World                           interlingua Mundo
+ ia-001           Interlingua world                           interlingua Mundo
  id               Indonesian                                  Indonesia
  id-ID            Indonesian Indonesia                        Indonesia Indonesia
  ig               Igbo                                        Igbo
@@ -483,6 +483,8 @@ The available locales are:
  kde-TZ           Makonde Tanzania                            Chimakonde Tanzania
  kea              Kabuverdianu                                kabuverdianu
  kea-CV           Kabuverdianu Cape Verde                     kabuverdianu Kabu Verdi
+ kgp              Kaingang                                    kanhgág
+ kgp-BR           Kaingang Brazil                             kanhgág Mrasir
  khq              Koyra Chiini                                Koyra ciini
  khq-ML           Koyra Chiini Mali                           Koyra ciini Maali
  ki               Kikuyu                                      Gikuyu
@@ -562,8 +564,8 @@ The available locales are:
  mgh-MZ           Makhuwa-Meetto Mozambique                   Makua Umozambiki
  mgo              Metaʼ                                       metaʼ
  mgo-CM           Metaʼ Cameroon                              metaʼ Kamalun
- mi               Maori                                       te reo Māori
- mi-NZ            Maori New Zealand                           te reo Māori Aotearoa
+ mi               Māori                                       te reo Māori
+ mi-NZ            Māori New Zealand                           te reo Māori Aotearoa
  mk               Macedonian                                  македонски
  mk-MK            Macedonian North Macedonia                  македонски Северна Македонија
  ml               Malayalam                                   മലയാളം
@@ -615,6 +617,7 @@ The available locales are:
  nn-NO            Norwegian Nynorsk Norway                    norsk nynorsk Noreg
  nnh              Ngiemboon                                   Shwóŋò ngiembɔɔn
  nnh-CM           Ngiemboon Cameroon                          Shwóŋò ngiembɔɔn Kàmalûm
+ no               Norwegian                                   norsk
  nus              Nuer                                        Thok Nath
  nus-SS           Nuer South Sudan                            Thok Nath SS
  nyn              Nyankole                                    Runyankore
@@ -665,7 +668,6 @@ The available locales are:
  ro-RO            Romanian Romania                            română România
  rof              Rombo                                       Kihorombo
  rof-TZ           Rombo Tanzania                              Kihorombo Tanzania
- root             Root                                        root
  ru               Russian                                     русский
  ru-BY            Russian Belarus                             русский Беларусь
  ru-KG            Russian Kyrgyzstan                          русский Киргизия
@@ -688,6 +690,8 @@ The available locales are:
  sat-Olck-IN      Santali India Ol Chiki                      ᱥᱟᱱᱛᱟᱲᱤ ᱤᱱᱰᱤᱭᱟ ᱚᱞ ᱪᱤᱠᱤ
  sbp              Sangu                                       Ishisangu
  sbp-TZ           Sangu Tanzania                              Ishisangu Tansaniya
+ sc               Sardinian                                   sardu
+ sc-IT            Sardinian Italy                             sardu Itàlia
  sd               Sindhi                                      سنڌي
  sd-Arab          Sindhi Arabic                               سنڌي عربي
  sd-Arab-PK       Sindhi Pakistan Arabic                      سنڌي پاڪستان عربي
@@ -764,9 +768,9 @@ The available locales are:
  tg-TJ            Tajik Tajikistan                            тоҷикӣ Тоҷикистон
  th               Thai                                        ไทย
  th-TH            Thai Thailand                               ไทย ไทย
- ti               Tigrinya                                    ትግር
- ti-ER            Tigrinya Eritrea                            ትግር ኤርትራ
- ti-ET            Tigrinya Ethiopia                           ትግር ኢትዮጵያ
+ ti               Tigrinya                                    ትግርኛ
+ ti-ER            Tigrinya Eritrea                            ትግርኛ ኤርትራ
+ ti-ET            Tigrinya Ethiopia                           ትግርኛ ኢትዮጵያ
  tk               Turkmen                                     türkmen dili
  tk-TM            Turkmen Turkmenistan                        türkmen dili Türkmenistan
  to               Tongan                                      lea fakatonga
@@ -784,6 +788,7 @@ The available locales are:
  ug-CN            Uyghur China                                ئۇيغۇرچە جۇڭگو
  uk               Ukrainian                                   українська
  uk-UA            Ukrainian Ukraine                           українська Україна
+ und              Unknown language                            und
  ur               Urdu                                        اردو
  ur-IN            Urdu India                                  اردو بھارت
  ur-PK            Urdu Pakistan                               اردو پاکستان
@@ -814,10 +819,14 @@ The available locales are:
  yav              Yangben                                     nuasue
  yav-CM           Yangben Cameroon                            nuasue Kemelún
  yi               Yiddish                                     ייִדיש
- yi-001           Yiddish World                               ייִדיש וועלט
+ yi-001           Yiddish world                               ייִדיש וועלט
  yo               Yoruba                                      Èdè Yorùbá
  yo-BJ            Yoruba Benin                                Èdè Yorùbá Bɛ̀nɛ̀
  yo-NG            Yoruba Nigeria                              Èdè Yorùbá Nàìjíríà
+ yrl              Nheengatu                                   nheẽgatu
+ yrl-BR           Nheengatu Brazil                            nheẽgatu Brasiu
+ yrl-CO           Nheengatu Colombia                          ñengatú Kurũbiya
+ yrl-VE           Nheengatu Venezuela                         ñengatú Wenesuera
  yue              Cantonese                                   粵語
  yue-Hans         Cantonese Simplified                        粤语 简体
  yue-Hans-CN      Cantonese China Simplified                  粤语 中华人民共和国 简体
@@ -845,8 +854,6 @@ Bugs may be submitted at L<https://github.com/houseabsolute/DateTime-Locale/issu
 There is a mailing list available for users of this distribution,
 L<mailto:datetime@perl.org>.
 
-I am also usually active on IRC as 'autarch' on C<irc://irc.perl.org>.
-
 =head1 SOURCE
 
 The source code repository for DateTime-Locale can be found at L<https://github.com/houseabsolute/DateTime-Locale>.
@@ -857,7 +864,7 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2003 - 2020 by Dave Rolsky.
+This software is copyright (c) 2003 - 2021 by Dave Rolsky.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

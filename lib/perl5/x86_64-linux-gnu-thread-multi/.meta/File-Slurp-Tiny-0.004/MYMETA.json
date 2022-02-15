@@ -76,5 +76,5 @@
       "Leon Timmermans <fawaka@gmail.com>",
       "Matt Phillips <mattp@cpan.org>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001"
+   "x_serialization_backend" : "JSON::PP version 4.04"
 }

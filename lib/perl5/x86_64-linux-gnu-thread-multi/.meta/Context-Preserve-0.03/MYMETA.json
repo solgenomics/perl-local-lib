@@ -1175,7 +1175,7 @@
       "Karen Etheridge <ether@cpan.org>",
       "Jonathan Rockway <jon@jrock.us>"
    ],
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_serialization_backend" : "JSON::PP version 4.04",
    "x_static_install" : 1,
    "x_use_unsafe_inc" : 0
 }

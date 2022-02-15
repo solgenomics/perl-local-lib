@@ -1,1 +1,1 @@
-{"version":"0.07","name":"Math::Round","target":"Math::Round","dist":"Math-Round-0.07","pathname":"G/GR/GROMMEL/Math-Round-0.07.tar.gz","provides":{"Math::Round":{"version":"0.07","file":"Round.pm"}}}
+{"version":"0.07","target":"Math::Round","name":"Math::Round","provides":{"Math::Round":{"version":"0.07","file":"Round.pm"}},"pathname":"G/GR/GROMMEL/Math-Round-0.07.tar.gz","dist":"Math-Round-0.07"}

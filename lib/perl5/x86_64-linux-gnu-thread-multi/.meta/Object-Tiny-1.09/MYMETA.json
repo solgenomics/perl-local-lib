@@ -1051,6 +1051,6 @@
       "Steffen Mueller <smueller@cpan.org>"
    ],
    "x_generated_by_perl" : "v5.29.4",
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_serialization_backend" : "JSON::PP version 4.04",
    "x_use_unsafe_inc" : 0
 }

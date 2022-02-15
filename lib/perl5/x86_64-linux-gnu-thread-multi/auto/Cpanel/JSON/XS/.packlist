@@ -1,5 +1,5 @@
-/home/nmorales/cxgn/sgn/../perl-local-lib/bin/cpanel_json_xs
-/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/Cpanel/JSON/XS.pm
-/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/Cpanel/JSON/XS/Boolean.pm
-/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/Cpanel/JSON/XS/Type.pm
-/home/nmorales/cxgn/sgn/../perl-local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/Cpanel/JSON/XS/XS.so
+/home/production/cxgn/local-lib/bin/cpanel_json_xs
+/home/production/cxgn/local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/Cpanel/JSON/XS.pm
+/home/production/cxgn/local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/Cpanel/JSON/XS/Boolean.pm
+/home/production/cxgn/local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/Cpanel/JSON/XS/Type.pm
+/home/production/cxgn/local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/Cpanel/JSON/XS/XS.so

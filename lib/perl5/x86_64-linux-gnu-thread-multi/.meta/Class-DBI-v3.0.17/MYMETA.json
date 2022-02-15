@@ -43,6 +43,6 @@
    "release_status" : "stable",
    "version" : "v3.0.17",
    "x_installdirs" : "site",
-   "x_serialization_backend" : "JSON::PP version 2.97001",
+   "x_serialization_backend" : "JSON::PP version 4.04",
    "x_version_from" : "lib/Class/DBI.pm"
 }

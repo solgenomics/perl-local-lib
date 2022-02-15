@@ -1,1 +1,1 @@
-{"pathname":"W/WR/WRW/Barcode-Code128-2.21.tar.gz","dist":"Barcode-Code128-2.21","name":"Barcode::Code128","target":"Barcode::Code128","provides":{"Barcode::Code128":{"file":"lib/Barcode/Code128.pm","version":"2.21"}},"version":"2.21"}
+{"dist":"Barcode-Code128-2.21","version":"2.21","name":"Barcode::Code128","pathname":"W/WR/WRW/Barcode-Code128-2.21.tar.gz","provides":{"Barcode::Code128":{"version":"2.21","file":"lib/Barcode/Code128.pm"}},"target":"Barcode::Code128"}

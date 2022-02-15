@@ -1,1 +1,1 @@
-{"name":"String::CRC","dist":"String-CRC-1.0","pathname":"M/MU/MUIR/modules/String-CRC-1.0.tar.gz","version":"1","target":"String::CRC","provides":{"String::CRC":{"file":"CRC.pm","version":"1"}}}
+{"name":"String::CRC","pathname":"M/MU/MUIR/modules/String-CRC-1.0.tar.gz","target":"String::CRC","provides":{"String::CRC":{"file":"CRC.pm","version":"1"}},"dist":"String-CRC-1.0","version":"1"}

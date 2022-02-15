@@ -9,7 +9,7 @@ BEGIN { @JSON::ISA = 'Exporter' }
 @JSON::EXPORT = qw(from_json to_json jsonToObj objToJson encode_json decode_json);
 
 BEGIN {
-    $JSON::VERSION = '4.02';
+    $JSON::VERSION = '4.05';
     $JSON::DEBUG   = 0 unless (defined $JSON::DEBUG);
     $JSON::DEBUG   = $ENV{ PERL_JSON_DEBUG } if exists $ENV{ PERL_JSON_DEBUG };
 }
@@ -476,10 +476,6 @@ JSON - JSON (JavaScript Object Notation) encoder/decoder
  
  $pretty_printed = $json->pretty->encode( $perl_scalar ); # pretty-printing
 
-=head1 VERSION
-
-    4.02
-
 =head1 DESCRIPTION
 
 This module is a thin wrapper for L<JSON::XS>-compatible modules with a few
@@ -943,7 +939,7 @@ This setting has currently no effect on tied hashes.
     
     $enabled = $json->get_allow_nonref
 
-Unlike other boolean options, this opotion is enabled by default beginning
+Unlike other boolean options, this option is enabled by default beginning
 with version C<4.0>.
 
 If C<$enable> is true (or missing), then the C<encode> method can convert a
@@ -1595,7 +1591,7 @@ argument being the object to serialise, and the second argument being the
 constant string C<JSON> to distinguish it from other serialisers.
 
 The C<FREEZE> method can return any number of values (i.e. zero or
-more). These values and the paclkage/classname of the object will then be
+more). These values and the package/classname of the object will then be
 encoded as a tagged JSON value in the following format:
 
    ("classname")[FREEZE return values...]
