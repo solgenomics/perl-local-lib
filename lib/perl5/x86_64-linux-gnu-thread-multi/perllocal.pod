@@ -11378,3 +11378,69 @@ C<EXE_FILES: bin/extract_vba>
 
 =back
 
+=head2 Sat Feb 12 01:35:40 2022: C<Module> L<CryptX|CryptX>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/sgn/../local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.076>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sat Feb 12 01:35:42 2022: C<Module> L<Graphics::ColorUtils|Graphics::ColorUtils>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/sgn/../local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.17>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Sat Feb 12 01:36:23 2022: C<Module> L<Spreadsheet::ParseXLSX|Spreadsheet::ParseXLSX>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/sgn/../local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.27>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
