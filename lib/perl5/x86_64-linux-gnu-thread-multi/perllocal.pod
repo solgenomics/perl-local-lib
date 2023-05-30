@@ -10316,3 +10316,69 @@ C<EXE_FILES: bin/extract_vba>
 
 =back
 
+=head2 Tue May 23 18:52:31 2023: C<Module> L<MD5|MD5>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/sgn/../local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.03>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue May 23 18:52:31 2023: C<Module> L<Crypt::Passwd|Crypt::Passwd>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/sgn/../local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.03>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Tue May 23 18:53:04 2023: C<Module> L<Spreadsheet::XLSX|Spreadsheet::XLSX>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/sgn/../local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.17>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
