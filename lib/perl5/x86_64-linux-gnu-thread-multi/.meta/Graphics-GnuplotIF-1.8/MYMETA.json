@@ -1,0 +1,33 @@
+{
+   "abstract" : "A dynamic Perl interface to gnuplot",
+   "author" : [
+      "Dr.-Ing. Fritz Mehner <mehner.fritz@web.de>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Build version 0.4231",
+   "license" : [
+      "unknown"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "Graphics-GnuplotIF",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "inc"
+      ]
+   },
+   "prereqs" : {
+      "runtime" : {
+         "requires" : {
+            "Test::More" : 0,
+            "version" : 0
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "1.8",
+   "x_serialization_backend" : "JSON::PP version 4.04"
+}
