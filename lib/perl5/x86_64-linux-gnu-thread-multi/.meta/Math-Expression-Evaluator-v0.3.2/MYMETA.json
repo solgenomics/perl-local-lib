@@ -1,0 +1,52 @@
+{
+   "abstract" : "parses, compiles and evaluates mathematic expressions",
+   "author" : [
+      "Moritz Lenz"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Build version 0.4231",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "Math-Expression-Evaluator",
+   "prereqs" : {
+      "runtime" : {
+         "requires" : {
+            "Carp" : 0,
+            "Data::Dumper" : 0,
+            "Math::Trig" : 0,
+            "perl" : "5.006001"
+         }
+      }
+   },
+   "provides" : {
+      "Math::Expression::Evaluator" : {
+         "file" : "lib/Math/Expression/Evaluator.pm",
+         "version" : "v0.3.2"
+      },
+      "Math::Expression::Evaluator::Lexer" : {
+         "file" : "lib/Math/Expression/Evaluator/Lexer.pm"
+      },
+      "Math::Expression::Evaluator::Optimizer" : {
+         "file" : "lib/Math/Expression/Evaluator/Optimizer.pm"
+      },
+      "Math::Expression::Evaluator::Parser" : {
+         "file" : "lib/Math/Expression/Evaluator/Parser.pm"
+      },
+      "Math::Expression::Evaluator::Util" : {
+         "file" : "lib/Math/Expression/Evaluator/Util.pm"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://dev.perl.org/licenses/"
+      ]
+   },
+   "version" : "v0.3.2",
+   "x_serialization_backend" : "JSON::PP version 4.04"
+}
