@@ -1,10 +1,11 @@
 package Types::TypeTiny;
 
+use 5.008001;
 use strict;
 use warnings;
 
 our $AUTHORITY = 'cpan:TOBYINK';
-our $VERSION   = '1.012004';
+our $VERSION   = '2.004000';
 
 $VERSION =~ tr/_//d;
 
@@ -16,7 +17,7 @@ BEGIN {
 		'Type::Tiny::XS'->VERSION( '0.022' );
 		1;
 	}
-		? sub () { !!1 }
+		? eval "sub () { '$Type::Tiny::XS::VERSION' }"
 		: sub () { !!0 };
 }
 
@@ -83,7 +84,11 @@ sub meta {
 }
 
 sub type_names {
-	qw( CodeLike StringLike TypeTiny HashLike ArrayLike _ForeignTypeConstraint );
+	qw(
+		StringLike BoolLike
+		HashLike ArrayLike CodeLike
+		TypeTiny _ForeignTypeConstraint
+	);
 }
 
 sub has_type {
@@ -171,6 +176,7 @@ sub StringLike () {
 		inlined => sub {
 			qq/defined($_[1]) && !ref($_[1]) or Scalar::Util::blessed($_[1]) && ${\ +_get_check_overload_sub() }($_[1], q[""])/;
 		},
+		type_default => sub { return '' },
 	);
 	if ( __XS ) {
 		my $xsub     = Type::Tiny::XS::get_coderef_for( 'StringLike' );
@@ -207,9 +213,17 @@ sub HashLike (;@) {
 		inlined => sub {
 			qq/ref($_[1]) eq q[HASH] or Scalar::Util::blessed($_[1]) && ${\ +_get_check_overload_sub() }($_[1], q[\%{}])/;
 		},
+		type_default => sub { return {} },
 		constraint_generator => sub {
 			my $param = TypeTiny()->assert_coerce( shift );
 			my $check = $param->compiled_check;
+			if ( __XS ge '0.025' ) {
+				my $paramname = Type::Tiny::XS::is_known( $check );
+				my $xsub = defined($paramname)
+					? Type::Tiny::XS::get_coderef_for( "HashLike[$paramname]" )
+					: undef;
+				return $xsub if $xsub;
+			}
 			sub {
 				my %hash = %$_;
 				for my $key ( sort keys %hash ) {
@@ -221,8 +235,17 @@ sub HashLike (;@) {
 		inline_generator => sub {
 			my $param = TypeTiny()->assert_coerce( shift );
 			return unless $param->can_be_inlined;
+			my $check = $param->compiled_check;
+			my $xsubname;
+			if ( __XS ge '0.025' ) {
+				my $paramname = Type::Tiny::XS::is_known( $check );
+				$xsubname = defined($paramname)
+					? Type::Tiny::XS::get_subname_for( "HashLike[$paramname]" )
+					: undef;
+			}
 			sub {
 				my $var  = pop;
+				return "$xsubname($var)" if $xsubname && !$Type::Tiny::AvoidCallbacks;
 				my $code = sprintf(
 					'do { my $ok=1; my %%h = %%{%s}; for my $k (sort keys %%h) { ($ok=0,next) unless (%s) }; $ok }',
 					$var,
@@ -288,9 +311,17 @@ sub ArrayLike (;@) {
 		inlined => sub {
 			qq/ref($_[1]) eq q[ARRAY] or Scalar::Util::blessed($_[1]) && ${\ +_get_check_overload_sub() }($_[1], q[\@{}])/;
 		},
+		type_default => sub { return [] },
 		constraint_generator => sub {
 			my $param = TypeTiny()->assert_coerce( shift );
 			my $check = $param->compiled_check;
+			if ( __XS ge '0.025' ) {
+				my $paramname = Type::Tiny::XS::is_known( $check );
+				my $xsub = defined($paramname)
+					? Type::Tiny::XS::get_coderef_for( "ArrayLike[$paramname]" )
+					: undef;
+				return $xsub if $xsub;
+			}
 			sub {
 				my @arr = @$_;
 				for my $val ( @arr ) {
@@ -302,8 +333,17 @@ sub ArrayLike (;@) {
 		inline_generator => sub {
 			my $param = TypeTiny()->assert_coerce( shift );
 			return unless $param->can_be_inlined;
+			my $check = $param->compiled_check;
+			my $xsubname;
+			if ( __XS ge '0.025' ) {
+				my $paramname = Type::Tiny::XS::is_known( $check );
+				$xsubname = defined($paramname)
+					? Type::Tiny::XS::get_subname_for( "ArrayLike[$paramname]" )
+					: undef;
+			}
 			sub {
 				my $var  = pop;
+				return "$xsubname($var)" if $xsubname && !$Type::Tiny::AvoidCallbacks;
 				my $code = sprintf(
 					'do { my $ok=1; for my $v (@{%s}) { ($ok=0,next) unless (%s) }; $ok }',
 					$var,
@@ -372,6 +412,7 @@ sub CodeLike () {
 		inlined => sub {
 			qq/ref($_[1]) eq q[CODE] or Scalar::Util::blessed($_[1]) && ${\ +_get_check_overload_sub() }($_[1], q[\&{}])/;
 		},
+		type_default => sub { return sub {} },
 		library => __PACKAGE__,
 	);
 	if ( __XS ) {
@@ -396,6 +437,31 @@ sub CodeLike () {
 	}
 } #/ sub CodeLike
 
+sub BoolLike () {
+	return $cache{BoolLike} if $cache{BoolLike};
+	require Type::Tiny;
+	$cache{BoolLike} = "Type::Tiny"->new(
+		name       => "BoolLike",
+		constraint => sub {
+			!defined( $_ )
+				or !ref( $_ ) && ( $_ eq '' || $_ eq '0' || $_ eq '1' )
+				or blessed( $_ ) && _check_overload( $_, q[bool] )
+				or blessed( $_ ) && _check_overload( $_, q[0+] ) && do { my $n = sprintf('%d', $_); $n==0 or $n==1 };
+		},
+		inlined => sub {
+			qq/do {
+				local \$_ = $_;
+				!defined()
+					or !ref() && ( \$_ eq '' || \$_ eq '0' || \$_ eq '1' )
+					or Scalar::Util::blessed(\$_) && ${\ +_get_check_overload_sub() }(\$_, q[bool])
+					or Scalar::Util::blessed(\$_) && ${\ +_get_check_overload_sub() }(\$_, q[0+]) && do { my \$n = sprintf('%d', $_); \$n==0 or \$n==1 }
+			}/;
+		},
+		type_default => sub { return !!0 },
+		library => __PACKAGE__,
+	);
+} #/ sub BoolLike
+
 sub TypeTiny () {
 	return $cache{TypeTiny} if defined $cache{TypeTiny};
 	require Type::Tiny;
@@ -406,6 +472,7 @@ sub TypeTiny () {
 			my $var = $_[1];
 			"Scalar::Util::blessed($var) && $var\->isa(q[Type::Tiny])";
 		},
+		type_default => sub { require Types::Standard; return Types::Standard::Any() },
 		library         => __PACKAGE__,
 		_build_coercion => sub {
 			my $c = shift;
@@ -433,7 +500,7 @@ my %ttt_cache;
 sub _is_ForeignTypeConstraint {
 	my $t = @_ ? $_[0] : $_;
 	return !!1 if ref $t eq 'CODE';
-	if ( my $class = blessed $t) {
+	if ( my $class = blessed $t ) {
 		return !!0 if $class->isa( "Type::Tiny" );
 		return !!1 if $class->isa( "Moose::Meta::TypeConstraint" );
 		return !!1 if $class->isa( "MooseX::Types::TypeDecorator" );
@@ -461,6 +528,7 @@ sub to_TypeTiny {
 		return _TypeTinyFromMouse( $t )           if $class->isa( "Mouse::Meta::TypeConstraint" );
 		return _TypeTinyFromValidationClass( $t ) if $class->isa( "Validation::Class::Simple" );
 		return _TypeTinyFromValidationClass( $t ) if $class->isa( "Validation::Class" );
+		return $t->to_TypeTiny                    if $t->can( "DOES" ) && $t->DOES( "Type::Library::Compiler::TypeConstraint" ) && $t->can( "to_TypeTiny" );
 		return _TypeTinyFromGeneric( $t )         if $t->can( "check" );                            # i.e. Type::API::Constraint
 	} #/ if ( my $class = blessed...)
 	#>>>
@@ -766,6 +834,8 @@ Types::TypeTiny - type constraints used internally by Type::Tiny
 This module is covered by the
 L<Type-Tiny stability policy|Type::Tiny::Manual::Policies/"STABILITY">.
 
+The B<BoolLike> type is currently unstable.
+
 =head1 DESCRIPTION
 
 Dogfooding.
@@ -783,6 +853,24 @@ designed for use within Type::Tiny, may be more generally useful.
 B<< StringLike >>
 
 Accepts strings and objects overloading stringification.
+
+=item *
+
+B<< BoolLike >>
+
+Accepts undef, "", 0, 1; accepts any blessed object overloading "bool";
+accepts any blessed object overloading "0+" to return 0 or 1. (Needs to
+actually call the overloaded operation to check that.)
+
+Warning: an object which overloads "0+" without also turning on overload
+fallbacks may actually be useless as a practical boolean. But some common
+objects such as JSON::PP's booleans overload "0+" instead of overloading
+"bool" (thankfully with fallbacks enabled!) so we do need to support this.
+
+The intention of this type is to be a version of B<Bool> which also
+accepts common boolean objects such as L<JSON::PP::Boolean>. It is currently
+unstable and the exact definition of the type may change to better implement
+that intended functionality.
 
 =item *
 
@@ -831,23 +919,52 @@ Yes, the underscore is included.
 
 =item C<< to_TypeTiny($constraint) >>
 
-Promotes (or "demotes" if you prefer) a Moose::Meta::TypeConstraint object
-to a Type::Tiny object.
+Promotes (or "demotes" if you prefer) a "foreign" type constraint to a
+Type::Tiny object. Can handle:
 
-Can also handle L<Validation::Class> objects. Type constraints built from 
-Validation::Class objects deliberately I<ignore> field filters when they
-do constraint checking (and go to great lengths to do so); using filters for
-coercion only. (The behaviour of C<coerce> if we don't do that is just too
-weird!)
+=over
 
-Can also handle any object providing C<check> and C<get_message> methods.
-(This includes L<Mouse::Meta::TypeConstraint> objects.) If the object also
-provides C<has_coercion> and C<coerce> methods, these will be used too.
+=item *
 
-Can also handle coderefs (but not blessed coderefs or objects overloading
-C<< &{} >>). Coderefs are expected to return true iff C<< $_ >> passes the
-constraint. If C<< $_ >> fails the type constraint, they may either return
-false, or die with a helpful error message.
+Moose types (including L<Moose::Meta::TypeConstraint> objects and
+L<MooseX::Types::TypeDecorator> objects).
+
+=item *
+
+Mouse types (including L<Mouse::Meta::TypeConstraint> objects).
+
+=item *
+
+L<Validation::Class> and L<Validation::Class::Simple> objects.
+
+=item *
+
+Types built using L<Type::Library::Compiler>.
+
+=item *
+
+Any object which provides C<check> and C<get_message> methods.
+(This includes L<Specio> and L<Type::Nano> types.) If the object
+provides C<has_coercion> and L<coerce> methods, these will
+be used to handle quoting. If the object provides C<can_be_inlined>
+and C<inline_check> methods, these will be used to handling inlining.
+If the object provides a C<name> method, this will be assumed to
+return the type name.
+
+=item *
+
+Coderefs (but not blessed coderefs or objects overloading C<< &{} >>
+unless they provide the methods described above!) Coderefs are expected
+to return true iff C<< $_ >> passes the constraint. If C<< $_ >> fails
+the type constraint, they may either return false, or die with a helpful
+error message.
+
+=item *
+
+L<Sub::Quote>-enabled coderefs. These are handled the same way as above,
+but Type::Tiny will consult Sub::Quote to determine if they can be inlined.
+
+=back
 
 =back
 
@@ -889,7 +1006,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

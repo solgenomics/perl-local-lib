@@ -1,18 +1,17 @@
 package Types::Standard;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
 	eval { require re };
-	if ( $] < 5.008 ) { require Devel::TypeTiny::Perl56Compat }
 	if ( $] < 5.010 ) { require Devel::TypeTiny::Perl58Compat }
 }
 
 BEGIN {
 	$Types::Standard::AUTHORITY = 'cpan:TOBYINK';
-	$Types::Standard::VERSION   = '1.012004';
+	$Types::Standard::VERSION   = '2.004000';
 }
 
 $Types::Standard::VERSION =~ tr/_//d;
@@ -21,7 +20,8 @@ use Type::Library -base;
 
 our @EXPORT_OK = qw( slurpy );
 
-use Scalar::Util qw( blessed looks_like_number );
+use Eval::TypeTiny  qw( set_subname );
+use Scalar::Util    qw( blessed looks_like_number );
 use Type::Tiny      ();
 use Types::TypeTiny ();
 
@@ -123,14 +123,16 @@ my $add_core_type = sub {
 		};
 	} #/ if ( defined( $xsubname...))
 	
-	$meta->add_type( $typedef );
+	@_ = ( $meta, $typedef );
+	goto \&Type::Library::add_type;
 };
 
 my $maybe_load_modules = sub {
 	my $code = pop;
 	if ( $Type::Tiny::AvoidCallbacks ) {
 		$code = sprintf(
-			'do { package Type::Tiny; %s; %s }',
+			'do { %s %s; %s }',
+			$Type::Tiny::SafePackage,
 			join( '; ', map "use $_ ()", @_ ),
 			$code,
 		);
@@ -158,8 +160,6 @@ my $meta = __PACKAGE__->meta;
 	}
 	Types::Standard::_Stringable->Type::Tiny::_install_overloads(
 		q[""] => sub { $_[0]{text} ||= $_[0]{code}->() } );
-		
-	my $subname;
 	
 	sub LazyLoad ($$) {
 		bless \@_, 'Types::Standard::LazyLoad';
@@ -179,15 +179,10 @@ my $meta = __PACKAGE__->meta;
 			}
 			my $mm = $type->{my_methods} || {};
 			for my $key ( keys %$mm ) {
-				$subname =
-					eval   { require Sub::Util } ? \&Sub::Util::set_subname
-					: eval { require Sub::Name } ? \&Sub::Name::subname
-					: 0
-					if not defined $subname;
 				next unless ref( $mm->{$key} ) eq 'Types::Standard::LazyLoad';
 				my $f = $mm->{$key}[1];
 				$mm->{$key} = $class->can( "__$f" );
-				$subname and $subname->(
+				set_subname(
 					sprintf( "%s::my_%s", $type->qualified_name, $key ),
 					$mm->{$key},
 				);
@@ -211,6 +206,7 @@ my $_any = $meta->$add_core_type(
 		name            => "Any",
 		inlined         => sub { "!!1" },
 		complement_name => 'None',
+		type_default    => sub { return undef; },
 	}
 );
 
@@ -232,6 +228,7 @@ my $_bool = $meta->$add_core_type(
 		inlined => sub {
 			"!ref $_[1] and (!defined $_[1] or $_[1] eq q() or $_[1] eq '0' or $_[1] eq '1')";
 		},
+		type_default => sub { return !!0; },
 	}
 );
 
@@ -243,6 +240,7 @@ my $_undef = $meta->$add_core_type(
 		parent     => $_item,
 		constraint => sub { !defined $_ },
 		inlined    => sub { "!defined($_[1])" },
+		type_default => sub { return undef; },
 	}
 );
 
@@ -275,10 +273,11 @@ my $_str = $meta->$add_core_type(
 		constraint => sub {
 			ref( \$_ ) eq 'SCALAR' or ref( \( my $val = $_ ) ) eq 'SCALAR';
 		},
-		inlined => sub {
+		inlined    => sub {
 			"defined($_[1]) and do { ref(\\$_[1]) eq 'SCALAR' or ref(\\(my \$val = $_[1])) eq 'SCALAR' }";
 		},
-		sorter => sub { $_[0] cmp $_[1] }
+		sorter     => sub { $_[0] cmp $_[1] },
+		type_default => sub { return ''; },
 	}
 );
 
@@ -295,7 +294,8 @@ my $_laxnum = $meta->add_type(
 				: "defined($_[1]) && !ref($_[1]) && Scalar::Util::looks_like_number($_[1]) && ref(\\($_[1])) ne 'GLOB'"
 			);
 		},
-		sorter => sub { $_[0] <=> $_[1] }
+		sorter     => sub { $_[0] <=> $_[1] },
+		type_default => sub { return 0; },
 	}
 );
 
@@ -315,7 +315,7 @@ my $_strictnum = $meta->add_type(
 					\z/x
 				);
 		},
-		inlined => sub {
+		inlined    => sub {
 			'my $val = '
 				. $_[1] . ';'
 				. Value()->inline_check( '$val' )
@@ -327,7 +327,8 @@ my $_strictnum = $meta->add_type(
 			(?:[Ee](?:[+-]?[0-9]+))?          # matches E1 or e1 or e-1 or e+1 etc
 		\z/x ); '
 		},
-		sorter => sub { $_[0] <=> $_[1] }
+		sorter     => sub { $_[0] <=> $_[1] },
+		type_default => sub { return 0; },
 	}
 );
 
@@ -346,6 +347,7 @@ $meta->$add_core_type(
 		inlined    => sub {
 			"do { my \$tmp = $_[1]; defined(\$tmp) and !ref(\$tmp) and \$tmp =~ /\\A-?[0-9]+\\z/ }";
 		},
+		type_default => sub { return 0; },
 	}
 );
 
@@ -435,6 +437,7 @@ $meta->$add_core_type(
 				? "Ref::Util::XS::is_plain_coderef($_[1])"
 				: "ref($_[1]) eq 'CODE'";
 		},
+		type_default => sub { return sub {}; },
 	}
 );
 
@@ -445,13 +448,14 @@ my $_regexp = $meta->$add_core_type(
 		constraint => sub {
 			ref( $_ ) && !!re::is_regexp( $_ ) or blessed( $_ ) && $_->isa( 'Regexp' );
 		},
-		inlined => sub {
+		inlined    => sub {
 			my $v = $_[1];
 			$maybe_load_modules->(
 				qw/ Scalar::Util re /,
 				"ref($v) && !!re::is_regexp($v) or Scalar::Util::blessed($v) && $v\->isa('Regexp')"
 			);
 		},
+		type_default => sub { return qr//; },
 	}
 );
 
@@ -500,6 +504,11 @@ my $_arr = $meta->$add_core_type(
 		inline_generator     => LazyLoad( ArrayRef => 'inline_generator' ),
 		deep_explanation     => LazyLoad( ArrayRef => 'deep_explanation' ),
 		coercion_generator   => LazyLoad( ArrayRef => 'coercion_generator' ),
+		type_default         => sub { return []; },
+		type_default_generator => sub {
+			return $Type::Tiny::parameterize_type->type_default if @_ < 2;
+			return undef;
+		},
 	}
 );
 
@@ -517,6 +526,11 @@ my $_hash = $meta->$add_core_type(
 		inline_generator     => LazyLoad( HashRef => 'inline_generator' ),
 		deep_explanation     => LazyLoad( HashRef => 'deep_explanation' ),
 		coercion_generator   => LazyLoad( HashRef => 'coercion_generator' ),
+		type_default         => sub { return {}; },
+		type_default_generator => sub {
+			return $Type::Tiny::parameterize_type->type_default if @_ < 2;
+			return undef;
+		},
 		my_methods           => {
 			hashref_allows_key   => LazyLoad( HashRef => 'hashref_allows_key' ),
 			hashref_allows_value => LazyLoad( HashRef => 'hashref_allows_value' ),
@@ -534,6 +548,7 @@ $meta->$add_core_type(
 		inline_generator     => LazyLoad( ScalarRef => 'inline_generator' ),
 		deep_explanation     => LazyLoad( ScalarRef => 'deep_explanation' ),
 		coercion_generator   => LazyLoad( ScalarRef => 'coercion_generator' ),
+		type_default         => sub { my $x; return \$x; },
 	}
 );
 
@@ -623,6 +638,10 @@ $meta->$add_core_type(
 			return unless $param->has_coercion;
 			return $param->coercion;
 		},
+		type_default       => sub { return undef; },
+		type_default_generator => sub {
+			$_[0]->type_default || $Type::Tiny::parameterize_type->type_default ;
+		},
 	}
 );
 
@@ -637,6 +656,9 @@ my $_map = $meta->$add_core_type(
 		my_methods           => {
 			hashref_allows_key   => LazyLoad( Map => 'hashref_allows_key' ),
 			hashref_allows_value => LazyLoad( Map => 'hashref_allows_value' ),
+		},
+		type_default_generator => sub {
+			return $Type::Tiny::parameterize_type->type_default;
 		},
 	}
 );
@@ -678,12 +700,81 @@ my $_Optional = $meta->add_type(
 			return unless $param->has_coercion;
 			return $param->coercion;
 		},
+		type_default_generator => sub {
+			return $_[0]->type_default;
+		},
+	}
+);
+
+my $_slurpy;
+$_slurpy = $meta->add_type(
+	{
+		name                 => "Slurpy",
+		slurpy               => 1,
+		parent               => $_item,
+		constraint_generator => sub {
+			my $self  = $_slurpy;
+			my $param = @_ ? Types::TypeTiny::to_TypeTiny(shift) : $_any;
+			Types::TypeTiny::is_TypeTiny( $param )
+				or _croak(
+				"Parameter to Slurpy[`a] expected to be a type constraint; got $param" );
+			
+			return $self->create_child_type(
+				slurpy          => 1,
+				display_name    => $self->name_generator->( $self, $param ),
+				parameters      => [ $param ],
+				constraint      => sub { $param->check( $_[0] ) },
+				type_default    => $param->type_default,
+				_build_coercion => sub {
+					my $coercion = shift;
+					$coercion->add_type_coercions( @{ $param->coercion->type_coercion_map } )
+						if $param->has_coercion;
+					$coercion->freeze;
+				},
+				$param->can_be_inlined
+					? ( inlined => sub { $param->inline_check( $_[1] ) } )
+					: (),
+			);
+		},
+		deep_explanation => sub {
+			my ( $type, $value, $varname ) = @_;
+			my $param = $type->parameters->[0];
+			return [
+				sprintf( '%s is slurpy', $varname ),
+				@{ $param->validate_explain( $value, $varname ) },
+			];
+		},
+		my_methods => {
+			'unslurpy' => sub {
+				my $self  = shift;
+				$self->{_my_unslurpy} ||= $self->find_parent(
+					sub { $_->parent->{uniq} == $_slurpy->{uniq} }
+				)->type_parameter;
+			},
+			'slurp_into' => sub {
+				my $self  = shift;
+				my $parameters = $self->find_parent(
+					sub { $_->parent->{uniq} == $_slurpy->{uniq} }
+				)->parameters;
+				if ( $parameters->[1] ) {
+					return $parameters->[1];
+				}
+				my $constraint = $parameters->[0];
+				return 'HASH'
+					if $constraint->is_a_type_of( HashRef() )
+					or $constraint->is_a_type_of( Map() )
+					or $constraint->is_a_type_of( Dict() );
+				return 'ARRAY';
+			},
+		},
 	}
 );
 
 sub slurpy {
 	my $t = shift;
-	wantarray ? ( +{ slurpy => $t }, @_ ) : +{ slurpy => $t };
+	my $s = $_slurpy->of( $t );
+	$s->{slurpy} ||= 1;
+	wantarray ? ( $s, @_ ) : $s;
 }
 
 $meta->$add_core_type(
@@ -692,10 +783,7 @@ $meta->$add_core_type(
 		parent         => $_arr,
 		name_generator => sub {
 			my ( $s, @a ) = @_;
-			sprintf(
-				'%s[%s]', $s, join q[,],
-				map { ref( $_ ) eq "HASH" ? sprintf( "slurpy %s", $_->{slurpy} ) : $_ } @a
-			);
+			sprintf( '%s[%s]', $s, join q[,], @a );
 		},
 		constraint_generator => LazyLoad( Tuple => 'constraint_generator' ),
 		inline_generator     => LazyLoad( Tuple => 'inline_generator' ),
@@ -725,12 +813,16 @@ $meta->add_type(
 		parent         => $_hash,
 		name_generator => sub {
 			my ( $s, @p ) = @_;
-			my $l = ref( $p[-1] ) eq q(HASH) ? pop( @p )->{slurpy} : undef;
+			my $l = @p
+				&& Types::TypeTiny::is_TypeTiny( $p[-1] )
+				&& $p[-1]->is_strictly_a_type_of( Types::Standard::Slurpy() )
+				? pop(@p)
+				: undef;
 			my %a = @p;
 			sprintf(
 				'%s[%s%s]', $s,
 				join( q[,], map sprintf( "%s=>%s", $_, $a{$_} ), sort keys %a ),
-				$l ? ",slurpy $l" : ''
+				$l ? ",$l" : ''
 			);
 		},
 		constraint_generator => LazyLoad( Dict => 'constraint_generator' ),
@@ -828,6 +920,7 @@ $meta->add_type(
 			push @code, '$ok }';
 			return ( undef, join( q( ), @code ) );
 		},
+		type_default => sub { return [] },
 	}
 );
 
@@ -965,6 +1058,7 @@ $meta->add_type(
 				$coercion ? ( coercion => $coercion ) : (),
 			);
 		},
+		type_default => undef,
 	}
 );
 
@@ -1061,11 +1155,13 @@ Types::Standard - bundled set of built-in types for Type::Tiny
    );
    
    sub add_child {
-     state $check = compile( Object, Object );  # method signature
+     state $check = signature(
+       method     => Object,
+       positional => [ Object ],
+     );                                         # method signature
+     my ( $self, $child ) = $check->( @_ );     # unpack @_
      
-     my ($self, $child) = $check->(@_);         # unpack @_
      push @{ $self->children }, $child;
-     
      return $self;
    }
  }
@@ -1132,6 +1228,8 @@ B<< Bool >>
 
 Values that are reasonable booleans. Accepts 1, 0, the empty string and
 undef.
+
+Other customers also bought: B<< BoolLike >> from L<Types::TypeTiny>.
 
 =item *
 
@@ -1295,7 +1393,7 @@ A blessed object.
 
 =head2 Structured
 
-OK, so I stole some ideas from L<MooseX::Types::Structured>.
+Okay, so I stole some ideas from L<MooseX::Types::Structured>.
 
 =over
 
@@ -1343,13 +1441,13 @@ L<Type::Params> for a similar purpose to how it's used in B<Tuple>.)
 
 =back
 
-This module also exports a C<slurpy> function, which can be used as
-follows.
+This module also exports a B<Slurpy> parameterized type, which can be
+used as follows.
 
 It can cause additional trailing values in a B<Tuple> to be slurped
 into a structure and validated. For example, slurping into an arrayref:
 
-   my $type = Tuple[Str, slurpy ArrayRef[Int]];
+   my $type = Tuple[ Str, Slurpy[ ArrayRef[Int] ] ];
    
    $type->( ["Hello"] );                # ok
    $type->( ["Hello", 1, 2, 3] );       # ok
@@ -1357,7 +1455,7 @@ into a structure and validated. For example, slurping into an arrayref:
 
 Or into a hashref:
 
-   my $type2 = Tuple[Str, slurpy Map[Int, RegexpRef]];
+   my $type2 = Tuple[ Str, Slurpy[ Map[Int, RegexpRef] ] ];
    
    $type2->( ["Hello"] );                               # ok
    $type2->( ["Hello", 1, qr/one/i, 2, qr/two/] );      # ok
@@ -1365,21 +1463,27 @@ Or into a hashref:
 It can cause additional values in a B<Dict> to be slurped into a
 hashref and validated:
 
-   my $type3 = Dict[ values => ArrayRef, slurpy HashRef[Str] ];
+   my $type3 = Dict[ values => ArrayRef, Slurpy[ HashRef[Str] ] ];
    
    $type3->( { values => [] } );                        # ok
    $type3->( { values => [], name => "Foo" } );         # ok
    $type3->( { values => [], name => [] } );            # not ok
 
-In either B<Tuple> or B<Dict>, B<< slurpy Any >> can be used to indicate
+In either B<Tuple> or B<Dict>, B<< Slurpy[Any] >> can be used to indicate
 that additional values are acceptable, but should not be constrained in
 any way. 
 
-B<< slurpy Any >> is an optimized code path. Although the following are
+B<< Slurpy[Any] >> is an optimized code path. Although the following are
 essentially equivalent checks, the former should run a lot faster:
 
-   Tuple[Int, slurpy Any]
-   Tuple[Int, slurpy ArrayRef]
+   Tuple[ Int, Slurpy[Any] ]
+   Tuple[ Int, Slurpy[ArrayRef] ]
+
+A function C<< slurpy($type) >> is also exported which was historically
+how slurpy types were created.
+
+Outside of B<Dict> and B<Tuple>, B<< Slurpy[Foo] >> should just act the
+same as B<Foo>. But don't do that.
 
 =begin trustme
 
@@ -1389,7 +1493,7 @@ essentially equivalent checks, the former should run a lot faster:
 
 =head2 Objects
 
-OK, so I stole some ideas from L<MooX::Types::MooseLike::Base>.
+Okay, so I stole some ideas from L<MooX::Types::MooseLike::Base>.
 
 =over
 
@@ -1582,7 +1686,7 @@ C<< [1,{},2] >> and C<< [1,{},2,[]] >>.
 
 I think you understand B<CycleTuple> already.
 
-Currently B<Optional> and C<slurpy> parameters are forbidden. There are
+Currently B<Optional> and B<Slurpy> parameters are forbidden. There are
 fairly limited use cases for them, and it's not exactly clear what they
 should mean.
 
@@ -1608,7 +1712,7 @@ strings, the 1st, 4th, 7th, etc values are integers, and the 2nd,
 
 =head2 Coercions
 
-Most of the types in this type library have no coercions by default.
+Most of the types in this type library have no coercions.
 The exception is B<Bool> as of Types::Standard 1.003_003, which coerces
 from B<Any> via C<< !!$_ >>.
 
@@ -1738,7 +1842,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

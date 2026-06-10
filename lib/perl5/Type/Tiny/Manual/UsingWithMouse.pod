@@ -55,7 +55,7 @@ others!)
 Type::Tiny provides automatic deep coercions, so if type B<Xyz> has a coercion,
 the following should "just work":
 
-  isa xyzlist => ( is => 'ro', isa => ArrayRef[Xyz], coerce => 1 );
+  has xyzlist => ( is => 'ro', isa => ArrayRef[Xyz], coerce => 1 );
 
 =item *
 
@@ -203,10 +203,11 @@ Here's your next step:
 
 =over
 
-=item * L<Type::Tiny::Manual::UsingWithClassTiny>
+=item * L<Type::Tiny::Manual::UsingWithMite>
 
-Including how to Type::Tiny in your object's C<BUILD> method, and
-third-party shims between Type::Tiny and Class::Tiny.
+How to use Type::Tiny with Mite, including how to write an entire Perl
+project using clean Moose-like code and no non-core dependencies.
+(Not even dependencies on Mite or Type::Tiny!)
 
 =back
 
@@ -216,7 +217,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

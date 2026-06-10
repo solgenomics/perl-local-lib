@@ -1,12 +1,12 @@
 package Type::Coercion;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
 	$Type::Coercion::AUTHORITY = 'cpan:TOBYINK';
-	$Type::Coercion::VERSION   = '1.012004';
+	$Type::Coercion::VERSION   = '2.004000';
 }
 
 $Type::Coercion::VERSION =~ tr/_//d;
@@ -469,14 +469,14 @@ sub _reparameterize {
 sub isa {
 	my $self = shift;
 	
-	if ( $INC{"Moose.pm"}
+	if ( $INC{"Moose/Meta/TypeCoercion.pm"}
 		and blessed( $self )
 		and $_[0] eq 'Moose::Meta::TypeCoercion' )
 	{
 		return !!1;
 	}
 	
-	if ( $INC{"Moose.pm"}
+	if ( $INC{"Moose/Meta/TypeCoercion.pm"}
 		and blessed( $self )
 		and $_[0] =~ /^(Class::MOP|MooseX?)::/ )
 	{
@@ -493,7 +493,7 @@ sub can {
 	my $can = $self->SUPER::can( @_ );
 	return $can if $can;
 	
-	if ( $INC{"Moose.pm"}
+	if ( $INC{"Moose/Meta/TypeCoercion.pm"}
 		and blessed( $self )
 		and my $method = $self->moose_coercion->can( @_ ) )
 	{
@@ -508,7 +508,7 @@ sub AUTOLOAD {
 	my ( $m ) = ( our $AUTOLOAD =~ /::(\w+)$/ );
 	return if $m eq 'DESTROY';
 	
-	if ( $INC{"Moose.pm"}
+	if ( $INC{"Moose/Meta/TypeCoercion.pm"}
 		and blessed( $self )
 		and my $method = $self->moose_coercion->can( $m ) )
 	{
@@ -924,7 +924,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

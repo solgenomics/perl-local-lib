@@ -1,12 +1,12 @@
 package Type::Utils;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
 	$Type::Utils::AUTHORITY = 'cpan:TOBYINK';
-	$Type::Utils::VERSION   = '1.012004';
+	$Type::Utils::VERSION   = '2.004000';
 }
 
 $Type::Utils::VERSION =~ tr/_//d;
@@ -90,7 +90,18 @@ sub extends {
 				my $specio = $types->{$name};
 				my $tt     = Types::TypeTiny::to_TypeTiny( $specio );
 				$caller->add_type(
-					$tt->create_child_type( library => $caller, name => $name ) );
+					$tt->create_child_type( library => $caller, name => $name )
+				);
+			}
+		}
+		elsif ( $lib->isa( 'Exporter' )
+		and my $types = do { no strict 'refs'; ${"$lib\::EXPORT_TAGS"}{'types'} } ) {
+			for my $name ( @$types ) {
+				my $obj = $lib->$name;
+				my $tt  = Types::TypeTiny::to_TypeTiny( $obj );
+				$caller->add_type(
+					$tt->create_child_type( library => $caller, name => $name )
+				);
 			}
 		}
 		else {
@@ -141,8 +152,14 @@ sub declare {
 		$type = $bless->new( %opts );
 	}
 	
-	if ( $caller->isa( "Type::Library" ) ) {
-		$caller->meta->add_type( $type ) unless $type->is_anon;
+	if ( not $type->is_anon ) {
+		
+		$caller->meta->add_type( $type )
+			if $caller->isa( 'Type::Library' );
+		
+		$INC{'Type/Registry.pm'}
+			? 'Type::Registry'->for_class( $caller )->add_type( $type, $opts{name} )
+			: ( $Type::Registry::DELAYED{$caller}{$opts{name}} = $type );
 	}
 	
 	return $type;
@@ -375,9 +392,13 @@ sub match_on_type {
 } #/ sub match_on_type
 
 sub compile_match_on_type {
-	my @code = 'sub { local $_ = $_[0]; ';
-	my @checks;
-	my @actions;
+	require Eval::TypeTiny::CodeAccumulator;
+	my $coderef = 'Eval::TypeTiny::CodeAccumulator'->new(
+		description => 'compiled match',
+	);
+	$coderef->add_line( 'sub {' );
+	$coderef->increase_indent;
+	$coderef->add_line( 'local $_ = $_[0];' );
 	
 	my $els = '';
 	
@@ -393,38 +414,49 @@ sub compile_match_on_type {
 		}
 		
 		if ( $type->can_be_inlined ) {
-			push @code, sprintf( '%sif (%s)', $els, $type->inline_check( '$_' ) );
+			$coderef->add_line( sprintf(
+				'%sif ( %s ) {',
+				$els,
+				$type->inline_check( '$_' ),
+			) );
 		}
 		else {
-			push @checks, $type;
-			push @code,   sprintf( '%sif ($checks[%d]->check($_))', $els, $#checks );
+			my $varname = $coderef->add_variable( '$type', \$type );
+			$coderef->add_line( sprintf(
+				'%sif ( %s->check($_) ) {',
+				$els,
+				$varname,
+			) );
 		}
+		$coderef->increase_indent;
 		
 		$els = 'els';
 		
 		if ( Types::TypeTiny::is_StringLike( $code ) ) {
-			push @code, sprintf( '  { %s }', $code );
+			$coderef->add_line( $code );
 		}
 		else {
 			Types::TypeTiny::assert_CodeLike( $code );
-			push @actions, $code;
-			push @code,    sprintf( '  { $actions[%d]->(@_) }', $#actions );
+			my $varname = $coderef->add_variable( '$action', \$code );
+			$coderef->add_line( sprintf(
+				'%s->( @_ )',
+				$varname,
+			) );
 		}
+		$coderef->decrease_indent;
+		$coderef->add_line( '}' );
 	} #/ while ( @_ )
 	
-	push @code, 'else',
-		'  { Type::Utils::_croak("No cases matched for %s", Type::Tiny::_dd($_[0])) }';
-		
-	push @code, '}';    # /sub
+	$coderef->add_line( 'else {' );
+	$coderef->increase_indent;
+	$coderef->add_line( 'Type::Utils::_croak( "No cases matched for %s", Type::Tiny::_dd( $_ ) );' );
+	$coderef->decrease_indent;
+	$coderef->add_line( '}' );
 	
-	require Eval::TypeTiny;
-	return Eval::TypeTiny::eval_closure(
-		source      => \@code,
-		environment => {
-			'@actions' => \@actions,
-			'@checks'  => \@checks,
-		},
-	);
+	$coderef->decrease_indent;
+	$coderef->add_line( '}' );
+	
+	return $coderef->compile;
 } #/ sub compile_match_on_type
 
 sub classifier {
@@ -471,7 +503,7 @@ sub classifier {
 	sub lookup_via_moose {
 		my $self = shift;
 		
-		if ( $INC{'Moose.pm'} ) {
+		if ( $INC{'Moose/Meta/TypeConstraint.pm'} ) {
 			require Moose::Util::TypeConstraints;
 			require Types::TypeTiny;
 			my $r = Moose::Util::TypeConstraints::find_type_constraint( $_[0] );
@@ -517,7 +549,7 @@ sub classifier {
 		
 		my $meta;
 		if ( defined $self->{"~~chained"} ) {
-			$meta ||= Moose::Util::find_meta( $self->{"~~chained"} ) if $INC{'Moose.pm'};
+			$meta ||= Moose::Util::find_meta( $self->{"~~chained"} ) if $INC{'Moose/Util.pm'};
 			$meta ||= Mouse::Util::find_meta( $self->{"~~chained"} ) if $INC{'Mouse.pm'};
 		}
 		
@@ -692,9 +724,10 @@ specify the parent type (if any) and (possibly) refine its definition.
    my $EvenInt = declare as Int, where { $_ % 2 == 0 };
 
 I<< NOTE: >>
-If the caller package inherits from L<Type::Library> then any non-anonymous
-types declared in the package will be automatically installed into the
-library.
+Named types will be automatically added to the caller's type registry.
+(See L<Type::Registry>.) If the caller package inherits from L<Type::Library>
+named types will also be automatically installed into the library and
+made available as exports.
 
 Hidden gem: if you're inheriting from a type constraint that includes some
 coercions, you can include C<< coercion => 1 >> in the C<< %options >> hash
@@ -1149,7 +1182,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

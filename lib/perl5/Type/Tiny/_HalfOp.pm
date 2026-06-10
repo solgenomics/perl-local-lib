@@ -1,12 +1,12 @@
 package Type::Tiny::_HalfOp;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
 	$Type::Tiny::_HalfOp::AUTHORITY = 'cpan:TOBYINK';
-	$Type::Tiny::_HalfOp::VERSION   = '1.012004';
+	$Type::Tiny::_HalfOp::VERSION   = '2.004000';
 }
 
 $Type::Tiny::_HalfOp::VERSION =~ tr/_//d;
@@ -25,7 +25,7 @@ sub complete {
 	my ( $self, $type ) = @_;
 	my $complete_type = $type->parameterize( @{ $self->{param} } );
 	my $method        = overload::Method( $complete_type, $self->{op} );
-	$complete_type->$method( $self->{type} );
+	$complete_type->$method( $self->{type}, undef );
 }
 
 1;
@@ -81,7 +81,7 @@ Graham Knop E<lt>haarg@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2014, 2017-2021 by Graham Knop.
+This software is copyright (c) 2014, 2017-2023 by Graham Knop.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

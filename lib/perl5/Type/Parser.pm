@@ -1,12 +1,13 @@
 package Type::Parser;
 
+use 5.008001;
 use strict;
 use warnings;
 
 sub _croak ($;@) { require Error::TypeTiny; goto \&Error::TypeTiny::croak }
 
 our $AUTHORITY = 'cpan:TOBYINK';
-our $VERSION   = '1.012004';
+our $VERSION   = '2.004000';
 
 $VERSION =~ tr/_//d;
 
@@ -23,6 +24,7 @@ sub COMMA ()     { "COMMA" }
 sub SLURPY ()    { "SLURPY" }
 sub UNION ()     { "UNION" }
 sub INTERSECT () { "INTERSECT" }
+sub SLASH ()     { "SLASH" }
 sub NOT ()       { "NOT" }
 sub L_PAREN ()   { "L_PAREN" }
 sub R_PAREN ()   { "R_PAREN" }
@@ -78,18 +80,26 @@ Evaluate: {
 		}
 		
 		if ( $node->{type} eq "union" ) {
-			return $reg->make_union( map _eval_type( $_, $reg ), @{ $node->{union} } );
+			return $reg->_make_union_by_overload( map _eval_type( $_, $reg ), @{ $node->{union} } );
 		}
 		
 		if ( $node->{type} eq "intersect" ) {
-			return $reg->make_intersection(
+			return $reg->_make_intersection_by_overload(
 				map _eval_type( $_, $reg ),
 				@{ $node->{intersect} }
 			);
 		}
 		
+		if ( $node->{type} eq "slash" ) {
+			my @types = map _eval_type( $_, $reg ), @{ $node->{slash} };
+			_croak( "Expected exactly two types joined with slash operator" )
+				unless @types == 2;
+			return $types[0] / $types[1];
+		}
+		
 		if ( $node->{type} eq "slurpy" ) {
-			return +{ slurpy => _eval_type( $node->{of}, $reg ) };
+			require Types::Standard;
+			return Types::Standard::Slurpy()->of( _eval_type( $node->{of}, $reg ) );
 		}
 		
 		if ( $node->{type} eq "complement" ) {
@@ -159,6 +169,10 @@ Evaluate: {
 			return _simplify( "intersect", INTERSECT, $expr );
 		}
 		
+		if ( $expr->{type} eq "expression" and $expr->{op}[0] eq SLASH ) {
+			return _simplify( "slash", SLASH, $expr );
+		}
+		
 		return $expr;
 	} #/ sub _simplify_expression
 	
@@ -183,8 +197,12 @@ Evaluate: {
 } #/ Evaluate:
 
 {
-
 	package Type::Parser::AstBuilder;
+	
+	our $AUTHORITY = 'cpan:TOBYINK';
+	our $VERSION   = '2.004000';
+	
+	$VERSION =~ tr/_//d;
 	
 	sub new {
 		my $class = shift;
@@ -194,6 +212,7 @@ Evaluate: {
 	our %precedence = (
 	
 		#		Type::Parser::COMMA()     , 1 ,
+		Type::Parser::SLASH(),     1,
 		Type::Parser::UNION(),     2,
 		Type::Parser::INTERSECT(), 3,
 		Type::Parser::NOT(),       4,
@@ -327,15 +346,24 @@ Evaluate: {
 }
 
 {
-
 	package Type::Parser::Token;
+	
+	our $AUTHORITY = 'cpan:TOBYINK';
+	our $VERSION   = '2.004000';
+	
+	$VERSION =~ tr/_//d;
+	
 	sub type     { $_[0][0] }
 	sub spelling { $_[0][1] }
 }
 
 {
-
 	package Type::Parser::TokenStream;
+	
+	our $AUTHORITY = 'cpan:TOBYINK';
+	our $VERSION   = '2.004000';
+	
+	$VERSION =~ tr/_//d;
 	
 	use Scalar::Util qw(looks_like_number);
 	
@@ -415,8 +443,9 @@ Evaluate: {
 		','      => bless( [ Type::Parser::COMMA,     "," ],   "Type::Parser::Token" ),
 		'=>'     => bless( [ Type::Parser::COMMA,     "=>" ],  "Type::Parser::Token" ),
 		'slurpy' => bless( [ Type::Parser::SLURPY, "slurpy" ], "Type::Parser::Token" ),
-		'|'      => bless( [ Type::Parser::UNION,  "|" ],      "Type::Parser::Token" ),
+		'|'      => bless( [ Type::Parser::UNION,     "|" ],   "Type::Parser::Token" ),
 		'&'      => bless( [ Type::Parser::INTERSECT, "&" ],   "Type::Parser::Token" ),
+		'/'      => bless( [ Type::Parser::SLASH,     "/" ],   "Type::Parser::Token" ),
 		'~'      => bless( [ Type::Parser::NOT,       "~" ],   "Type::Parser::Token" ),
 	);
 	
@@ -428,7 +457,7 @@ Evaluate: {
 		# Punctuation
 		#
 		
-		if ( $self->{remaining} =~ /^( => | [()\]\[|&~,] )/xsm ) {
+		if ( $self->{remaining} =~ /^( => | [()\]\[|&~,\/] )/xsm ) {
 			my $spelling = $1;
 			substr( $self->{remaining}, 0, length $spelling ) = "";
 			return $punctuation{$spelling};
@@ -565,6 +594,8 @@ The following constants correspond to values returned by C<< $token->type >>.
 
 =item C<< INTERSECT >>
 
+=item C<< SLASH >>
+
 =item C<< NOT >>
 
 =item C<< L_PAREN >>
@@ -590,7 +621,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -1,25 +1,85 @@
 package Type::Tiny;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
-	if ( $] < 5.008 ) { require Devel::TypeTiny::Perl56Compat }
 	if ( $] < 5.010 ) { require Devel::TypeTiny::Perl58Compat }
 }
 
 BEGIN {
 	$Type::Tiny::AUTHORITY  = 'cpan:TOBYINK';
-	$Type::Tiny::VERSION    = '1.012004';
+	$Type::Tiny::VERSION    = '2.004000';
 	$Type::Tiny::XS_VERSION = '0.016';
 }
 
 $Type::Tiny::VERSION    =~ tr/_//d;
 $Type::Tiny::XS_VERSION =~ tr/_//d;
 
+our @InternalPackages = qw(
+	Devel::TypeTiny::Perl56Compat
+	Devel::TypeTiny::Perl58Compat
+	Error::TypeTiny
+	Error::TypeTiny::Assertion
+	Error::TypeTiny::Compilation
+	Error::TypeTiny::WrongNumberOfParameters
+	Eval::TypeTiny
+	Eval::TypeTiny::CodeAccumulator
+	Eval::TypeTiny::Sandbox
+	Exporter::Tiny
+	Reply::Plugin::TypeTiny
+	Test::TypeTiny
+	Type::Coercion
+	Type::Coercion::FromMoose
+	Type::Coercion::Union
+	Type::Library
+	Type::Params
+	Type::Params::Alternatives
+	Type::Params::Parameter
+	Type::Params::Signature
+	Type::Parser
+	Type::Parser::AstBuilder
+	Type::Parser::Token
+	Type::Parser::TokenStream
+	Type::Registry
+	Types::Common
+	Types::Common::Numeric
+	Types::Common::String
+	Types::Standard
+	Types::Standard::_Stringable
+	Types::Standard::ArrayRef
+	Types::Standard::CycleTuple
+	Types::Standard::Dict
+	Types::Standard::HashRef
+	Types::Standard::Map
+	Types::Standard::ScalarRef
+	Types::Standard::StrMatch
+	Types::Standard::Tied
+	Types::Standard::Tuple
+	Types::TypeTiny
+	Type::Tie
+	Type::Tie::ARRAY
+	Type::Tie::BASE
+	Type::Tie::HASH
+	Type::Tie::SCALAR
+	Type::Tiny
+	Type::Tiny::_DeclaredType
+	Type::Tiny::_HalfOp
+	Type::Tiny::Class
+	Type::Tiny::ConsrtainedObject
+	Type::Tiny::Duck
+	Type::Tiny::Enum
+	Type::Tiny::Intersection
+	Type::Tiny::Role
+	Type::Tiny::Union
+	Type::Utils
+);
+
 use Scalar::Util qw( blessed );
 use Types::TypeTiny ();
+
+our $SafePackage = sprintf 'package %s;', __PACKAGE__;
 
 sub _croak ($;@) { require Error::TypeTiny; goto \&Error::TypeTiny::croak }
 
@@ -53,6 +113,15 @@ BEGIN {
 		$try_xs
 		? sub () { $INC{'Mouse/Util.pm'} and Mouse::Util::MOUSE_XS() }
 		: sub () { !!0 };
+	
+	my $strict_mode = 0;
+	$ENV{$_} && ++$strict_mode for qw(
+		EXTENDED_TESTING
+		AUTHOR_TESTING
+		RELEASE_TESTING
+		PERL_STRICT
+	);
+	*_STRICT_MODE = $strict_mode ? sub () { !!1 } : sub () { !!0 };
 } #/ BEGIN
 
 {
@@ -102,7 +171,7 @@ __PACKAGE__->_install_overloads(
 					return "Type::Tiny::_HalfOp"->new(
 						$op,
 						$param,
-						"Type::Tiny::Union"->new( type_constraints => [ $type, $tc[1] ] ),
+						"Type::Tiny::Union"->new_by_overload( type_constraints => [ $type, $tc[1] ] ),
 					);
 				} #/ if ( blessed $tc[0] eq...)
 			} #/ if ( blessed $tc[0] )
@@ -112,7 +181,7 @@ __PACKAGE__->_install_overloads(
 			}
 		} #/ if ( !_FIXED_PRECEDENCE...)
 		require Type::Tiny::Union;
-		return "Type::Tiny::Union"->new( type_constraints => \@tc );
+		return "Type::Tiny::Union"->new_by_overload( type_constraints => \@tc );
 	},
 	q(&) => sub {
 		my @tc = _swap @_;
@@ -126,7 +195,7 @@ __PACKAGE__->_install_overloads(
 					return "Type::Tiny::_HalfOp"->new(
 						$op,
 						$param,
-						"Type::Tiny::Intersection"->new( type_constraints => [ $type, $tc[1] ] ),
+						"Type::Tiny::Intersection"->new_by_overload( type_constraints => [ $type, $tc[1] ] ),
 					);
 				} #/ if ( blessed $tc[0] eq...)
 			} #/ if ( blessed $tc[0] )
@@ -136,7 +205,7 @@ __PACKAGE__->_install_overloads(
 			}
 		} #/ if ( !_FIXED_PRECEDENCE...)
 		require Type::Tiny::Intersection;
-		"Type::Tiny::Intersection"->new( type_constraints => \@tc );
+		"Type::Tiny::Intersection"->new_by_overload( type_constraints => \@tc );
 	},
 	q(~)  => sub { shift->complementary_type },
 	q(==) => sub { $_[0]->equals( $_[1] ) },
@@ -153,6 +222,8 @@ __PACKAGE__->_install_overloads(
 	},
 	q(eq)  => sub { "$_[0]" eq "$_[1]" },
 	q(cmp) => sub { $_[2] ? ( "$_[1]" cmp "$_[0]" ) : ( "$_[0]" cmp "$_[1]" ) },
+	q(0+)  => sub { $_[0]{uniq} },
+	q(/)   => sub { ( _STRICT_MODE xor $_[2] ) ? $_[0] : $_[1] },
 );
 
 __PACKAGE__->_install_overloads(
@@ -223,7 +294,6 @@ our %ALL_TYPES;
 
 my $QFS;
 my $uniq = 1;
-my $subname;
 
 sub new {
 	my $class  = shift;
@@ -231,6 +301,19 @@ sub new {
 	
 	for ( qw/ name display_name library / ) {
 		$params{$_} = $params{$_} . '' if defined $params{$_};
+	}
+	
+	my $level = 0;
+	while ( not exists $params{definition_context} and $level < 20 ) {
+		our $_TT_GUTS ||= do {
+			my $g = join '|', map quotemeta, grep !m{^Types::}, @InternalPackages;
+			qr/\A(?:$g)\z/o
+		};
+		my $package = caller $level;
+		if ( $package !~ $_TT_GUTS ) {
+			@{ $params{definition_context} = {} }{ qw/ package file line / } = caller $level;
+		}
+		++$level;
 	}
 	
 	if ( exists $params{parent} ) {
@@ -345,21 +428,27 @@ sub new {
 	# type constraint without needing to load Type::Coercion yet.
 	
 	if ( $params{my_methods} ) {
-		$subname =
-			eval   { require Sub::Util } ? \&Sub::Util::set_subname
-			: eval { require Sub::Name } ? \&Sub::Name::subname
-			: 0
-			if not defined $subname;
-		if ( $subname ) {
-			( Scalar::Util::reftype( $params{my_methods}{$_} ) eq 'CODE' ) && $subname->(
+		require Eval::TypeTiny;
+		Scalar::Util::reftype( $params{my_methods}{$_} ) eq 'CODE'
+			and Eval::TypeTiny::set_subname(
 				sprintf( "%s::my_%s", $self->qualified_name, $_ ),
 				$params{my_methods}{$_},
 			) for keys %{ $params{my_methods} };
-		}
 	} #/ if ( $params{my_methods...})
+	
+	# In general, mutating a type constraint after it's been created
+	# is a bad idea and will probably not work. However some places are
+	# especially harmful and can lead to confusing errors, so allow
+	# subclasses to lock down particular keys.
+	#
+	$self->_lockdown( sub {
+		&Internals::SvREADONLY( $_, !!1 ) for @_;
+	} );
 	
 	return $self;
 } #/ sub new
+
+sub _lockdown {}
 
 sub DESTROY {
 	my $self = shift;
@@ -414,10 +503,11 @@ sub _dd {
 } #/ sub _dd
 
 sub _loose_to_TypeTiny {
+	my $caller = caller( 1 ); # assumption
 	map +(
 		ref( $_ )
 		? Types::TypeTiny::to_TypeTiny( $_ )
-		: do { require Type::Utils; Type::Utils::dwim_type( $_ ) }
+		: do { require Type::Utils; Type::Utils::dwim_type( $_, for => $caller ) }
 	), @_;
 }
 
@@ -436,14 +526,15 @@ sub inlined              { $_[0]{inlined} }
 sub deprecated           { $_[0]{deprecated} }
 sub constraint_generator { $_[0]{constraint_generator} }
 sub inline_generator     { $_[0]{inline_generator} }
-sub name_generator { $_[0]{name_generator} ||= $_[0]->_build_name_generator }
-sub coercion_generator { $_[0]{coercion_generator} }
-sub parameters         { $_[0]{parameters} }
-sub moose_type         { $_[0]{moose_type} ||= $_[0]->_build_moose_type }
-sub mouse_type         { $_[0]{mouse_type} ||= $_[0]->_build_mouse_type }
-sub deep_explanation   { $_[0]{deep_explanation} }
-sub my_methods         { $_[0]{my_methods} ||= $_[0]->_build_my_methods }
-sub sorter             { $_[0]{sorter} }
+sub name_generator       { $_[0]{name_generator} ||= $_[0]->_build_name_generator }
+sub coercion_generator   { $_[0]{coercion_generator} }
+sub parameters           { $_[0]{parameters} }
+sub moose_type           { $_[0]{moose_type} ||= $_[0]->_build_moose_type }
+sub mouse_type           { $_[0]{mouse_type} ||= $_[0]->_build_mouse_type }
+sub deep_explanation     { $_[0]{deep_explanation} }
+sub my_methods           { $_[0]{my_methods} ||= $_[0]->_build_my_methods }
+sub sorter               { $_[0]{sorter} }
+sub exception_class      { $_[0]{exception_class} ||= $_[0]->_build_exception_class }
 
 sub has_parent               { exists $_[0]{parent} }
 sub has_library              { exists $_[0]{library} }
@@ -512,8 +603,8 @@ sub _build_default_message {
 sub _build_name_generator {
 	my $self = shift;
 	return sub {
-		my ( $s, @a ) = @_;
-		sprintf( '%s[%s]', $s, join q[,], @a );
+		defined && s/[\x00-\x1F]//smg for ( my ( $s, @a ) = @_ );
+		sprintf( '%s[%s]', $s, join q[,], map !defined() ? 'undef' : !ref() && /\W/ ? B::perlstring($_) : $_, @a );
 	};
 }
 
@@ -546,12 +637,42 @@ sub _build_compiled_check {
 	};
 } #/ sub _build_compiled_check
 
+sub _build_exception_class {
+	my $self = shift;
+	return $self->parent->exception_class if $self->has_parent;
+	require Error::TypeTiny::Assertion;
+	return 'Error::TypeTiny::Assertion';
+}
+
+sub definition_context {
+	my $self  = shift;
+	my $found = $self->find_parent(sub {
+		ref $_->{definition_context} and exists $_->{definition_context}{file};
+	});
+	$found ? $found->{definition_context} : {};
+}
+
 sub find_constraining_type {
 	my $self = shift;
 	if ( $self->_is_null_constraint and $self->has_parent ) {
 		return $self->parent->find_constraining_type;
 	}
 	$self;
+}
+
+sub type_default {
+	my ( $self, @args ) = @_;
+	if ( exists $self->{type_default} ) {
+		if ( @args ) {
+			my $td = $self->{type_default};
+			return sub { local $_ = \@args; &$td; };
+		}
+		return $self->{type_default};
+	}
+	if ( my $parent = $self->parent ) {
+		return $parent->type_default( @args ) if $self->_is_null_constraint;
+	}
+	return undef;
 }
 
 our @CMP;
@@ -597,7 +718,7 @@ push @CMP, sub {
 		Scalar::Util::refaddr( $B_stem->compiled_check );
 		
 	if ( $A_stem->can_be_inlined and $B_stem->can_be_inlined ) {
-		return 0
+		return CMP_EQUIVALENT
 			if $A_stem->inline_check( '$WOLFIE' ) eq $B_stem->inline_check( '$WOLFIE' );
 	}
 	
@@ -797,7 +918,8 @@ sub validate_explain {
 		my $deep = $self->parent->deep_explanation->( $self, $value, $varname );
 		return [ $message, @$deep ] if $deep;
 	}
-	
+
+	local $SIG{__WARN__} = sub {};
 	return [
 		$message,
 		sprintf( '"%s" is defined as: %s', $self, $self->_perlcode )
@@ -814,6 +936,7 @@ sub _perlcode {
 		if $self->can_be_inlined;
 		
 	$b ||= do {
+		local $@;
 		require B::Deparse;
 		my $tmp = "B::Deparse"->new;
 		$tmp->ambient_pragmas( strict => "all", warnings => "all" )
@@ -876,7 +999,7 @@ sub inline_check {
 	}
 	my $r = join " && " => map {
 		/[;{}]/ && !/\Ado \{.+\}\z/
-			? "do { package Type::Tiny; $_ }"
+			? "do { $SafePackage $_ }"
 			: "($_)"
 	} @r;
 	return @r == 1 ? $r : "($r)";
@@ -886,6 +1009,8 @@ sub inline_assert {
 	require B;
 	my $self = shift;
 	my ( $varname, $typevarname, %extras ) = @_;
+	
+	$extras{exception_class} ||= $self->exception_class;
 	
 	my $inline_check;
 	if ( $self->can_be_inlined ) {
@@ -927,21 +1052,21 @@ sub inline_assert {
 	} #/ else [ if ( $typevarname ) ]
 	
 	$do_wrapper
-		? qq[do { no warnings "void"; package Type::Tiny; $inline_check or $inline_throw; $varname };]
-		: qq[     no warnings "void"; package Type::Tiny; $inline_check or $inline_throw; $varname   ];
+		? qq[do { no warnings "void"; $SafePackage $inline_check or $inline_throw; $varname };]
+		: qq[     no warnings "void"; $SafePackage $inline_check or $inline_throw; $varname   ];
 } #/ sub inline_assert
 
 sub _failed_check {
-	require Error::TypeTiny::Assertion;
-	
 	my ( $self, $name, $value, %attrs ) = @_;
 	$self = $ALL_TYPES{$self} if defined $self && !ref $self;
 	
-	my $exception_class =
-		delete( $attrs{exception_class} ) || "Error::TypeTiny::Assertion";
-		
+	my $exception_class = delete( $attrs{exception_class} )
+		|| ( ref $self ? $self->exception_class : 'Error::TypeTiny::Assertion' );
+	my $callback = delete( $attrs{on_die} );
+
 	if ( $self ) {
-		$exception_class->throw(
+		return $exception_class->throw_cb(
+			$callback,
 			message => $self->get_message( $value ),
 			type    => $self,
 			value   => $value,
@@ -949,9 +1074,9 @@ sub _failed_check {
 		);
 	}
 	else {
-		$exception_class->throw(
-			message =>
-				sprintf( '%s did not pass type constraint "%s"', _dd( $value ), $name ),
+		return $exception_class->throw_cb(
+			$callback,
+			message => sprintf( '%s did not pass type constraint "%s"', _dd( $value ), $name ),
 			value => $value,
 			%attrs,
 		);
@@ -984,7 +1109,7 @@ sub is_parameterized {
 		join ',', map {
 			Types::TypeTiny::is_TypeTiny( $_ )  ? sprintf( '$Type::Tiny::ALL_TYPES{%s}', defined( $_->{uniq} ) ? $_->{uniq} : '____CANNOT_KEY____' ) :
 			ref() eq 'ARRAY'                    ? do { $seen{$_}++ ? '____CANNOT_KEY____' : sprintf( '[%s]', ____make_key( @$_ ) ) } :
-			ref() eq 'HASH'                     ? do { $seen{$_}++ ? '____CANNOT_KEY____' : sprintf( '{%s}', ____make_key( %$_ ) ) } :
+			ref() eq 'HASH'                     ? do { $seen{$_}++ ? '____CANNOT_KEY____' : sprintf( '{%s}', ____make_key( do { my %h = %$_; map +( $_, $h{$_} ), sort keys %h; } ) ) } :
 			ref() eq 'SCALAR' || ref() eq 'REF' ? do { $seen{$_}++ ? '____CANNOT_KEY____' : sprintf( '\\(%s)', ____make_key( $$_ ) ) } :
 			!defined()                          ? 'undef' :
 			!ref()                              ? do { require B; B::perlstring( $_ ) } :
@@ -1030,9 +1155,11 @@ sub is_parameterized {
 				if $compiled;
 			$options{inlined} = $self->inline_generator->( @_ )
 				if $self->has_inline_generator;
+			$options{type_default} = $self->{type_default_generator}->( @_ )
+				if exists $self->{type_default_generator}; # undocumented
 			exists $options{$_} && !defined $options{$_} && delete $options{$_}
 				for keys %options;
-				
+			
 			$P = $self->create_child_type( %options );
 			
 			if ( $self->has_coercion_generator ) {
@@ -1154,6 +1281,59 @@ sub _build_mouse_type {
 	return $r;
 } #/ sub _build_mouse_type
 
+sub exportables {
+	my ( $self, $base_name, $tag ) = ( shift, @_ ); # $tag is undocumented
+	if ( not $self->is_anon ) {
+		$base_name ||= $self->name;
+	}
+	$tag ||= 0;
+
+	my @exportables;
+	return \@exportables if ! $base_name;
+
+	require Eval::TypeTiny;
+
+	push @exportables, {
+		name => $base_name,
+		code => Eval::TypeTiny::type_to_coderef( $self ),
+		tags => [ 'types' ],
+	} if $tag eq 'types' || !$tag;
+
+	push @exportables, {
+		name => sprintf( 'is_%s', $base_name ),
+		code => $self->compiled_check,
+		tags => [ 'is' ],
+	} if $tag eq 'is' || !$tag;
+
+	push @exportables, {
+		name => sprintf( 'assert_%s', $base_name ),
+		code => $self->_overload_coderef,
+		tags => [ 'assert' ],
+	} if $tag eq 'assert' || !$tag;
+
+	push @exportables, {
+		name => sprintf( 'to_%s', $base_name ),
+		code => $self->has_coercion && $self->coercion->frozen
+			? $self->coercion->compiled_coercion
+			: sub ($) { $self->coerce( $_[0] ) },
+		tags => [ 'to' ],
+	} if $tag eq 'to' || !$tag;
+
+	return \@exportables;
+}
+
+sub exportables_by_tag {
+	my ( $self, $tag, $base_name ) = ( shift, @_ );
+	my @matched = grep {
+		my $e = $_;
+		grep $_ eq $tag, @{ $e->{tags} || [] };
+	} @{ $self->exportables( $base_name, $tag ) };
+	return @matched if wantarray;
+	_croak( 'Expected to find one exportable tagged "%s", found %d', $tag, scalar @matched )
+		unless @matched == 1;
+	return $matched[0];
+}
+
 sub _process_coercion_list {
 	my $self = shift;
 	
@@ -1248,7 +1428,7 @@ sub coercibles {
 sub isa {
 	my $self = shift;
 	
-	if ( $INC{"Moose.pm"}
+	if ( $INC{"Moose/Meta/TypeConstraint.pm"}
 		and ref( $self )
 		and $_[0] =~ /^(?:Class::MOP|MooseX?::Meta)::(.+)$/ )
 	{
@@ -1261,7 +1441,7 @@ sub isa {
 		
 		my $inflate = $self->moose_type;
 		return $inflate->isa( @_ );
-	} #/ if ( $INC{"Moose.pm"} ...)
+	} #/ if ( $INC{"Moose/Meta/TypeConstraint.pm"} ...)
 	
 	if ( $INC{"Mouse.pm"}
 		and ref( $self )
@@ -1309,7 +1489,7 @@ sub can {
 	return $can if $can;
 	
 	if ( ref( $self ) ) {
-		if ( $INC{"Moose.pm"} ) {
+		if ( $INC{"Moose/Meta/TypeConstraint.pm"} ) {
 			my $method = $self->moose_type->can( @_ );
 			return sub { shift->moose_type->$method( @_ ) }
 				if $method;
@@ -1340,7 +1520,7 @@ sub AUTOLOAD {
 	return if $m eq 'DESTROY';
 	
 	if ( ref( $self ) ) {
-		if ( $INC{"Moose.pm"} ) {
+		if ( $INC{"Moose/Meta/TypeConstraint.pm"} ) {
 			my $method = $self->moose_type->can( $m );
 			return $self->moose_type->$method( @_ ) if $method;
 		}
@@ -1558,7 +1738,7 @@ Type::Tiny - tiny, yet Moo(se)-compatible type constraint
  package Horse {
    use Moo;
    use Types::Standard qw( Str Int Enum ArrayRef Object );
-   use Type::Params qw( compile );
+   use Type::Params qw( signature );
    use namespace::autoclean;
    
    has name => (
@@ -1581,11 +1761,13 @@ Type::Tiny - tiny, yet Moo(se)-compatible type constraint
    );
    
    sub add_child {
-     state $check = compile( Object, Object );  # method signature
+     state $check = signature(
+       method     => Object,
+       positional => [ Object ],
+     );                                         # method signature
+     my ( $self, $child ) = $check->( @_ );     # unpack @_
      
-     my ($self, $child) = $check->(@_);         # unpack @_
      push @{ $self->children }, $child;
-     
      return $self;
    }
  }
@@ -1642,6 +1824,11 @@ objects which are compatible with Moo, Moose and Mouse.
       use Mouse;
       has favourite_number => (is => "ro", isa => $NUM);
    }
+
+Type::Tiny conforms to L<Type::API::Constraint>,
+L<Type::API::Constraint::Coercible>,
+L<Type::API::Constraint::Constructor>, and
+L<Type::API::Constraint::Inlinable>.
 
 Maybe now we won't need to have separate MooseX, MouseX and MooX versions
 of everything? We can but hope...
@@ -1761,10 +1948,59 @@ The idea is to allow for:
   @sorted = Int->sort( 2, 1, 11 );    # => 1, 2, 11
   @sorted = Str->sort( 2, 1, 11 );    # => 1, 11, 2 
 
+=item C<< type_default >>
+
+A coderef which returns a sensible default value for this type. For example,
+for a B<Counter> type, a sensible default might be "0":
+
+  my $Size = Type::Tiny->new(
+    name          => 'Size',
+    parent        => Types::Standard::Enum[ qw( XS S M L XL ) ],
+    type_default  => sub { return 'M'; },
+  );
+  
+  package Tshirt {
+    use Moo;
+    has size => (
+      is       => 'ro',
+      isa      => $Size,
+      default  => $Size->type_default,
+    );
+  }
+
+Child types will inherit a type default from their parent unless the child
+has a C<constraint>. If a type neither has nor inherits a type default, then
+calling C<type_default> will return undef.
+
+As a special case, this:
+
+  $type->type_default( @args )
+
+Will return:
+
+  sub {
+    local $_ = \@args;
+    $type->type_default->( @_ );
+  }
+
+Many of the types defined in L<Types::Standard> and other bundled type
+libraries have type defaults, but discovering them is left as an exercise
+for the reader.
+
 =item C<< my_methods >>
 
 Experimental hashref of additional methods that can be called on the type
 constraint object.
+
+=item C<< exception_class >>
+
+The class used to throw an exception when a value fails its type check.
+Defaults to "Error::TypeTiny::Assertion", which is usually good. This class
+is expected to provide a C<throw_cb> method compatible with the method of
+that name in L<Error::TypeTiny>.
+
+If a parent type constraint has a custom C<exception_class>, then this
+will be "inherited" by its children.
 
 =back
 
@@ -1855,6 +2091,16 @@ default lazily-built return values.
 Coderef to validate a value (C<< $_[0] >>) against the type constraint.
 This coderef is expected to also handle all validation for the parent
 type constraints.
+
+=item C<< definition_context >>
+
+Hashref of information indicating where the type constraint was originally
+defined. Type::Tiny will generate this based on C<caller> if you do not
+supply it. The hashref will ordinarily contain keys C<"package">, C<"file">,
+and C<"line">.
+
+For parameterized types and compound types (e.g. unions and intersections),
+this may not be especially meaningful information.
 
 =item C<< complementary_type >>
 
@@ -2283,14 +2529,37 @@ See also L<Type::API::Constraint>, etc.
 
 =item C<< TIESCALAR >>, C<< TIEARRAY >>, C<< TIEHASH >>
 
-These are provided as hooks that wrap L<Type::Tie>. (Type::Tie is distributed
-separately, and can be used with non-Type::Tiny type constraints too.) They
-allow the following to work:
+These are provided as hooks that wrap L<Type::Tie>. They allow the following
+to work:
 
    use Types::Standard qw(Int);
    tie my @list, Int;
    push @list, 123, 456;   # ok
    push @list, "Hello";    # dies
+
+=item C<< exportables( $base_name ) >>
+
+Returns a list of the functions a type library should export if it contains
+this type constraint.
+
+Example:
+
+  [
+    { name => 'Int',        tags => [ 'types' ],  code => sub { ... } },
+    { name => 'is_Int',     tags => [ 'is' ],     code => sub { ... } },
+    { name => 'assert_Int', tags => [ 'assert' ], code => sub { ... } },
+    { name => 'to_Int',     tags => [ 'to' ],     code => sub { ... } },
+  ]
+
+C<< $base_name >> is optional, but allows you to get a list of exportables
+using a specific name. This is useful if the type constraint has a name
+which wouldn't be a legal Perl function name.
+
+=item C<< exportables_by_tag( $tag, $base_name ) >>
+
+Filters C<exportables> by a specific tag name. In list context, returns all
+matching exportables. In scalar context returns a single matching exportable
+and dies if multiple exportables match, or none do!
 
 =back
 
@@ -2354,6 +2623,12 @@ See L<Type::Tiny::Union>.
 The C<< & >> operator is overloaded to build the intersection of two type
 constraints. See L<Type::Tiny::Intersection>.
 
+=item *
+
+The C<< / >> operator provides magical L<Devel::StrictMode> support.
+If C<< $ENV{PERL_STRICT} >> (or a few other environment variables) is true,
+then it returns the left operand. Normally it returns the right operand.
+
 =back
 
 Previous versions of Type::Tiny would overload the C<< + >> operator to
@@ -2410,6 +2685,15 @@ if it needs to rely on callbacks when asked not to.)
 
 Most normal users can ignore this.
 
+=item C<< $Type::Tiny::SafePackage >>
+
+This is the string "package Type::Tiny;" which is sometimes inserted
+into strings of inlined code to avoid namespace clashes. In most cases,
+you do not need to change this. However, if you are inlining type
+constraint code, saving that code into Perl modules, and uploading them
+to CPAN, you may wish to change it to avoid problems with the CPAN
+indexer. Most normal users of Type::Tiny do not need to be aware of this.
+
 =back
 
 =head2 Environment
@@ -2461,7 +2745,7 @@ Thanks to Matt S Trout for advice on L<Moo> integration.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

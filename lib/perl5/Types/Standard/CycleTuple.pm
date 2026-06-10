@@ -1,12 +1,14 @@
+# INTERNAL MODULE: guts for CycleTuple type from Types::Standard.
+
 package Types::Standard::CycleTuple;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
 	$Types::Standard::CycleTuple::AUTHORITY = 'cpan:TOBYINK';
-	$Types::Standard::CycleTuple::VERSION   = '1.012004';
+	$Types::Standard::CycleTuple::VERSION   = '2.004000';
 }
 
 $Types::Standard::CycleTuple::VERSION =~ tr/_//d;
@@ -19,6 +21,7 @@ sub _croak ($;@) { require Error::TypeTiny; goto \&Error::TypeTiny::croak }
 
 my $_Optional = Types::Standard::Optional;
 my $_arr      = Types::Standard::ArrayRef;
+my $_Slurpy   = Types::Standard::Slurpy;
 
 no warnings;
 
@@ -26,9 +29,6 @@ my $cycleuniq = 0;
 
 sub __constraint_generator {
 	my @params = map {
-		ref( $_ ) eq 'HASH'
-			and exists( $_->{slurpy} )
-			and _croak( "Parameters to CycleTuple[...] cannot be slurpy" );
 		my $param = $_;
 		Types::TypeTiny::is_TypeTiny( $param )
 			or _croak(
@@ -40,7 +40,9 @@ sub __constraint_generator {
 	
 	_croak( "Parameters to CycleTuple[...] cannot be optional" )
 		if grep !!$_->is_strictly_a_type_of( $_Optional ), @params;
-		
+	_croak( "Parameters to CycleTuple[...] cannot be slurpy" )
+		if grep !!$_->is_strictly_a_type_of( $_Slurpy ), @params;
+	
 	sub {
 		my $value = shift;
 		return unless $_arr->check( $value );
@@ -218,50 +220,3 @@ sub __coercion_generator {
 } #/ sub __coercion_generator
 
 1;
-
-__END__
-
-=pod
-
-=encoding utf-8
-
-=head1 NAME
-
-Types::Standard::CycleTuple - internals for the Types::Standard CycleTuple type constraint
-
-=head1 STATUS
-
-This module is considered part of Type-Tiny's internals. It is not
-covered by the
-L<Type-Tiny stability policy|Type::Tiny::Manual::Policies/"STABILITY">.
-
-=head1 DESCRIPTION
-
-This file contains some of the guts for L<Types::Standard>.
-It will be loaded on demand. You may ignore its presence.
-
-=head1 BUGS
-
-Please report any bugs to
-L<https://github.com/tobyink/p5-type-tiny/issues>.
-
-=head1 SEE ALSO
-
-L<Types::Standard>.
-
-=head1 AUTHOR
-
-Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
-
-=head1 COPYRIGHT AND LICENCE
-
-This software is copyright (c) 2017-2021 by Toby Inkster.
-
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
-
-=head1 DISCLAIMER OF WARRANTIES
-
-THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
-MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.

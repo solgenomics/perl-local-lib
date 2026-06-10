@@ -897,6 +897,9 @@ set the C<binmode> option, then its value is passed to a call to C<binmode> on
 the opened handle. You can use this to set the file to be read in binary mode,
 utf8, etc. See C<perldoc -f binmode> for more.
 
+Please note that using binmode :utf8 with sysread (and thus read_file) 
+has been deprecated in recent versions of perl.
+
 =item
 
 blk_size

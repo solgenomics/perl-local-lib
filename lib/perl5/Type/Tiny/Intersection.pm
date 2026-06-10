@@ -1,12 +1,12 @@
 package Type::Tiny::Intersection;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
 	$Type::Tiny::Intersection::AUTHORITY = 'cpan:TOBYINK';
-	$Type::Tiny::Intersection::VERSION   = '1.012004';
+	$Type::Tiny::Intersection::VERSION   = '2.004000';
 }
 
 $Type::Tiny::Intersection::VERSION =~ tr/_//d;
@@ -22,6 +22,24 @@ our @ISA = 'Type::Tiny';
 __PACKAGE__->_install_overloads(
 	q[@{}] => sub { $_[0]{type_constraints} ||= [] },
 );
+
+sub new_by_overload {
+	my $proto = shift;
+	my %opts  = ( @_ == 1 ) ? %{ $_[0] } : @_;
+
+	my @types = @{ $opts{type_constraints} };
+	if ( my @makers = map scalar( blessed($_) && $_->can( 'new_intersection' ) ), @types ) {
+		my $first_maker = shift @makers;
+		if ( ref $first_maker ) {
+			my $all_same = not grep $_ ne $first_maker, @makers;
+			if ( $all_same ) {
+				return ref( $types[0] )->$first_maker( %opts );
+			}
+		}
+	}
+
+	return $proto->new( \%opts );
+}
 
 sub new {
 	my $proto = shift;
@@ -66,6 +84,11 @@ sub new {
 	
 	return $proto->SUPER::new( %opts );
 } #/ sub new
+
+sub _lockdown {
+	my ( $self, $callback ) = @_;
+	$callback->( $self->{type_constraints} );
+}
 
 sub type_constraints { $_[0]{type_constraints} }
 sub constraint       { $_[0]{constraint} ||= $_[0]->_build_constraint }
@@ -113,7 +136,7 @@ sub inline_check {
 	
 	my $code = sprintf '(%s)', join " and ", map $_->inline_check( $_[0] ), @$self;
 	
-	return "do { package Type::Tiny; $code }"
+	return "do { $Type::Tiny::SafePackage $code }"
 		if $Type::Tiny::AvoidCallbacks;
 	return "$self->{xs_sub}\($_[0]\)"
 		if $self->{xs_sub};
@@ -227,6 +250,60 @@ __END__
 
 Type::Tiny::Intersection - intersection type constraints
 
+=head1 SYNOPSIS
+
+Using via the C<< & >> operator overload:
+
+  package Local::Stash {
+    use Moo;
+    use Types::Common qw( LowerCaseStr StrLength );
+    
+    has identifier => (
+      is   => 'ro',
+      isa  => (LowerCaseStr) & (StrLength[4, 8]),
+    );
+  }
+  
+  my $x = Local::Stash->new( data => {} );  # not ok
+  my $y = Local::Stash->new( data => [] );  # not ok
+
+Note that it is a good idea to enclose each type being intersected
+in parentheses to avoid Perl thinking the C<< & >> is the sigil for
+a coderef.
+
+Using Type::Tiny::Intersection's object-oriented interface:
+
+  package Local::Stash {
+    use Moo;
+    use Types::Common qw( LowerCaseStr StrLength );
+    use Type::Tiny::Intersection;
+    
+    my $ShortLcStr = Type::Tiny::Intersection->new(
+      name             => 'AnyData',
+      type_constraints => [ LowerCaseStr, StrLength[4, 8] ],
+    );
+    
+    has identifier => (
+      is   => 'ro',
+      isa  => $ShortLcStr,
+    );
+  }
+
+Using Type::Utils's functional interface:
+
+  package Local::Stash {
+    use Moo;
+    use Types::Common qw( LowerCaseStr StrLength );
+    use Type::Utils;
+    
+    my $ShortLcStr = intersection ShortLcStr => [ LowerCaseStr, StrLength[4, 8] ];
+    
+    has identifier => (
+      is   => 'ro',
+      isa  => $ShortLcStr,
+    );
+  }
+
 =head1 STATUS
 
 This module is covered by the
@@ -236,8 +313,33 @@ L<Type-Tiny stability policy|Type::Tiny::Manual::Policies/"STABILITY">.
 
 Intersection type constraints.
 
+Intersection type constraints are not often very useful. Consider the
+intersection of B<HashRef> and B<ArrayRef>. A value will only pass if
+it is both a hashref and an arrayref. Given that neither of those type
+constraints accept C<undef> or overloaded objects, there is no possible
+value that can pass both.
+
+Which is not to say that intersections are never useful, but it happens
+quite rarely.
+
 This package inherits from L<Type::Tiny>; see that for most documentation.
 Major differences are listed below:
+
+=head2 Constructor
+
+The C<new> constructor from L<Type::Tiny> still works, of course. But there
+is also:
+
+=over
+
+=item C<< new_by_overload(%attributes) >>
+
+Like the C<new> constructor, but will sometimes return another type
+constraint which is not strictly an instance of L<Type::Tiny::Intersection>,
+but still encapsulates the same meaning. This constructor is used by
+Type::Tiny's overloading of the C<< & >> operator.
+
+=back
 
 =head2 Attributes
 
@@ -318,7 +420,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

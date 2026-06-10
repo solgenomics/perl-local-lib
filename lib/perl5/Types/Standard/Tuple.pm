@@ -1,12 +1,14 @@
+# INTERNAL MODULE: guts for Tuple type from Types::Standard.
+
 package Types::Standard::Tuple;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
 	$Types::Standard::Tuple::AUTHORITY = 'cpan:TOBYINK';
-	$Types::Standard::Tuple::VERSION   = '1.012004';
+	$Types::Standard::Tuple::VERSION   = '2.004000';
 }
 
 $Types::Standard::Tuple::VERSION =~ tr/_//d;
@@ -18,21 +20,19 @@ use Types::TypeTiny ();
 sub _croak ($;@) { require Error::TypeTiny; goto \&Error::TypeTiny::croak }
 
 my $_Optional = Types::Standard::Optional;
+my $_Slurpy   = Types::Standard::Slurpy;
 
 no warnings;
 
 sub __constraint_generator {
+	my $slurpy =
+		@_
+		&& Types::TypeTiny::is_TypeTiny( $_[-1] )
+		&& $_[-1]->is_strictly_a_type_of( $_Slurpy )
+		? pop
+		: undef;
+		
 	my @constraints = @_;
-	my $slurpy;
-	if ( exists $constraints[-1] and ref $constraints[-1] eq "HASH" ) {
-		$slurpy = Types::TypeTiny::to_TypeTiny( $constraints[-1]{slurpy} );
-		Types::TypeTiny::is_TypeTiny( $slurpy )
-			or _croak(
-			"Slurpy parameter to Tuple[...] expected to be a type constraint; got $slurpy"
-			);
-		pop( @constraints )->{slurpy} = $slurpy;    # keep canonicalized version around
-	}
-	
 	for ( @constraints ) {
 		Types::TypeTiny::is_TypeTiny( $_ )
 			or
@@ -57,8 +57,8 @@ sub __constraint_generator {
 	} #/ if ( Type::Tiny::_USE_XS...)
 	
 	my @is_optional = map !!$_->is_strictly_a_type_of( $_Optional ), @constraints;
-	my $slurp_hash  = $slurpy && $slurpy->is_a_type_of( Types::Standard::HashRef );
-	my $slurp_any   = $slurpy && $slurpy->equals( Types::Standard::Any );
+	my $slurp_hash  = $slurpy && $slurpy->my_slurp_into eq 'HASH';
+	my $slurp_any   = $slurpy && $slurpy->my_unslurpy->equals( Types::Standard::Any );
 	
 	my @sorted_is_optional = sort @is_optional;
 	join( "|", @sorted_is_optional ) eq join( "|", @is_optional )
@@ -92,11 +92,13 @@ sub __constraint_generator {
 } #/ sub __constraint_generator
 
 sub __inline_generator {
+	my $slurpy =
+		@_
+		&& Types::TypeTiny::is_TypeTiny( $_[-1] )
+		&& $_[-1]->is_strictly_a_type_of( $_Slurpy )
+		? pop
+		: undef;
 	my @constraints = @_;
-	my $slurpy;
-	if ( exists $constraints[-1] and ref $constraints[-1] eq "HASH" ) {
-		$slurpy = pop( @constraints )->{slurpy};
-	}
 	
 	return if grep { not $_->can_be_inlined } @constraints;
 	return if defined $slurpy && !$slurpy->can_be_inlined;
@@ -123,9 +125,9 @@ sub __inline_generator {
 			'do { my ($orig, $from, $to) = (%s, %d, $#{%s});'
 			. '(($to-$from) %% 2) and do { my $tmp = +{@{$orig}[$from..$to]}; %s }'
 			. '}'
-			if $slurpy->is_a_type_of( Types::Standard::HashRef );
+			if $slurpy->my_slurp_into eq 'HASH';
 		$slurpy_any = 1
-			if $slurpy->equals( Types::Standard::Any );
+			if $slurpy->my_unslurpy->equals( Types::Standard::Any );
 	}
 	
 	my @is_optional = map !!$_->is_strictly_a_type_of( $_Optional ), @constraints;
@@ -166,10 +168,12 @@ sub __deep_explanation {
 	my ( $type, $value, $varname ) = @_;
 	
 	my @constraints = @{ $type->parameters };
-	my $slurpy;
-	if ( exists $constraints[-1] and ref $constraints[-1] eq "HASH" ) {
-		$slurpy = Types::TypeTiny::to_TypeTiny( pop( @constraints )->{slurpy} );
-	}
+	my $slurpy =
+		@constraints
+		&& Types::TypeTiny::is_TypeTiny( $constraints[-1] )
+		&& $constraints[-1]->is_strictly_a_type_of( $_Slurpy )
+		? pop( @constraints )
+		: undef;
 	@constraints = map Types::TypeTiny::to_TypeTiny( $_ ), @constraints;
 	
 	if ( @constraints < @$value and not $slurpy ) {
@@ -202,7 +206,7 @@ sub __deep_explanation {
 	
 	if ( defined( $slurpy ) ) {
 		my $tmp =
-			$slurpy->is_a_type_of( Types::Standard::HashRef )
+			$slurpy->my_slurp_into eq 'HASH'
 			? +{ @$value[ $#constraints + 1 .. $#$value ] }
 			: +[ @$value[ $#constraints + 1 .. $#$value ] ];
 		$slurpy->check( $tmp )
@@ -210,10 +214,10 @@ sub __deep_explanation {
 			sprintf(
 				'Array elements from index %d are slurped into a %s which is constrained with "%s"',
 				$#constraints + 1,
-				$slurpy->is_a_type_of( Types::Standard::HashRef ) ? 'hashref' : 'arrayref',
-				$slurpy,
+				( $slurpy->my_slurp_into eq 'HASH' ) ? 'hashref' : 'arrayref',
+				( $slurpy->my_unslurpy || $slurpy ),
 			),
-			@{ $slurpy->validate_explain( $tmp, '$SLURPY' ) },
+			@{ ( $slurpy->my_unslurpy || $slurpy )->validate_explain( $tmp, '$SLURPY' ) },
 			];
 	} #/ if ( defined( $slurpy ...))
 	
@@ -226,10 +230,12 @@ my $label_counter = 0;
 sub __coercion_generator {
 	my ( $parent, $child, @tuple ) = @_;
 	
-	my $slurpy;
-	if ( exists $tuple[-1] and ref $tuple[-1] eq "HASH" ) {
-		$slurpy = pop( @tuple )->{slurpy};
-	}
+	my $slurpy =
+		@tuple
+		&& Types::TypeTiny::is_TypeTiny( $tuple[-1] )
+		&& $tuple[-1]->is_strictly_a_type_of( $_Slurpy )
+		? pop( @tuple )
+		: undef;
 	
 	my $child_coercions_exist = 0;
 	my $all_inlinable         = 1;
@@ -242,8 +248,7 @@ sub __coercion_generator {
 	return unless $child_coercions_exist;
 	my $C = "Type::Coercion"->new( type_constraint => $child );
 	
-	my $slurpy_is_hashref =
-		$slurpy && $slurpy->is_a_type_of( Types::Standard::HashRef );
+	my $slurpy_is_hashref = $slurpy && $slurpy->my_slurp_into eq 'HASH';
 		
 	if ( $all_inlinable ) {
 		$C->add_type_coercions(
@@ -350,50 +355,3 @@ sub __coercion_generator {
 } #/ sub __coercion_generator
 
 1;
-
-__END__
-
-=pod
-
-=encoding utf-8
-
-=head1 NAME
-
-Types::Standard::Tuple - internals for the Types::Standard Tuple type constraint
-
-=head1 STATUS
-
-This module is considered part of Type-Tiny's internals. It is not
-covered by the
-L<Type-Tiny stability policy|Type::Tiny::Manual::Policies/"STABILITY">.
-
-=head1 DESCRIPTION
-
-This file contains some of the guts for L<Types::Standard>.
-It will be loaded on demand. You may ignore its presence.
-
-=head1 BUGS
-
-Please report any bugs to
-L<https://github.com/tobyink/p5-type-tiny/issues>.
-
-=head1 SEE ALSO
-
-L<Types::Standard>.
-
-=head1 AUTHOR
-
-Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
-
-=head1 COPYRIGHT AND LICENCE
-
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
-
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
-
-=head1 DISCLAIMER OF WARRANTIES
-
-THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
-MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.

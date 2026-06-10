@@ -1,11 +1,11 @@
-package B::Hooks::EndOfScope; # git description: 0.24-6-gcafb435
+package B::Hooks::EndOfScope; # git description: 0.27-8-gbe15c53
 # ABSTRACT: Execute code after a scope finished compilation
 # KEYWORDS: code hooks execution scope
 
 use strict;
 use warnings;
 
-our $VERSION = '0.25';
+our $VERSION = '0.28';
 
 use 5.006001;
 
@@ -36,7 +36,7 @@ B::Hooks::EndOfScope - Execute code after a scope finished compilation
 
 =head1 VERSION
 
-version 0.25
+version 0.28
 
 =head1 SYNOPSIS
 
@@ -137,7 +137,7 @@ Peter Rabbitson <ribasushi@leporine.io>
 
 =head1 CONTRIBUTORS
 
-=for stopwords Karen Etheridge Christian Walde Graham Knop Simon Wilper Tatsuhiko Miyagawa Tomas Doran
+=for stopwords Karen Etheridge Graham Knop Christian Walde Simon Wilper Tatsuhiko Miyagawa Tomas Doran
 
 =over 4
 
@@ -147,11 +147,11 @@ Karen Etheridge <ether@cpan.org>
 
 =item *
 
-Christian Walde <walde.christian@googlemail.com>
+Graham Knop <haarg@haarg.org>
 
 =item *
 
-Graham Knop <haarg@haarg.org>
+Christian Walde <walde.christian@googlemail.com>
 
 =item *
 

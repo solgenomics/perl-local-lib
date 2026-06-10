@@ -1,13 +1,13 @@
 use strict;
 use warnings;
-package Getopt::Long::Descriptive 0.110;
+package Getopt::Long::Descriptive 0.116;
 # ABSTRACT: Getopt::Long, but simpler and more powerful
 
-use v5.10.1;
+use v5.12;
 
 use Carp qw(carp croak);
 use File::Basename ();
-use Getopt::Long 2.33;
+use Getopt::Long 2.55;
 use List::Util qw(first);
 use Params::Validate 0.97 qw(:all);
 use Scalar::Util ();
@@ -283,7 +283,6 @@ use Sub::Exporter 0.972 -setup => {
 
 my %CONSTRAINT = (
   implies  => \&_mk_implies,
-  required => { optional => 0 },
   only_one => \&_mk_only_one,
 );
 
@@ -362,7 +361,7 @@ sub _build_describe_options {
   my ($class) = @_;
 
   sub {
-    my $format = shift;
+    my $format = (ref $_[0] ? '%c %o' : shift(@_));
     my $arg    = (ref $_[-1] and ref $_[-1] eq 'HASH') ? pop @_ : {};
     my @opts;
 
@@ -445,10 +444,6 @@ sub _build_describe_options {
 
     my %opt_count;
     $opt_count{$_}++ for @options;
-    my @redundant = sort grep {; $opt_count{$_} > 1 } keys %opt_count;
-
-    warn "Getopt::Long::Descriptive was configured with these ambiguous options: @redundant\n"
-      if @redundant;
 
     my $short = join q{},
       sort  { lc $a cmp lc $b or $a cmp $b }
@@ -479,11 +474,13 @@ sub _build_describe_options {
       show_defaults => $arg->{show_defaults},
     });
 
-    Getopt::Long::Configure(@go_conf);
+    my $old_go_conf = Getopt::Long::Configure(@go_conf);
 
     my %return;
     $usage->die unless GetOptions(\%return, grep { length } @getopt_specs);
     my @given_keys = keys %return;
+
+    Getopt::Long::Configure($old_go_conf);
 
     for my $opt (keys %return) {
       my $newopt = _munge($opt);
@@ -548,7 +545,15 @@ sub _validate_with {
 
   my $spec = $arg{spec};
   my %pvspec;
-  for my $ct (keys %{$spec}) {
+  SPEC_ENTRY: for my $ct (keys %{$spec}) {
+    if ($ct eq 'required') {
+      # This used to be in %CONSTRAINT but this whole system is a bit
+      # overcomplex, I think, and moving this here makes life simpler.  Someday
+      # (ha ha) this can all be overhauled. -- rjbs, 2024-01-20
+      $pvspec{optional} = ! $spec->{$ct};
+      next SPEC_ENTRY;
+    }
+
     if ($CONSTRAINT{$ct} and ref $CONSTRAINT{$ct} eq 'CODE') {
       $pvspec{callbacks} ||= {};
       $pvspec{callbacks} = {
@@ -731,7 +736,7 @@ Getopt::Long::Descriptive - Getopt::Long, but simpler and more powerful
 
 =head1 VERSION
 
-version 0.110
+version 0.116
 
 =head1 SYNOPSIS
 
@@ -772,13 +777,13 @@ features.
 
 =head1 PERL VERSION
 
-This library should run on perls released even a long time ago.  It should work
-on any version of perl released in the last five years.
+This library should run on perls released even a long time ago.  It should
+work on any version of perl released in the last five years.
 
 Although it may work on older versions of perl, no guarantee is made that the
 minimum required version will not be increased.  The version may be increased
-for any reason, and there is no promise that patches will be accepted to lower
-the minimum required perl.
+for any reason, and there is no promise that patches will be accepted to
+lower the minimum required perl.
 
 =head1 FUNCTIONS
 
@@ -1025,13 +1030,13 @@ Hans Dieter Pearcey <hdp@cpan.org>
 
 =item *
 
-Ricardo Signes <rjbs@semiotic.systems>
+Ricardo Signes <cpan@semiotic.systems>
 
 =back
 
 =head1 CONTRIBUTORS
 
-=for stopwords Arthur Axel 'fREW' Schmidt Dave Rolsky Diab Jerius Hans Dieter Pearcey Harley Pig hdp@cpan.org Karen Etheridge Michael McClimon Niels Thykier Olaf Alders Roman Hubacek Smylers Thomas Neumann zhouzhen1
+=for stopwords Arthur Axel 'fREW' Schmidt Dave Rolsky Diab Jerius Hans Dieter Pearcey Harley Pig hdp@cpan.org Karen Etheridge Michael McClimon Niels Thykier Olaf Alders Ricardo Signes Roman Hubacek Smylers Thomas Neumann zhouzhen1
 
 =over 4
 
@@ -1046,10 +1051,6 @@ Dave Rolsky <autarch@urth.org>
 =item *
 
 Diab Jerius <djerius@cfa.harvard.edu>
-
-=item *
-
-Hans Dieter Pearcey <hdp@pobox.com>
 
 =item *
 
@@ -1078,6 +1079,10 @@ Niels Thykier <niels@thykier.net>
 =item *
 
 Olaf Alders <olaf@wundersolutions.com>
+
+=item *
+
+Ricardo Signes <rjbs@semiotic.systems>
 
 =item *
 

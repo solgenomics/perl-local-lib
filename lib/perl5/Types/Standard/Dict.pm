@@ -1,12 +1,14 @@
+# INTERNAL MODULE: guts for Dict type from Types::Standard.
+
 package Types::Standard::Dict;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
 	$Types::Standard::Dict::AUTHORITY = 'cpan:TOBYINK';
-	$Types::Standard::Dict::VERSION   = '1.012004';
+	$Types::Standard::Dict::VERSION   = '2.004000';
 }
 
 $Types::Standard::Dict::VERSION =~ tr/_//d;
@@ -21,6 +23,7 @@ sub _croak ($;@) {
 	goto \&Error::TypeTiny::croak;
 }
 
+my $_Slurpy   = Types::Standard::Slurpy;
 my $_optional = Types::Standard::Optional;
 my $_hash     = Types::Standard::HashRef;
 my $_map      = Types::Standard::Map;
@@ -38,25 +41,16 @@ sub pair_iterator {
 }
 
 sub __constraint_generator {
-	my $shash;
-	my $slurpy = ref( $_[-1] ) eq q(HASH)
-		? do {
-		$shash = pop @_;
-		Types::TypeTiny::to_TypeTiny( $shash->{slurpy} );
-		}
+	my $slurpy =
+		@_
+		&& Types::TypeTiny::is_TypeTiny( $_[-1] )
+		&& $_[-1]->is_strictly_a_type_of( $_Slurpy )
+		? pop->my_unslurpy
 		: undef;
 	my $iterator = pair_iterator @_;
 	my %constraints;
 	my %is_optional;
 	my @keys;
-	
-	if ( $slurpy ) {
-		Types::TypeTiny::is_TypeTiny( $slurpy )
-			or _croak(
-			"Slurpy parameter to Dict[...] expected to be a type constraint; got $slurpy" );
-			
-		$shash->{slurpy} = $slurpy;    # store canonicalized slurpy
-	}
 	
 	while ( my ( $k, $v ) = $iterator->() ) {
 		$constraints{$k} = $v;
@@ -73,7 +67,7 @@ sub __constraint_generator {
 	return sub {
 		my $value = $_[0];
 		if ( $slurpy ) {
-			my %tmp = map { exists( $constraints{$_} ) ? () : ( $_ => $value->{$_} ) }
+			my %tmp = map +( exists( $constraints{$_} ) ? () : ( $_ => $value->{$_} ) ),
 				keys %$value;
 			return unless $slurpy->check( \%tmp );
 		}
@@ -93,7 +87,12 @@ sub __inline_generator {
 	# We can only inline a parameterized Dict if all the
 	# constraints inside can be inlined.
 	
-	my $slurpy = ref( $_[-1] ) eq q(HASH) ? pop( @_ )->{slurpy} : undef;
+	my $slurpy =
+		@_
+		&& Types::TypeTiny::is_TypeTiny( $_[-1] )
+		&& $_[-1]->is_strictly_a_type_of( $_Slurpy )
+		? pop->my_unslurpy
+		: undef;
 	return if $slurpy && !$slurpy->can_be_inlined;
 	
 	# Is slurpy a very loose type constraint?
@@ -167,7 +166,12 @@ sub __deep_explanation {
 	my ( $type, $value, $varname ) = @_;
 	my @params = @{ $type->parameters };
 	
-	my $slurpy   = ref( $params[-1] ) eq q(HASH) ? pop( @params )->{slurpy} : undef;
+	my $slurpy =
+		@params
+		&& Types::TypeTiny::is_TypeTiny( $params[-1] )
+		&& $params[-1]->is_strictly_a_type_of( $_Slurpy )
+		? pop( @params )->my_unslurpy
+		: undef;
 	my $iterator = pair_iterator @params;
 	my %constraints;
 	my @keys;
@@ -237,7 +241,12 @@ my $label_counter = 0;
 our ( $keycheck_counter, @KEYCHECK ) = -1;
 
 sub __coercion_generator {
-	my $slurpy = ref( $_[-1] ) eq q(HASH) ? pop( @_ )->{slurpy} : undef;
+	my $slurpy =
+		@_
+		&& Types::TypeTiny::is_TypeTiny( $_[-1] )
+		&& $_[-1]->is_strictly_a_type_of( $_Slurpy )
+		? pop->my_unslurpy
+		: undef;
 	my ( $parent, $child, %dict ) = @_;
 	my $C = "Type::Coercion"->new( type_constraint => $child );
 	
@@ -388,9 +397,12 @@ sub __dict_is_slurpy {
 	
 	my $dict = $self->find_parent(
 		sub { $_->has_parent && $_->parent == Types::Standard::Dict() } );
-	ref( $dict->parameters->[-1] ) eq q(HASH)
-		? $dict->parameters->[-1]{slurpy}
-		: !!0;
+	my $slurpy =
+		@{ $dict->parameters }
+		&& Types::TypeTiny::is_TypeTiny( $dict->parameters->[-1] )
+		&& $dict->parameters->[-1]->is_strictly_a_type_of( $_Slurpy )
+		? $dict->parameters->[-1]
+		: undef;
 } #/ sub __dict_is_slurpy
 
 sub __hashref_allows_key {
@@ -407,6 +419,7 @@ sub __hashref_allows_key {
 		my @args = @{ $dict->parameters };
 		pop @args;
 		%params = @args;
+		$slurpy = $slurpy->my_unslurpy;
 	}
 	else {
 		%params = @{ $dict->parameters };
@@ -441,6 +454,7 @@ sub __hashref_allows_value {
 		my @args = @{ $dict->parameters };
 		pop @args;
 		%params = @args;
+		$slurpy = $slurpy->my_unslurpy;
 	}
 	else {
 		%params = @{ $dict->parameters };
@@ -461,50 +475,3 @@ sub __hashref_allows_value {
 } #/ sub __hashref_allows_value
 
 1;
-
-__END__
-
-=pod
-
-=encoding utf-8
-
-=head1 NAME
-
-Types::Standard::Dict - internals for the Types::Standard Dict type constraint
-
-=head1 STATUS
-
-This module is considered part of Type-Tiny's internals. It is not
-covered by the
-L<Type-Tiny stability policy|Type::Tiny::Manual::Policies/"STABILITY">.
-
-=head1 DESCRIPTION
-
-This file contains some of the guts for L<Types::Standard>.
-It will be loaded on demand. You may ignore its presence.
-
-=head1 BUGS
-
-Please report any bugs to
-L<https://github.com/tobyink/p5-type-tiny/issues>.
-
-=head1 SEE ALSO
-
-L<Types::Standard>.
-
-=head1 AUTHOR
-
-Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
-
-=head1 COPYRIGHT AND LICENCE
-
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
-
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
-
-=head1 DISCLAIMER OF WARRANTIES
-
-THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
-MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.

@@ -1,16 +1,12 @@
 package Type::Tiny::Class;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
-	if ( $] < 5.008 ) { require Devel::TypeTiny::Perl56Compat }
-}
-
-BEGIN {
 	$Type::Tiny::Class::AUTHORITY = 'cpan:TOBYINK';
-	$Type::Tiny::Class::VERSION   = '1.012004';
+	$Type::Tiny::Class::VERSION   = '2.004000';
 }
 
 $Type::Tiny::Class::VERSION =~ tr/_//d;
@@ -19,9 +15,26 @@ use Scalar::Util qw< blessed >;
 
 sub _croak ($;@) { require Error::TypeTiny; goto \&Error::TypeTiny::croak }
 
+use Exporter::Tiny 1.004001 ();
 use Type::Tiny::ConstrainedObject ();
-our @ISA = 'Type::Tiny::ConstrainedObject';
+our @ISA = qw( Type::Tiny::ConstrainedObject Exporter::Tiny );
+
 sub _short_name { 'Class' }
+
+sub _exporter_fail {
+	my ( $class, $name, $opts, $globals ) = @_;
+	my $caller = $globals->{into};
+	
+	$opts->{name}  = $name unless exists $opts->{name}; $opts->{name} =~ s/:://g;
+	$opts->{class} = $name unless exists $opts->{class};
+	my $type = $class->new($opts);
+	
+	$INC{'Type/Registry.pm'}
+		? 'Type::Registry'->for_class( $caller )->add_type( $type )
+		: ( $Type::Registry::DELAYED{$caller}{$type->name} = $type )
+		unless( ref($caller) or $caller eq '-lexical' or $globals->{'lexical'} );
+	return map +( $_->{name} => $_->{code} ), @{ $type->exportables };
+}
 
 sub new {
 	my $proto = shift;
@@ -220,6 +233,87 @@ __END__
 
 Type::Tiny::Class - type constraints based on the "isa" method
 
+=head1 SYNOPSIS
+
+Using via L<Types::Standard>:
+
+  package Local::Horse {
+    use Moo;
+    use Types::Standard qw( Str InstanceOf );
+    
+    has name => (
+      is       => 'ro',
+      isa      => Str,
+    );
+    
+    has owner => (
+      is       => 'ro',
+      isa      => InstanceOf[ 'Local::Person' ],
+      default  => sub { Local::Person->new },
+    );
+  }
+
+Using Type::Tiny::Class's export feature:
+
+  package Local::Horse {
+    use Moo;
+    use Types::Standard qw( Str );
+    use Type::Tiny::Class 'Local::Person';
+    
+    has name => (
+      is       => 'ro',
+      isa      => Str,
+    );
+    
+    has owner => (
+      is       => 'ro',
+      isa      => LocalPerson,
+      default  => sub { LocalPerson->new },
+    );
+  }
+
+Using Type::Tiny::Class's object-oriented interface:
+
+  package Local::Horse {
+    use Moo;
+    use Types::Standard qw( Str );
+    use Type::Tiny::Class;
+    
+    my $Person = Type::Tiny::Class->new( class => 'Local::Person' );
+    
+    has name => (
+      is       => 'ro',
+      isa      => Str,
+    );
+    
+    has owner => (
+      is       => 'ro',
+      isa      => $Person,
+      default  => sub { $Person->new },
+    );
+  }
+
+Using Type::Utils's functional interface:
+
+  package Local::Horse {
+    use Moo;
+    use Types::Standard qw( Str );
+    use Type::Utils;
+    
+    my $Person = class_type 'Local::Person';
+    
+    has name => (
+      is       => 'ro',
+      isa      => Str,
+    );
+    
+    has owner => (
+      is       => 'ro',
+      isa      => $Person,
+      default  => sub { $Person->new },
+    );
+  }
+
 =head1 STATUS
 
 This module is covered by the
@@ -339,6 +433,33 @@ See L<Type::Tiny::ConstrainedObject>.
 
 =back
 
+=head2 Exports
+
+Type::Tiny::Class can be used as an exporter.
+
+  use Type::Tiny::Class 'HTTP::Tiny';
+
+This will export the following functions into your namespace:
+
+=over
+
+=item C<< HTTPTiny >>
+
+=item C<< is_HTTPTiny( $value ) >>
+
+=item C<< assert_HTTPTiny( $value ) >>
+
+=item C<< to_HTTPTiny( $value ) >>
+
+=back
+
+You will also be able to use C<< HTTPTiny->new(...) >> as a shortcut for
+C<< HTTP::Tiny->new(...) >>.
+
+Multiple types can be exported at once:
+
+  use Type::Tiny::Class qw( HTTP::Tiny LWP::UserAgent );
+
 =head1 BUGS
 
 Please report any bugs to
@@ -358,7 +479,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

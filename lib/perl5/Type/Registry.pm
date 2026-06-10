@@ -1,12 +1,12 @@
 package Type::Registry;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
 	$Type::Registry::AUTHORITY = 'cpan:TOBYINK';
-	$Type::Registry::VERSION   = '1.012004';
+	$Type::Registry::VERSION   = '2.004000';
 }
 
 $Type::Registry::VERSION =~ tr/_//d;
@@ -79,6 +79,11 @@ sub add_types {
 			$library->import( { into => \%hash }, @$types );
 			$hash{$_} = &{ $hash{$_} }() for keys %hash;
 		} #/ if ( $library->isa( "Type::Library"...))
+		elsif ( $library->isa( "Exporter" )
+		and my $type_tag = do { no strict 'refs'; ${"$library\::EXPORT_TAGS"}{'types'} } ) {
+			$types ||= $type_tag;
+			$hash{$_} = $library->$_ for @$types;
+		}
 		elsif ( $library->isa( "MooseX::Types::Base" ) ) {
 			$types ||= [];
 			Types::TypeTiny::is_ArrayLike( $types ) && ( @$types == 0 )
@@ -244,6 +249,14 @@ sub make_union {
 	return "Type::Tiny::Union"->new( type_constraints => \@types );
 }
 
+sub _make_union_by_overload {
+	my $self = shift;
+	my ( @types ) = @_;
+	
+	require Type::Tiny::Union;
+	return "Type::Tiny::Union"->new_by_overload( type_constraints => \@types );
+}
+
 sub make_intersection {
 	my $self = shift;
 	my ( @types ) = @_;
@@ -252,20 +265,28 @@ sub make_intersection {
 	return "Type::Tiny::Intersection"->new( type_constraints => \@types );
 }
 
+sub _make_intersection_by_overload {
+	my $self = shift;
+	my ( @types ) = @_;
+	
+	require Type::Tiny::Intersection;
+	return "Type::Tiny::Intersection"->new_by_overload( type_constraints => \@types );
+}
+
 sub make_class_type {
 	my $self = shift;
 	my ( $class ) = @_;
 	
-	require Type::Tiny::Class;
-	return "Type::Tiny::Class"->new( class => $class );
+	require Types::Standard;
+	return Types::Standard::InstanceOf()->of( $class );
 }
 
 sub make_role_type {
 	my $self = shift;
 	my ( $role ) = @_;
 	
-	require Type::Tiny::Role;
-	return "Type::Tiny::Role"->new( role => $role );
+	require Types::Standard;
+	return Types::Standard::ConsumerOf()->of( $role );
 }
 
 sub AUTOLOAD {
@@ -512,7 +533,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -41,7 +41,7 @@ accelerated only if their parameters are.
 
 The parameterized form of B<Tuple> can be accelerated if its
 parameters are, it has no B<Optional> components, and it does not use
-C<slurpy>.
+B<Slurpy>.
 
 Certain type constraints may benefit partially from Type::Tiny::XS.
 For example, B<RoleName> inherits from B<ClassName>, so part of the
@@ -56,8 +56,8 @@ L<Types::Common::Numeric> will be accelerated, as will the
 B<NonEmptyStr> type constraint from L<Types::Common::String>.
 
 The B<StringLike>, B<CodeLike>, B<HashLike>, and B<ArrayLike> types
-from L<Types::TypeTiny> will be accelerated, but parameterized
-B<HashLike> and B<ArrayLike> will not.
+from L<Types::TypeTiny> will be accelerated, including the parameterized
+versions of B<HashLike> and B<ArrayLike>.
 
 L<Type::Tiny::Union> and L<Type::Tiny::Intersection> will also be
 accelerated if their constituent type constraints are.
@@ -88,7 +88,7 @@ L<Type::Tiny::Duck> objects.
 
 In the case of a type constraint like this:
 
- my $type = Int->where(sub { $_ >= 0 });
+ my $type = Int->where( sub { $_ >= 0 } );
 
 Type::Tiny will need to call one sub to verify a value meets the B<Int>
 type constraint, and your coderef to check that the value is above zero.
@@ -104,7 +104,7 @@ more complicated, but this is close enough as an example.)
 
 If you provide your check as a string instead of a coderef, like this:
 
- my $type = Int->where(q{ $_ >= 0 });
+ my $type = Int->where( q{ $_ >= 0 } );
 
 Then Type::Tiny will be able to combine them into one string:
 
@@ -128,10 +128,10 @@ variable name and can use that in the string of code it generates.
  my $type = Type::Tiny->new(
    parent  => Int,
    inlined => sub {
-     my ($self, $varname) = @_;
+     my ( $self, $varname ) = @_;
      return sprintf(
        '(%s) && ( %s >= 0 )',
-       $self->parent->inline_check($varname),
+       $self->parent->inline_check( $varname ),
        $varname,
      );
    }
@@ -146,10 +146,10 @@ type check.
  my $type = Type::Tiny->new(
    parent  => Int,
    inlined => sub {
-     my ($self, $varname) = @_;
+     my ( $self, $varname ) = @_;
      return (
        undef,
-       sprintf('%s >= 0', $varname),
+       sprintf( '%s >= 0', $varname ),
      );
    }
  );
@@ -168,8 +168,8 @@ to.
  my $type = Type::Tiny->new(
    parent  => Int,
    inlined => sub {
-     my ($self, $varname) = @_;
-     return sprintf('%s =~ /^[0-9]+$/', $varname);
+     my ( $self, $varname ) = @_;
+     return sprintf( '%s =~ /^[0-9]+$/', $varname );
    }
  );
 
@@ -202,7 +202,7 @@ faster.)
 
 One possibility is to use strict type checks when you're running your
 release tests, and faster, more permissive type checks at other times.
-Devel::StrictMode can make this easier.
+L<Devel::StrictMode> can make this easier.
 
 This provides a C<STRICT> constant that indicates whether your code is
 operating in "strict mode" based on certain environment variables.
@@ -223,21 +223,49 @@ it can lead to inconsistent and unpredictable behaviour.
 
 =head3 Type::Params
 
+Very efficient way which avoids compiling the signature at all if
+C<STRICT> is false:
+
  use Types::Standard qw( Num Object );
- use Type::Params qw( compile );
+ use Type::Params qw( signature );
  use Devel::StrictMode qw( STRICT );
  
  sub add_number {
    state $check;
-   $check = compile(Object, Num) if STRICT;
+   STRICT and $check //= signature(
+     method     => 1,
+     positional => [ Num ],
+   );
    
-   my ($self, $num) = STRICT ? $check->(@_) : @_;
+   my ( $self, $num ) = STRICT ? &$check : @_;
+   
    push @{ $self->numbers }, $num;
    return $self;
  }
 
 Again, you need to be careful to ensure consistent behaviour if you're
 using coercions, defaults, slurpies, etc.
+
+Less efficient way, but more declarative and smart enough to just disable
+checks which are safe(ish) to disable, while coercions, defaults, and
+slurpies will continue to work:
+
+ use Types::Standard qw( Num Object );
+ use Type::Params qw( signature );
+ use Devel::StrictMode qw( STRICT );
+ 
+ sub add_number {
+   state $check = signature(
+     strictness => STRICT,
+     method     => 1,
+     positional => [ Num ],
+   );
+   
+   my ( $self, $num ) = &$check;
+   
+   push @{ $self->numbers }, $num;
+   return $self;
+ }
 
 =head3 Ad-Hoc Type Checks
 
@@ -246,6 +274,27 @@ using coercions, defaults, slurpies, etc.
  assert_Int($x) if STRICT;
  return $x + 1;
  ...;
+
+=head2 The Slash Operator
+
+Type::Tiny has some of the same logic as Devel::StrictMode built in.
+In particular, it overloads the slash (division) operator so that
+B<< TypeA/TypeB >> evaluates to B<TypeB> normally, but to B<TypeA>
+in strict mode.
+
+An example using this feature:
+
+ use Types::Standard -types;
+ 
+ has numbers => (
+   is      => 'ro',
+   isa     => ArrayRef[ Num / Any ],
+   default => sub { [] },
+ );
+
+In strict mode, this attribute would check that its value is an arrayref
+of numbers (which may be slow if it contains a lot of numbers). Normally
+though, it will just check that the value is an arrayref.
 
 =head1 NEXT STEPS
 
@@ -265,7 +314,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

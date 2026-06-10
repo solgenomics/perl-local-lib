@@ -12,7 +12,7 @@ The following is a list of type constraints bundled with Type::Tiny,
 with very brief descriptions. For more information, see the type
 library's documentation, and the test cases in C<< t/21-types/ >>.
 
-GitHib link:
+GitHub link:
 L<https://github.com/tobyink/p5-type-tiny/tree/master/t/21-types>.
 
 =over
@@ -40,6 +40,13 @@ Arrayrefs.
 B<< Bool >> I<< [has coercion] >> in L<Types::Standard>
 
 Booleans; the numbers or strings "0" and "1", the empty string, or undef. 
+
+=item *
+
+B<< BoolLike >> in L<Types::TypeTiny>
+
+Similar to B<< Bool >>, but without coercions, and accepts objects
+overloading "bool".
 
 =item *
 
@@ -76,6 +83,12 @@ An arrayref with a repeating pattern of constraints on its values.
 B<< Defined >> in L<Types::Standard>
 
 Any value other than undef.
+
+=item *
+
+B<< DelimitedStr >> I<< [parameterizable] >> in L<Types::Common::String>
+
+A comma-delimited or other delimited string.
 
 =item *
 
@@ -325,6 +338,12 @@ A single digit number. This includes single digit negative numbers!
 
 =item *
 
+B<< Slurpy >> I<< [parameterizable] >> in L<Types::Standard>
+
+Used in conjunction with Dict or Tuple.
+
+=item *
+
 B<< Str >> in L<Types::Standard>
 
 A string.
@@ -403,6 +422,8 @@ Any non-reference value, including undef.
 
 =back
 
+The module L<Types::Common> incorporates all of the above.
+
 =head1 NEXT STEPS
 
 Here's your next step:
@@ -421,7 +442,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

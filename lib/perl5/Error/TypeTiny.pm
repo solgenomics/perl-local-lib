@@ -1,12 +1,12 @@
 package Error::TypeTiny;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
 	$Error::TypeTiny::AUTHORITY = 'cpan:TOBYINK';
-	$Error::TypeTiny::VERSION   = '1.012004';
+	$Error::TypeTiny::VERSION   = '2.004000';
 }
 
 $Error::TypeTiny::VERSION =~ tr/_//d;
@@ -17,51 +17,11 @@ __PACKAGE__->Type::Tiny::_install_overloads(
 	q[bool] => sub { 1 },
 );
 
+require Carp;
+*CarpInternal = \%Carp::CarpInternal;
+
 our %CarpInternal;
-$CarpInternal{$_}++ for qw(
-	Types::Standard::_Stringable
-	Exporter::Tiny
-	Eval::TypeTiny::Sandbox
-	
-	Devel::TypeTiny::Perl56Compat
-	Devel::TypeTiny::Perl58Compat
-	Error::TypeTiny
-	Error::TypeTiny::Assertion
-	Error::TypeTiny::Compilation
-	Error::TypeTiny::WrongNumberOfParameters
-	Eval::TypeTiny
-	Reply::Plugin::TypeTiny
-	Test::TypeTiny
-	Type::Coercion
-	Type::Coercion::FromMoose
-	Type::Coercion::Union
-	Type::Library
-	Type::Params
-	Type::Parser
-	Type::Registry
-	Types::Common::Numeric
-	Types::Common::String
-	Types::Standard
-	Types::Standard::ArrayRef
-	Types::Standard::CycleTuple
-	Types::Standard::Dict
-	Types::Standard::HashRef
-	Types::Standard::Map
-	Types::Standard::ScalarRef
-	Types::Standard::StrMatch
-	Types::Standard::Tied
-	Types::Standard::Tuple
-	Types::TypeTiny
-	Type::Tiny
-	Type::Tiny::Class
-	Type::Tiny::Duck
-	Type::Tiny::Enum
-	Type::Tiny::_HalfOp
-	Type::Tiny::Intersection
-	Type::Tiny::Role
-	Type::Tiny::Union
-	Type::Utils
-);
+$CarpInternal{$_}++ for @Type::Tiny::InternalPackages;
 
 sub new {
 	my $class  = shift;
@@ -70,7 +30,14 @@ sub new {
 }
 
 sub throw {
+	my $next = $_[0]->can( 'throw_cb' );
+	splice( @_, 1, 0, undef );
+	goto $next;
+}
+
+sub throw_cb {
 	my $class = shift;
+	my $callback = shift;
 	
 	my ( $level, @caller, %ctxt ) = 0;
 	while (
@@ -106,13 +73,13 @@ sub throw {
 		);
 	}
 	
-	die(
-		our $LastError = $class->new(
-			context     => \%ctxt,
-			stack_trace => $stack,
-			@_,
-		)
+	our $LastError = $class->new(
+		context     => \%ctxt,
+		stack_trace => $stack,
+		@_,
 	);
+	
+	$callback ? $callback->( $LastError ) : die( $LastError );
 } #/ sub throw
 
 sub message     { $_[0]{message} ||= $_[0]->_build_message }
@@ -198,6 +165,13 @@ Constructs an exception and passes it to C<die>.
 
 Automatically populates C<context> and C<stack_trace> if appropriate.
 
+=item C<< throw_cb($callback, %attributes) >>
+
+Constructs an exception and passes it to C<< $callback >> which should
+be a coderef; if undef, uses C<die>.
+
+Automatically populates C<context> and C<stack_trace> if appropriate.
+
 =back
 
 =head2 Attributes
@@ -254,9 +228,10 @@ Stringification is overloaded to call C<to_string>.
 
 =over
 
-=item C<< %Error::TypeTiny::CarpInternal >>
+=item C<< %Carp::CarpInternal >>
 
-Serves a similar purpose to C<< %Carp::CarpInternal >>.
+Error::TypeTiny honours this package variable from L<Carp>.
+(C< %Error::TypeTiny::CarpInternal> is an alias for it.)
 
 =item C<< $Error::TypeTiny::StackTrace >>
 
@@ -298,7 +273,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

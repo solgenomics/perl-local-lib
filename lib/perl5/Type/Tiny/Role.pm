@@ -1,12 +1,12 @@
 package Type::Tiny::Role;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
 	$Type::Tiny::Role::AUTHORITY = 'cpan:TOBYINK';
-	$Type::Tiny::Role::VERSION   = '1.012004';
+	$Type::Tiny::Role::VERSION   = '2.004000';
 }
 
 $Type::Tiny::Role::VERSION =~ tr/_//d;
@@ -15,9 +15,26 @@ use Scalar::Util qw< blessed weaken >;
 
 sub _croak ($;@) { require Error::TypeTiny; goto \&Error::TypeTiny::croak }
 
+use Exporter::Tiny 1.004001 ();
 use Type::Tiny::ConstrainedObject ();
-our @ISA = 'Type::Tiny::ConstrainedObject';
+our @ISA = qw( Type::Tiny::ConstrainedObject Exporter::Tiny );
+
 sub _short_name { 'Role' }
+
+sub _exporter_fail {
+	my ( $class, $name, $opts, $globals ) = @_;
+	my $caller = $globals->{into};
+	
+	$opts->{name} = $name unless exists $opts->{name}; $opts->{name} =~ s/:://g;
+	$opts->{role} = $name unless exists $opts->{role};
+	my $type = $class->new($opts);
+	
+	$INC{'Type/Registry.pm'}
+		? 'Type::Registry'->for_class( $caller )->add_type( $type )
+		: ( $Type::Registry::DELAYED{$caller}{$type->name} = $type )
+		unless( ref($caller) or $caller eq '-lexical' or $globals->{'lexical'} );
+	return map +( $_->{name} => $_->{code} ), @{ $type->exportables };
+}
 
 my %cache;
 
@@ -103,6 +120,91 @@ __END__
 
 Type::Tiny::Role - type constraints based on the "DOES" method
 
+=head1 SYNOPSIS
+
+Using via L<Types::Standard>:
+
+  package Local::Horse {
+    use Moo;
+    use Types::Standard qw( Str ConsumerOf );
+    
+    has name => (
+      is       => 'ro',
+      isa      => Str,
+    );
+    
+    has owner => (
+      is       => 'ro',
+      isa      => ConsumerOf[ 'Local::Traits::DoesOwnership' ],
+      default  => sub { Local::Person->new },
+    );
+  }
+
+Using Type::Tiny::Class's export feature:
+
+  package Local::Horse {
+    use Moo;
+    use Types::Standard qw( Str );
+    use Type::Tiny::Role (
+      Owner => { role => 'Local::Traits::DoesOwnership' },
+    );
+    
+    has name => (
+      is       => 'ro',
+      isa      => Str,
+    );
+    
+    has owner => (
+      is       => 'ro',
+      isa      => Owner,
+      default  => sub { Local::Person->new },
+    );
+  }
+
+Using Type::Tiny::Role's object-oriented interface:
+
+  package Local::Horse {
+    use Moo;
+    use Types::Standard qw( Str );
+    use Type::Tiny::Class;
+    
+    my $Owner = Type::Tiny::Role->new(
+      role => 'Local::Traits::DoesOwnership',
+    );
+    
+    has name => (
+      is       => 'ro',
+      isa      => Str,
+    );
+    
+    has owner => (
+      is       => 'ro',
+      isa      => $Owner,
+      default  => sub { Local::Person->new },
+    );
+  }
+
+Using Type::Utils's functional interface:
+
+  package Local::Horse {
+    use Moo;
+    use Types::Standard qw( Str );
+    use Type::Utils;
+    
+    my $Owner = role_type 'Local::Traits::DoesOwnership';
+    
+    has name => (
+      is       => 'ro',
+      isa      => Str,
+    );
+    
+    has owner => (
+      is       => 'ro',
+      isa      => $Owner,
+      default  => sub { Local::Person->new },
+    );
+  }
+
 =head1 STATUS
 
 This module is covered by the
@@ -162,6 +264,30 @@ See L<Type::Tiny::ConstrainedObject>.
 
 =back
 
+=head2 Exports
+
+Type::Tiny::Role can be used as an exporter.
+
+  use Type::Tiny::Role 'MyApp::Printable';
+
+This will export the following functions into your namespace:
+
+=over
+
+=item C<< MyAppPrintable >>
+
+=item C<< is_MyAppPrintable( $value ) >>
+
+=item C<< assert_MyAppPrintable( $value ) >>
+
+=item C<< to_MyAppPrintable( $value ) >>
+
+=back
+
+Multiple types can be exported at once:
+
+  use Type::Tiny::Role qw( MyApp::Printable MyApp::Sendable );
+
 =head1 BUGS
 
 Please report any bugs to
@@ -181,7 +307,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

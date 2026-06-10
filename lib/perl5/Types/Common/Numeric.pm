@@ -1,16 +1,12 @@
 package Types::Common::Numeric;
 
-use 5.006001;
+use 5.008001;
 use strict;
 use warnings;
 
 BEGIN {
-	if ( $] < 5.008 ) { require Devel::TypeTiny::Perl56Compat }
-}
-
-BEGIN {
 	$Types::Common::Numeric::AUTHORITY = 'cpan:TOBYINK';
-	$Types::Common::Numeric::VERSION   = '1.012004';
+	$Types::Common::Numeric::VERSION   = '2.004000';
 }
 
 $Types::Common::Numeric::VERSION =~ tr/_//d;
@@ -45,6 +41,7 @@ $meta->add_type(
 	constraint => sub { $_ >= 0 },
 	inlined    => sub { undef, qq($_ >= 0) },
 	message    => sub { "Must be a number greater than or equal to zero" },
+	type_default => sub { return 0; },
 );
 
 my ( $pos_int, $posz_int );
@@ -82,6 +79,7 @@ $meta->add_type(
 	},
 	message => sub { "Must be an integer greater than or equal to zero" },
 	$posz_int ? ( compiled_type_constraint => $posz_int ) : (),
+	type_default => sub { return 0; },
 );
 
 $meta->add_type(
@@ -98,6 +96,7 @@ $meta->add_type(
 	constraint => sub { $_ <= 0 },
 	inlined    => sub { undef, qq($_ <= 0) },
 	message    => sub { "Must be a number less than or equal to zero" },
+	type_default => sub { return 0; },
 );
 
 $meta->add_type(
@@ -114,6 +113,7 @@ $meta->add_type(
 	constraint => sub { $_ <= 0 },
 	inlined    => sub { undef, qq($_ <= 0) },
 	message    => sub { "Must be an integer less than or equal to zero" },
+	type_default => sub { return 0; },
 );
 
 $meta->add_type(
@@ -122,6 +122,7 @@ $meta->add_type(
 	constraint => sub { $_ >= -9 and $_ <= 9 },
 	inlined    => sub { undef, qq($_ >= -9), qq($_ <= 9) },
 	message    => sub { "Must be a single digit" },
+	type_default => sub { return 0; },
 );
 
 for my $base ( qw/Num Int/ ) {
@@ -200,9 +201,9 @@ for my $base ( qw/Num Int/ ) {
 				);
 			}
 			push @whines, sprintf(
-				"length(%s) is %d",
+				"%s is %s",
 				$varname,
-				length( $value ),
+				$value,
 			);
 			return \@whines;
 		},
@@ -342,7 +343,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013-2014, 2017-2021 by Toby Inkster.
+This software is copyright (c) 2013-2014, 2017-2023 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

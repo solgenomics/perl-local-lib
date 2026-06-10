@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Sub::Exporter::Util;
 # ABSTRACT: utilities to make Sub::Exporter easier
-$Sub::Exporter::Util::VERSION = '0.988';
+$Sub::Exporter::Util::VERSION = '0.990';
 use Data::OptList ();
 use Params::Util ();
 
@@ -342,7 +342,7 @@ Sub::Exporter::Util - utilities to make Sub::Exporter easier
 
 =head1 VERSION
 
-version 0.988
+version 0.990
 
 =head1 DESCRIPTION
 
@@ -350,15 +350,15 @@ This module provides a number of utility functions for performing common or
 useful operations when setting up a Sub::Exporter configuration.  All of the
 utilities may be exported, but none are by default.
 
-=head1 PERL VERSION SUPPORT
+=head1 PERL VERSION
 
-This module has a long-term perl support period.  That means it will not
-require a version of perl released fewer than five years ago.
+This library should run on perls released even a long time ago.  It should
+work on any version of perl released in the last five years.
 
 Although it may work on older versions of perl, no guarantee is made that the
 minimum required version will not be increased.  The version may be increased
-for any reason, and there is no promise that patches will be accepted to lower
-the minimum required perl.
+for any reason, and there is no promise that patches will be accepted to
+lower the minimum required perl.
 
 =head1 THE UTILITIES
 
@@ -476,7 +476,7 @@ passed on to the generators for matching exports.
 
 =head1 AUTHOR
 
-Ricardo Signes <rjbs@semiotic.systems>
+Ricardo Signes <cpan@semiotic.systems>
 
 =head1 COPYRIGHT AND LICENSE
 
