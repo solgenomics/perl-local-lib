@@ -1,1 +1,1 @@
-{"pathname":"P/PE/PETDANCE/Test-Taint-1.08.tar.gz","target":"Test::Taint","version":"1.08","provides":{"Test::Taint":{"version":"1.08","file":"Taint.pm"}},"name":"Test::Taint","dist":"Test-Taint-1.08"}
+{"dist":"Test-Taint-1.08","provides":{"Test::Taint":{"version":"1.08","file":"Taint.pm"}},"version":"1.08","name":"Test::Taint","pathname":"P/PE/PETDANCE/Test-Taint-1.08.tar.gz","target":"Test::Taint"}

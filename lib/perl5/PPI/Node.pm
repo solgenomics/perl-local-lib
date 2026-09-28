@@ -51,12 +51,11 @@ L<PPI::Element> objects also apply to C<PPI::Node> objects.
 use strict;
 use Carp            ();
 use Scalar::Util    qw{refaddr};
-use List::Util      ();
 use Params::Util    qw{_INSTANCE _CLASS _CODELIKE _NUMBER};
 use PPI::Element    ();
-use PPI::Singletons '%_PARENT';
+use PPI::Singletons '%_PARENT', '%_POSITION_CACHE';
 
-our $VERSION = '1.272';
+our $VERSION = '1.291';
 
 our @ISA = "PPI::Element";
 
@@ -510,16 +509,31 @@ sub remove_child {
 
 	# Find the position of the child
 	my $key = refaddr $child;
-	my $p   = List::Util::first {
-		refaddr $self->{children}[$_] == $key
-	} 0..$#{$self->{children}};
+	my $p   = $self->__position($child);
 	return undef unless defined $p;
 
 	# Splice it out, and remove the child's parent entry
 	splice( @{$self->{children}}, $p, 1 );
-	delete $_PARENT{refaddr $child};
+	delete $_PARENT{$key};
 
 	$child;
+}
+
+=head2 replace_child $Element, $Replacement
+
+If successful, returns the replace element.  Otherwise, returns C<undef>.
+
+=cut
+
+sub replace_child {
+	my $self = shift;
+
+	my $child       = _INSTANCE(shift, 'PPI::Element') or return undef;
+	my $replacement = _INSTANCE(shift, 'PPI::Element') or return undef;
+
+	my $success = $self->__replace_child( $child, $replacement );
+
+	return $success ? $replacement : undef;
 }
 
 =pod
@@ -685,61 +699,77 @@ sub DESTROY {
 		}
 	}
 
-	# Remove us from our parent node as normal
-	delete $_PARENT{refaddr $_[0]};
+	$_[0]->SUPER::DESTROY;
 }
 
-# Find the position of a child
 sub __position {
-	my $key = refaddr $_[1];
-	List::Util::first { refaddr $_[0]{children}[$_] == $key } 0..$#{$_[0]{children}};
+	my ( $self, $child ) = @_;
+	my $key = refaddr $child;
+
+	return undef unless #
+		my $elements = $self->{children};
+
+	if (defined (my $position = $_POSITION_CACHE{$key})) {
+		my $maybe_child = $elements->[$position];
+		return $position if defined $maybe_child and refaddr $maybe_child == $key;
+	}
+
+	delete $_POSITION_CACHE{$key};
+
+	$_POSITION_CACHE{refaddr $elements->[$_]} = $_ for 0 .. $#{$elements};
+
+	return $_POSITION_CACHE{$key};
 }
 
 # Insert one or more elements before a child
 sub __insert_before_child {
-	my $self = shift;
-	my $key  = refaddr shift;
-	my $p    = List::Util::first {
-	         refaddr $self->{children}[$_] == $key
-	         } 0..$#{$self->{children}};
-	foreach ( @_ ) {
+	my ( $self, $child, @insertions ) = @_;
+	my $key  = refaddr $child;
+	my $p    = $self->__position($child);
+	foreach ( @insertions ) {
 		Scalar::Util::weaken(
 			$_PARENT{refaddr $_} = $self
 			);
 	}
-	splice( @{$self->{children}}, $p, 0, @_ );
+	splice( @{$self->{children}}, $p, 0, @insertions );
 	1;
 }
 
 # Insert one or more elements after a child
 sub __insert_after_child {
-	my $self = shift;
-	my $key  = refaddr shift;
-	my $p    = List::Util::first {
-	         refaddr $self->{children}[$_] == $key
-	         } 0..$#{$self->{children}};
-	foreach ( @_ ) {
+	my ( $self, $child, @insertions ) = @_;
+	my $key  = refaddr $child;
+	my $p    = $self->__position($child);
+	foreach ( @insertions ) {
 		Scalar::Util::weaken(
 			$_PARENT{refaddr $_} = $self
 			);
 	}
-	splice( @{$self->{children}}, $p + 1, 0, @_ );
+	splice( @{$self->{children}}, $p + 1, 0, @insertions );
 	1;
 }
 
 # Replace a child
 sub __replace_child {
-	my $self = shift;
-	my $key  = refaddr shift;
-	my $p    = List::Util::first {
-	         refaddr $self->{children}[$_] == $key
-	         } 0..$#{$self->{children}};
-	foreach ( @_ ) {
+	my ( $self, $old_child, @replacements ) = @_;
+	my $old_child_addr  = refaddr $old_child;
+
+	# Cache parent of new children
+	my $old_child_index = $self->__position($old_child);
+
+	return undef if !defined $old_child_index;
+
+	foreach ( @replacements ) {
 		Scalar::Util::weaken(
 			$_PARENT{refaddr $_} = $self
 			);
 	}
-	splice( @{$self->{children}}, $p, 1, @_ );
+
+	# Replace old child with new children
+	splice( @{$self->{children}}, $old_child_index, 1, @replacements );
+
+	# Uncache parent of old child
+	delete $_PARENT{$old_child_addr};
 	1;
 }
 

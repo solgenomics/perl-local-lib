@@ -11,10 +11,10 @@ use Carp ();
 sub _path { Path::Tiny::path(@_) }
 
 # ABSTRACT: Specification for defining an external dependency for CPAN
-our $VERSION = '2.46'; # VERSION
+our $VERSION = '2.84'; # VERSION
 
 
-our @EXPORT = qw( requires on plugin probe configure share sys download fetch decode prefer extract patch patch_ffi build build_ffi gather gather_ffi meta_prop ffi log test start_url before after );
+our @EXPORT = qw( requires on plugin probe configure share sys download fetch decode prefer extract patch patch_ffi build build_ffi gather gather_ffi meta_prop ffi log test start_url before after digest );
 
 
 sub requires
@@ -99,6 +99,16 @@ sub start_url
   my $meta = $caller->meta;
   $meta->prop->{start_url} = $url;
   $meta->add_requires('configure' => 'Alien::Build' => '1.19');
+  return;
+}
+
+
+sub digest
+{
+  my($algo, $digest) = @_;
+
+  my $caller = caller;
+  $caller->meta->apply_plugin('Digest', [$algo, $digest]);
   return;
 }
 
@@ -323,7 +333,7 @@ sub _add_modifier
   }
 
   foreach my $hook (
-    map { split /,/, $_ }                        # split on , for when multiple hooks must be attachewd (gather in any)
+    map { split /,/, $_ }                        # split on , for when multiple hooks must be attached (gather in any)
     map { my $x = $_ ; $x =~ s/\$/$suffix/; $x } # substitute $ at the end for a suffix (_ffi) if any
     $modifiers{$stage}->{$meta->{phase}})        # get the list of modifiers
   {
@@ -369,7 +379,7 @@ alienfile - Specification for defining an external dependency for CPAN
 
 =head1 VERSION
 
-version 2.46
+version 2.84
 
 =head1 SYNOPSIS
 
@@ -519,8 +529,10 @@ Examples:
  probe \&code;
  probe \@commandlist;
 
-Instructions for the probe stage.  May be either a
-code reference, or a command list.
+Instructions for the probe stage.  May be either a code reference, or a command list.
+Multiple probes and probe plugins can be given.  These will be used in sequence,
+stopping at the first that detects a system installation.  L<Alien::Build> will use
+a share install if no system installation is detected by the probes.
 
 =head2 configure
 
@@ -554,6 +566,17 @@ System block.  Allowed directives are: download, fetch, decode, prefer, extract,
  };
 
 Set the start URL for download.  This should be the URL to an index page, or the actual tarball of the source.
+
+=head2 digest
+
+[experimental]
+
+ share {
+   digest $algorithm, $digest;
+ };
+
+Check fetched and downloaded files against the given algorithm and
+digest.  Typically you will want to use SHA256 as the algorithm.
 
 =head2 download
 
@@ -705,7 +728,8 @@ Get the meta_prop hash reference.
 
  my $meta = meta;
 
-Returns the meta object for your L<alienfile>.
+Returns the meta object for your L<alienfile>.  For methods that can be used on the
+meta object, see L<Alien::Build/"META METHODS">.
 
 =head2 log
 
@@ -844,9 +868,11 @@ Håkon Hægland (hakonhagland, HAKONH)
 
 nick nauwelaerts (INPHOBIA)
 
+Florian Weimer
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2020 by Graham Ollis.
+This software is copyright (c) 2011-2022 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

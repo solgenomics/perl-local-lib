@@ -20,12 +20,13 @@ contact me at barries@slaysys.com, thanks!.
 =cut
 
 use strict;
+use warnings;
 use Carp;
 use IO::Handle;
 use vars qw{ $VERSION @ISA @EXPORT };
 
 BEGIN {
-    $VERSION = '20200505.0';
+    $VERSION = '20260402.0';
     @ISA     = qw( Exporter );
     @EXPORT  = qw(
       win32_spawn
@@ -37,15 +38,22 @@ BEGIN {
 
 require POSIX;
 
-use Text::ParseWords;
+use File::Spec ();
+use Win32 ();
 use Win32::Process;
+use Win32::ShellQuote ();
 use IPC::Run::Debug;
 use Win32API::File qw(
   FdGetOsFHandle
   SetHandleInformation
   HANDLE_FLAG_INHERIT
-  INVALID_HANDLE_VALUE
 );
+
+# Replace Win32API::File::INVALID_HANDLE_VALUE, which does not match the C ABI
+# on 64-bit builds (https://github.com/chorny/Win32API-File/issues/13).
+use constant C_ABI_INVALID_HANDLE_VALUE => length( pack 'P', undef ) == 4
+  ? 0xffffffff
+  : 0xffffffff << 32 | 0xffffffff;
 
 ## Takes an fd or a GLOB ref, never never never a Win32 handle.
 sub _dont_inherit {
@@ -55,7 +63,11 @@ sub _dont_inherit {
         $fd = fileno $fd if ref $fd;
         _debug "disabling inheritance of ", $fd if _debugging_details;
         my $osfh = FdGetOsFHandle $fd;
-        croak $^E if !defined $osfh || $osfh == INVALID_HANDLE_VALUE;
+
+        # Contrary to documentation, $! has the failure reason
+        # (https://github.com/chorny/Win32API-File/issues/14)
+        croak "$!: FdGetOsFHandle( $fd )"
+          if !defined $osfh || $osfh == C_ABI_INVALID_HANDLE_VALUE;
 
         SetHandleInformation( $osfh, HANDLE_FLAG_INHERIT, 0 );
     }
@@ -68,7 +80,11 @@ sub _inherit {    #### REMOVE
         $fd = fileno $fd if ref $fd;    #### REMOVE
         _debug "enabling inheritance of ", $fd if _debugging_details;    #### REMOVE
         my $osfh = FdGetOsFHandle $fd;                                   #### REMOVE
-        croak $^E if !defined $osfh || $osfh == INVALID_HANDLE_VALUE;    #### REMOVE
+
+        # Contrary to documentation, $! has the failure reason
+        # (https://github.com/chorny/Win32API-File/issues/14)
+        croak "$!: FdGetOsFHandle( $fd )"
+          if !defined $osfh || $osfh == C_ABI_INVALID_HANDLE_VALUE;
         #### REMOVE
         SetHandleInformation( $osfh, HANDLE_FLAG_INHERIT, 1 );           #### REMOVE
     }    #### REMOVE
@@ -314,29 +330,97 @@ sub optimize {
 
 =item win32_parse_cmd_line
 
-   @words = win32_parse_cmd_line( q{foo bar 'baz baz' "bat bat"} );
+   @words = win32_parse_cmd_line( q{foo "bar baz" qux} );
 
-returns 4 words. This parses like the bourne shell (see
-the bit about shellwords() in L<Text::ParseWords>), assuming we're
-trying to be a little cross-platform here.  The only difference is
-that "\" is *not* treated as an escape except when it precedes 
-punctuation, since it's used all over the place in DOS path specs.
+returns 3 words.  Parses a Windows command-line string into arguments
+following the
+L<standard Microsoft C/C++ rules|https://docs.microsoft.com/en-us/cpp/cpp/main-function-command-line-args#parsing-c-command-line-arguments>:
 
-TODO: globbing? probably not (it's unDOSish).
+=over 4
 
-TODO: shebang emulation? Probably, but perhaps that should be part
-of Run.pm so all spawned processes get the benefit.
+=item *
 
-LIMITATIONS: shellwords dies silently on malformed input like 
+Arguments are delimited by whitespace (space or tab).
 
-   a\"
+=item *
+
+Double quotes group arguments containing whitespace.
+
+=item *
+
+Single quotes are B<not> special (unlike Unix shells).
+
+=item *
+
+Backslashes are literal unless immediately preceding a double quote:
+2N backslashes + C<"> = N backslashes + start/end quote;
+2N+1 backslashes + C<"> = N backslashes + literal C<">.
+
+=back
 
 =cut
 
 sub win32_parse_cmd_line {
     my $line = shift;
-    $line =~ s{(\\[\w\s])}{\\$1}g;
-    return shellwords $line;
+    return unless defined $line && length $line;
+
+    my @args;
+    my $pos = 0;
+    my $len = length $line;
+
+    while ( $pos < $len ) {
+        ## Skip whitespace (space and tab only per Windows rules).
+        $pos++ while $pos < $len && substr( $line, $pos, 1 ) =~ /[ \t]/;
+        last if $pos >= $len;
+
+        my $arg      = '';
+        my $in_quote = 0;
+
+        while ( $pos < $len ) {
+            my $c = substr( $line, $pos, 1 );
+
+            ## Unquoted whitespace ends the argument.
+            last if !$in_quote && $c =~ /[ \t]/;
+
+            if ( $c eq '\\' ) {
+                ## Count consecutive backslashes.
+                my $bs = 0;
+                $bs++, $pos++
+                  while $pos < $len && substr( $line, $pos, 1 ) eq '\\';
+
+                if ( $pos < $len && substr( $line, $pos, 1 ) eq '"' ) {
+                    ## Backslashes followed by double quote.
+                    $arg .= '\\' x int( $bs / 2 );
+                    if ( $bs % 2 ) {
+                        ## Odd count: last backslash escapes the quote.
+                        $arg .= '"';
+                        $pos++;
+                    }
+                    else {
+                        ## Even count: quote toggles grouping.
+                        $in_quote = !$in_quote;
+                        $pos++;
+                    }
+                }
+                else {
+                    ## Backslashes not before a quote — all literal.
+                    $arg .= '\\' x $bs;
+                }
+            }
+            elsif ( $c eq '"' ) {
+                $in_quote = !$in_quote;
+                $pos++;
+            }
+            else {
+                $arg .= $c;
+                $pos++;
+            }
+        }
+
+        push @args, $arg;
+    }
+
+    return @args;
 }
 
 =pod
@@ -351,14 +435,12 @@ Cannot redirect higher file descriptors due to lack of support for this in the
 Win32 environment.
 
 This can be worked around by marking a handle as inheritable in the
-parent (or leaving it marked; this is the default in perl), obtaining it's
+parent (or leaving it marked; this is the default in perl), obtaining its
 Win32 handle with C<Win32API::GetOSFHandle(FH)> or
 C<Win32API::FdGetOsFHandle($fd)> and passing it to the child using the command
 line, the environment, or any other IPC mechanism (it's a plain old integer).
 The child can then use C<OsFHandleOpen()> or C<OsFHandleOpenFd()> and possibly
 C<<open FOO ">&BAR">> or C<<open FOO ">&$fd>> as need be.  Ach, the pain!
-
-Remember to check the Win32 handle against INVALID_HANDLE_VALUE.
 
 =cut
 
@@ -397,6 +479,71 @@ sub _dup2_gently {
 
 sub win32_spawn {
     my ( $cmd, $ops ) = @_;
+
+    my ( $app, $cmd_line );
+    my $need_pct = 0;
+    if ( UNIVERSAL::isa( $cmd, 'IPC::Run::Win32Process' ) ) {
+        $app      = $cmd->{lpApplicationName};
+        $cmd_line = $cmd->{lpCommandLine};
+    }
+    elsif ( $cmd->[0] !~ /\.(bat|cmd) *$/i ) {
+        $app      = $cmd->[0];
+        $cmd_line = Win32::ShellQuote::quote_native(@$cmd);
+    }
+    else {
+        # Batch file, so follow the batch-specific guidance of
+        # https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessa
+        # There's no one true way to locate cmd.exe.  In the unlikely event that
+        # %COMSPEC% is missing, fall back on a Windows API.  We could search
+        # %PATH% like _wsystem() does.  That would be prone to security bugs,
+        # and one fallback is enough.
+        $app = (
+            $ENV{COMSPEC}
+              || File::Spec->catfile(
+                Win32::GetFolderPath(Win32::CSIDL_SYSTEM),
+                'cmd.exe'
+              )
+        );
+
+        # Win32 rejects attempts to create files with names containing certain
+        # characters.  Ignore most, but reject the subset that might otherwise
+        # cause us to execute the wrong file instead of failing cleanly.
+        if ( $cmd->[0] =~ /["\r\n\0]/ ) {
+            croak "invalid batch file name";
+        }
+
+        # Make cmd.exe see the batch file name as quoted.  Suppose we instead
+        # used caret escapes, as we do for arguments.  cmd.exe could then "break
+        # the command token at the first occurrence of <space> , ; or ="
+        # (https://stackoverflow.com/a/4095133).
+        my @parts = qq{"$cmd->[0]"};
+
+        # cmd.exe will strip escapes once when parsing our $cmd_line and again
+        # where the batch file injects the argument via %*, %1, etc.  Compensate
+        # by adding one extra cmd_escape layer.
+        if ( @$cmd > 1 ) {
+            my @q = Win32::ShellQuote::quote_cmd( @{$cmd}[ 1 .. $#{$cmd} ] );
+            push @parts, map { Win32::ShellQuote::cmd_escape($_) } @q;
+        }
+
+        # One can't stop cmd.exe from expanding %var%, so inject each literal %
+        # via an environment variable.  Delete that variable before the real
+        # child can see it.  See
+        # https://www.dostips.com/forum/viewtopic.php?f=3&t=10131 for more on
+        # this technique and the limitations of alternatives.
+        $cmd_line = join ' ', @parts;
+        if ( $cmd_line =~ s/%/%ipcrunpct%/g ) {
+            $cmd_line = qq{/c "set "ipcrunpct=" & $cmd_line"};
+            $need_pct = 1;
+        }
+        else {
+            $cmd_line = qq{/c "$cmd_line"};
+        }
+    }
+    _debug "app: ", $app
+      if _debugging;
+    _debug "cmd line: ", $cmd_line
+      if _debugging;
 
     ## NOTE: The debug pipe write handle is passed to pump processes as STDOUT.
     ## and is not to the "real" child process, since they would not know
@@ -440,24 +587,46 @@ sub win32_spawn {
         }
     }
 
+    ## Mark all open file handles as non-inheritable except for the fds
+    ## that have been explicitly set up for the child (0, 1, 2).  This
+    ## prevents caller-owned handles (e.g. File::Temp directories) from
+    ## being inherited and keeping resources locked for the lifetime of
+    ## the child process.
+    ## See https://github.com/cpan-authors/IPC-Run/issues/141
+    {
+        my %kid_fds;
+        for my $op (@$ops) {
+            $kid_fds{ $op->{KFD} }  = 1 if defined $op->{KFD};
+            $kid_fds{ $op->{KFD1} } = 1 if defined $op->{KFD1};
+            $kid_fds{ $op->{KFD2} } = 1 if defined $op->{KFD2};
+        }
+        ## On Win32, KFDs are always 0, 1, or 2 (higher fds are rejected
+        ## above), so anything not in %kid_fds can be made non-inheritable.
+        ## Use a conservative upper bound; the CRT default is 512.
+        my $max_fds = 512;
+        for my $fd ( 0 .. $max_fds - 1 ) {
+            next if $kid_fds{$fd};
+            my $osfh = FdGetOsFHandle($fd);
+            next unless defined $osfh && $osfh != C_ABI_INVALID_HANDLE_VALUE;
+            SetHandleInformation( $osfh, HANDLE_FLAG_INHERIT, 0 );
+        }
+    }
+
+    local $ENV{ipcrunpct} = '%' if $need_pct;
     my $process;
-    my $cmd_line = join " ", map {
-        ( my $s = $_ ) =~ s/"/"""/g;
-        $s = qq{"$s"} if /[\"\s]|^$/;
-        $s;
-    } @$cmd;
-
-    _debug "cmd line: ", $cmd_line
-      if _debugging;
-
     Win32::Process::Create(
         $process,
-        $cmd->[0],
+        $app,
         $cmd_line,
         1,    ## Inherit handles
-        0,    ## Inherit parent priortiy class. Was NORMAL_PRIORITY_CLASS
+        0,    ## Inherit parent priority class. Was NORMAL_PRIORITY_CLASS
         ".",
-    ) or croak "$!: Win32::Process::Create()";
+      )
+      or do {
+        my $err = Win32::FormatMessage( Win32::GetLastError() );
+        $err =~ s/\r?\n$//s;
+        croak "$err: Win32::Process::Create()";
+      };
 
     for my $orig_fd ( keys %saved ) {
         IPC::Run::_dup2_rudely( $saved{$orig_fd}, $orig_fd );

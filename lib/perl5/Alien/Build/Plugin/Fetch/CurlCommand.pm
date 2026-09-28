@@ -12,7 +12,7 @@ use List::Util 1.33 qw( any pairmap );
 use File::chdir;
 
 # ABSTRACT: Plugin for fetching files using curl
-our $VERSION = '2.46'; # VERSION
+our $VERSION = '2.84'; # VERSION
 
 
 sub curl_command
@@ -139,9 +139,10 @@ sub init
         if($type eq 'text/html')
         {
           return {
-            type    => 'html',
-            base    => $h{url},
-            content => scalar path($h{filename})->slurp,
+            type     => 'html',
+            base     => $h{url},
+            content  => scalar path($h{filename})->slurp,
+            protocol => $scheme,
           };
         }
         else
@@ -150,6 +151,7 @@ sub init
             type     => 'file',
             filename => $h{filename},
             path     => path($h{filename})->absolute->stringify,
+            protocol => $scheme,
           };
         }
       }
@@ -253,7 +255,7 @@ Alien::Build::Plugin::Fetch::CurlCommand - Plugin for fetching files using curl
 
 =head1 VERSION
 
-version 2.46
+version 2.84
 
 =head1 SYNOPSIS
 
@@ -364,9 +366,11 @@ Håkon Hægland (hakonhagland, HAKONH)
 
 nick nauwelaerts (INPHOBIA)
 
+Florian Weimer
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2020 by Graham Ollis.
+This software is copyright (c) 2011-2022 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

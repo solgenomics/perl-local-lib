@@ -8,9 +8,11 @@ PPI::Token::Prototype - A subroutine prototype descriptor
 
 =head1 INHERITANCE
 
-  PPI::Token::End
-  isa PPI::Token
-      isa PPI::Element
+  PPI::Token::Prototype
+  isa PPI::Token::Quote::Literal
+      isa PPI::Token::Quote
+          isa PPI::Token
+              isa PPI::Element
 
 =head1 SYNOPSIS
 
@@ -49,26 +51,9 @@ L<PPI::Token> and L<PPI::Element> parent classes.
 use strict;
 use PPI::Token ();
 
-our $VERSION = '1.272';
+our $VERSION = '1.291';
 
-our @ISA = "PPI::Token";
-
-sub __TOKENIZER__on_char {
-	my $class = shift;
-	my $t     = shift;
-
-	# Suck in until we find the closing paren (or the end of line)
-	pos $t->{line} = $t->{line_cursor};
-	die "regex should always match" if $t->{line} !~ m/\G(.*?(?:\)|$))/gc;
-	$t->{token}->{content} .= $1;
-	$t->{line_cursor} += length $1;
-
-	# Shortcut if end of line
-	return 0 unless $1 =~ /\)$/;
-
-	# Found the closing paren
-	$t->_finalize_token->__TOKENIZER__on_char( $t );
-}
+our @ISA = "PPI::Token::Quote::Literal";
 
 =pod
 

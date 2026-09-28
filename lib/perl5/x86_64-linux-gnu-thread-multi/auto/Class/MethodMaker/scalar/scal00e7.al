@@ -3,9 +3,9 @@
 # See AutoSplit.pm.
 package Class::MethodMaker::scalar;
 
-#line 59322 "blib/lib/Class/MethodMaker/scalar.pm (autosplit into blib/lib/auto/Class/MethodMaker/scalar/scal00e7.al)"
+#line 49064 "blib/lib/Class/MethodMaker/scalar.pm (autosplit into blib/lib/auto/Class/MethodMaker/scalar/scal00e7.al)"
 #------------------
-# scalar read_cb - static - type - store_cb - default - v1_compat
+# scalar default - read_cb - static - store_cb - type - v1_compat
 
 sub scal00e7 {
   my $class  = shift;

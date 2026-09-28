@@ -3,7 +3,7 @@ package Test::Specio;
 use strict;
 use warnings;
 
-our $VERSION = '0.47';
+our $VERSION = '0.53';
 
 use IO::File;
 use Scalar::Util qw( blessed looks_like_number openhandle );
@@ -117,8 +117,8 @@ our $STR_OVERLOAD_CLASS_NAME = _T::StrOverload->new('_T::StrOverload');
     }
 }
 
-our $NUM_OVERLOAD_ZERO        = _T::NumOverload->new(0);
-our $NUM_OVERLOAD_ONE         = _T::NumOverload->new(1);
+our $NUM_OVERLOAD_ZERO        = _T::NumOverload->new( 0);
+our $NUM_OVERLOAD_ONE         = _T::NumOverload->new( 1);
 our $NUM_OVERLOAD_NEG         = _T::NumOverload->new(-42);
 our $NUM_OVERLOAD_DECIMAL     = _T::NumOverload->new(42.42);
 our $NUM_OVERLOAD_NEG_DECIMAL = _T::NumOverload->new(42.42);
@@ -223,8 +223,23 @@ BEGIN {
     }
 }
 
-our @EXPORT_OK   = ( @vars, qw( builtins_tests describe test_constraint ) );
+our @EXPORT_OK = (
+    @vars,
+    qw( builtins_tests create_BAR_handle_code describe test_constraint )
+);
 our %EXPORT_TAGS = ( vars => \@vars );
+
+sub create_BAR_handle_code {
+
+    # This used to be $^X, but that caused a test failure for someone
+    # (https://github.com/houseabsolute/Specio/issues/25). Then I tried __FILE__, but that doesn't work
+    # in cases where the file containing __FILE__ is eval'd, which we do in
+    # `xt/author/no-ref-util.t`. So now I'm just grabbing the first file in %INC.
+    return <<'EOF';
+my $file = $INC{ ( keys %INC )[0] };
+open BAR, '<', $file or die "Could not open $file for the test";
+EOF
+}
 
 sub builtins_tests {
     my $GLOB             = shift;
@@ -1298,7 +1313,7 @@ Test::Specio - Test helpers for Specio
 
 =head1 VERSION
 
-version 0.47
+version 0.53
 
 =head1 SYNOPSIS
 
@@ -1367,6 +1382,18 @@ types. The hashref has a form like this:
 You need to pass in a glob, an object which overloads globification, and an
 object which overloads globification to return an open filehandle. See below
 for more details on how to create these things.
+
+=head2 create_BAR_handle_code()
+
+Returns a string you can C<eval> to create a bar filehandle named C<BAR>. This
+should be used like this:
+
+  local *BAR;
+  {
+      local $@;
+      eval create_BAR_handle_code();
+      die $@ if $@;
+  }
 
 =head2 Variables
 
@@ -1528,14 +1555,12 @@ If you want to create a glob overloading object that returns a filehandle, do
 this:
 
   local *BAR;
-  open BAR, '<', $^X or die "Could not open $^X for the test";
+  open BAR, '<', $some_file or die $!;
   my $GLOB_OVERLOAD_FH = _T::GlobOverload->new( \*BAR );
 
 =head1 SUPPORT
 
 Bugs may be submitted at L<https://github.com/houseabsolute/Specio/issues>.
-
-I am also usually active on IRC as 'autarch' on C<irc://irc.perl.org>.
 
 =head1 SOURCE
 
@@ -1547,7 +1572,7 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2012 - 2021 by Dave Rolsky.
+This software is Copyright (c) 2012 - 2025 by Dave Rolsky.
 
 This is free software, licensed under:
 

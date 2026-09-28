@@ -24,6 +24,7 @@ A specialized IO class used on Win32.
 =cut
 
 use strict;
+use warnings;
 use Carp;
 use IO::Handle;
 use Socket;
@@ -32,7 +33,7 @@ require POSIX;
 use vars qw{$VERSION};
 
 BEGIN {
-    $VERSION = '20200505.0';
+    $VERSION = '20260402.0';
 }
 
 use Socket qw( IPPROTO_TCP TCP_NODELAY );
@@ -73,7 +74,6 @@ use Win32API::File qw(
   SetHandleInformation
   SetFilePointer
   HANDLE_FLAG_INHERIT
-  INVALID_HANDLE_VALUE
 
   createFile
   WriteFile
@@ -99,7 +99,6 @@ BEGIN {
         IPPROTO_TCP,
         TCP_NODELAY,
         HANDLE_FLAG_INHERIT,
-        INVALID_HANDLE_VALUE,
     );
 }
 
@@ -120,8 +119,15 @@ sub _cleanup {
     CloseHandle( $self->{TEMP_FILE_HANDLE} )
       if defined $self->{TEMP_FILE_HANDLE};
 
-    close( $self->{CHILD_HANDLE} )
-      if defined $self->{CHILD_HANDLE};
+    ## Explicitly close all socket/pipe handles before clearing the fields.
+    ## If these gensym handles are merely undef'd, they may survive until
+    ## global destruction when the underlying fd is already invalid, causing
+    ## "unable to close filehandle GEN## properly: Bad file descriptor
+    ## during global destruction" warnings.  (GH#237)
+    for my $field (qw( CHILD_HANDLE PUMP_SOCKET_HANDLE PUMP_PIPE_HANDLE )) {
+        close( $self->{$field} )
+          if defined $self->{$field} && defined fileno( $self->{$field} );
+    }
 
     $self->{$_} = undef for @cleanup_fields;
 }
@@ -357,8 +363,11 @@ sub _spawn_pumper {
     #   close SAVEOUT            or croak "$! closing SAVEOUT";       #### ADD
     #   close SAVEERR            or croak "$! closing SAVEERR";       #### ADD
 
-    close $stdin  or croak "$! closing pumper's stdin in parent";
-    close $stdout or croak "$! closing pumper's stdout in parent";
+    # In case of a sleep right here, need the IPC::Run::_close() treatment.
+    IPC::Run::_close fileno($stdin);
+    close $stdin;
+    IPC::Run::_close fileno($stdout);
+    close $stdout;
 
     # Don't close $debug_fd, we need it, as do other pumpers.
 
@@ -435,10 +444,22 @@ sub _open_socket_pipe {
     $self->{CHILD_HANDLE}     = gensym;
     $self->{PUMP_PIPE_HANDLE} = gensym;
 
+    ## When $parent_handle is a SCALAR ref (e.g. '>pipe', \$fh), we must
+    ## not pass it to _socket() which expects a GLOB.  Create the socket
+    ## with a fresh gensym and store the resulting handle back into the
+    ## caller's scalar.
+    my $scalar_ref;
+    if ( ref $parent_handle eq 'SCALAR' ) {
+        $scalar_ref    = $parent_handle;
+        $parent_handle = undef;
+    }
+
     (
         $self->{PARENT_HANDLE},
         $self->{PUMP_SOCKET_HANDLE}
     ) = _socket $parent_handle;
+
+    $$scalar_ref = $self->{PARENT_HANDLE} if $scalar_ref;
 
     ## These binmodes seem to have no effect on Win2K, but just to be safe
     ## I do them.

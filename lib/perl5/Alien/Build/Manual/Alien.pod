@@ -14,7 +14,7 @@ Alien::Build::Manual::Alien - General alien author documentation
 
 =head1 VERSION
 
-version 2.46
+version 2.84
 
 =head1 SYNOPSIS
 
@@ -60,6 +60,16 @@ L<Alien::Build::Manual::FAQ>
 =item Contributing
 
 L<Alien::Build::Manual::Contributing>
+
+=back
+
+=head1 SEE ALSO
+
+=over 4
+
+=item L<Alien::Build::Manual>
+
+Other L<Alien::Build> manuals.
 
 =back
 
@@ -125,9 +135,11 @@ Håkon Hægland (hakonhagland, HAKONH)
 
 nick nauwelaerts (INPHOBIA)
 
+Florian Weimer
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2020 by Graham Ollis.
+This software is copyright (c) 2011-2022 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

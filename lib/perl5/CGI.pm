@@ -1,13 +1,14 @@
 package CGI;
 require 5.008001;
 use Carp 'croak';
+use URI;
 
 my $appease_cpants_kwalitee = q/
 use strict;
 use warnings;
 #/;
 
-$CGI::VERSION='4.54';
+$CGI::VERSION='4.72';
 
 use CGI::Util qw(rearrange rearrange_header make_attributes unescape escape expires ebcdic2ascii ascii2ebcdic);
 
@@ -1097,7 +1098,7 @@ sub read_postdata_putdata {
         # unique for each filehandle.  Don't use the file descriptor as
         # this will be re-used for each filehandle if the
         # close_upload_files feature is used.
-        $self->{'.tmpfiles'}->{$$filehandle . $filehandle} = {
+        $self->{'.tmpfiles'}->{$filehandle->filename . $filehandle} = {
             hndl => $filehandle,
 			name => $filehandle->filename,
             info => {%header},
@@ -1607,9 +1608,9 @@ sub header {
     # if the user indicates an expiration time, then we need
     # both an Expires and a Date header (so that the browser is
     # uses OUR clock)
-    push(@header,"Expires: " . expires($expires,'http'))
+    push(@header,"Expires: " . expires($expires))
 	if $expires;
-    push(@header,"Date: " . expires(0,'http')) if $expires || $cookie || $nph;
+    push(@header,"Date: " . expires(0)) if $expires || $cookie || $nph;
     push(@header,"Pragma: no-cache") if $self->cache();
     push(@header,"Content-Disposition: attachment; filename=\"$attachment\"") if $attachment;
     push(@header,map {ucfirst $_} @other);
@@ -2747,8 +2748,9 @@ sub url {
     $url .= $path         if $path_info and defined $path;
     $url .= "?$query_str" if $query     and $query_str ne '';
     $url ||= '';
-    $url =~ s/([^a-zA-Z0-9_.%;&?\/\\:+=~-])/sprintf("%%%02X",ord($1))/eg;
-    return $url;
+
+	$url = URI->new( $url )->canonical->as_string;
+	return $url
 }
 
 #### Method: cookie
@@ -2761,12 +2763,12 @@ sub url {
 #   -path -> paths for which this cookie is valid (optional)
 #   -domain -> internet domain in which this cookie is valid (optional)
 #   -secure -> if true, cookie only passed through secure channel (optional)
-#   -expires -> expiry date in format Wdy, DD-Mon-YYYY HH:MM:SS GMT (optional)
+#   -expires -> expiry date in format Wdy, DD Mon YYYY HH:MM:SS GMT (optional)
 ####
 sub cookie {
     my($self,@p) = self_or_default(@_);
-    my($name,$value,$path,$domain,$secure,$expires,$httponly,$max_age,$samesite) =
-	rearrange([NAME,[VALUE,VALUES],PATH,DOMAIN,SECURE,EXPIRES,HTTPONLY,'MAX-AGE',SAMESITE],@p);
+    my($name,$value,$path,$domain,$secure,$expires,$httponly,$max_age,$samesite,$priority) =
+	rearrange([NAME,[VALUE,VALUES],PATH,DOMAIN,SECURE,EXPIRES,HTTPONLY,'MAX-AGE',SAMESITE,PRIORITY],@p);
 
     require CGI::Cookie;
 
@@ -2796,6 +2798,7 @@ sub cookie {
     push(@param,'-httponly'=>$httponly) if $httponly;
     push(@param,'-max-age'=>$max_age) if $max_age;
     push(@param,'-samesite'=>$samesite) if $samesite;
+    push(@param,'-priority'=>$priority) if $priority;
 
     return CGI::Cookie->new(@param);
 }
@@ -3450,7 +3453,7 @@ sub read_multipart {
 	  # unique for each filehandle.  Don't use the file descriptor as
 	  # this will be re-used for each filehandle if the
 	  # close_upload_files feature is used.
-      $self->{'.tmpfiles'}->{$$filehandle . $filehandle} = {
+      $self->{'.tmpfiles'}->{$filehandle->filename . $filehandle} = {
               hndl => $filehandle,
 		  name => $filehandle->filename,
 	      info => {%header},
@@ -3573,7 +3576,7 @@ sub read_multipart_related {
 	  # unique for each filehandle.  Don't use the file descriptor as
 	  # this will be re-used for each filehandle if the
 	  # close_upload_files feature is used.
-	  $self->{'.tmpfiles'}->{$$filehandle . $filehandle} = {
+	  $self->{'.tmpfiles'}->{$filehandle->filename . $filehandle} = {
               hndl => $filehandle,
 		  name => $filehandle->filename,
 	      info => {%header},
@@ -3596,15 +3599,16 @@ sub tmpFileName {
 
     # preferred calling convention: $filename came directly from param or upload
     if (ref $filename) {
-        return $self->{'.tmpfiles'}->{$$filename . $filename}->{name} || '';
+        return $self->{'.tmpfiles'}->{$filename->filename . $filename}->{name} || '';
     }
 
     # backwards compatible with older versions: $filename is merely equal to
     # one of our filenames when compared as strings
     foreach my $param_name ($self->param) {
         foreach my $filehandle ($self->multi_param($param_name)) {
+            next unless ref($filehandle);
             if ($filehandle eq $filename) {
-                return $self->{'.tmpfiles'}->{$$filehandle . $filehandle}->{name} || '';
+                return $self->{'.tmpfiles'}->{$filehandle->filename . $filehandle}->{name} || '';
             }
         }
     }
@@ -3615,7 +3619,7 @@ sub tmpFileName {
 sub uploadInfo {
     my($self,$filename) = self_or_default(@_);
     return if ! defined $$filename;
-    return $self->{'.tmpfiles'}->{$$filename . $filename}->{info};
+    return $self->{'.tmpfiles'}->{$filename->filename . $filename}->{info};
 }
 
 # internal routine, don't use

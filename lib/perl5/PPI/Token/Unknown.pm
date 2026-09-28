@@ -32,7 +32,7 @@ use PPI::Token     ();
 use PPI::Exception ();
 use PPI::Singletons qw' %MAGIC $CURLY_SYMBOL ';
 
-our $VERSION = '1.272';
+our $VERSION = '1.291';
 
 our @ISA = "PPI::Token";
 
@@ -115,6 +115,13 @@ sub __TOKENIZER__on_char {
 			return 1;
 		}
 
+		# Is it a nameless arg in a signature?
+		my %noname = ( ')' => 1, '=' => 1, ',' => 1 );
+		if ( $noname{$char} and $t->_current_token_has_signatures_active ) {
+			$t->{class} = $t->{token}->set_class('Symbol');
+			return $t->_finalize_token->__TOKENIZER__on_char($t);
+		}
+
 		if ( $MAGIC{ $c . $char } ) {
 			# Magic variable
 			$t->{class} = $t->{token}->set_class( 'Magic' );
@@ -151,6 +158,12 @@ sub __TOKENIZER__on_char {
 			# Symbol
 			$t->{class} = $t->{token}->set_class( 'Symbol' );
 			return 1;
+		}
+
+		# Is it a nameless arg in a signature?
+		if ( $char eq ')' and $t->_current_token_has_signatures_active ) {
+			$t->{class} = $t->{token}->set_class('Symbol');
+			return $t->_finalize_token->__TOKENIZER__on_char($t);
 		}
 
 		if ( $MAGIC{ $c . $char } ) {
@@ -196,6 +209,12 @@ sub __TOKENIZER__on_char {
 			# bitwise operator
 			$t->{class} = $t->{token}->set_class( 'Operator' );
 			return $t->_finalize_token->__TOKENIZER__on_char( $t );
+		}
+
+		# Is it a nameless arg in a signature?
+		if ( $char eq ')' and $t->_current_token_has_signatures_active ) {
+			$t->{class} = $t->{token}->set_class('Symbol');
+			return $t->_finalize_token->__TOKENIZER__on_char($t);
 		}
 
 		# Is it a magic variable?

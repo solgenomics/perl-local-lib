@@ -5,12 +5,12 @@ use strict;
 use warnings;
 use namespace::autoclean;
 
-our $VERSION = '1.55';
+our $VERSION = '1.66';
 
 use DateTime;
 use DateTime::TimeZone;
 
-use base qw(DateTime);
+use parent qw(DateTime);
 
 foreach my $m (qw( set set_time_zone truncate )) {
     ## no critic (TestingAndDebugging::ProhibitNoStrict)
@@ -78,7 +78,7 @@ package DateTime::Infinite::Future;
 use strict;
 use warnings;
 
-use base qw(DateTime::Infinite);
+use parent qw(DateTime::Infinite);
 
 {
     my $Pos = bless {
@@ -103,7 +103,7 @@ package DateTime::Infinite::Past;
 use strict;
 use warnings;
 
-use base qw(DateTime::Infinite);
+use parent qw(DateTime::Infinite);
 
 {
     my $Neg = bless {
@@ -214,7 +214,7 @@ DateTime::Infinite - Infinite past and future DateTime objects
 
 =head1 VERSION
 
-version 1.55
+version 1.66
 
 =head1 SYNOPSIS
 
@@ -275,7 +275,7 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2003 - 2021 by Dave Rolsky.
+This software is Copyright (c) 2003 - 2025 by Dave Rolsky.
 
 This is free software, licensed under:
 

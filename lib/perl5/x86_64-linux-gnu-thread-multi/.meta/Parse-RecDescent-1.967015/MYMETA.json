@@ -5,7 +5,7 @@
       "Jeremy T. Braun <JTBRAUN@CPAN.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Module::Build version 0.4231",
+   "generated_by" : "Module::Build version 0.4234",
    "license" : [
       "perl_5"
    ],
@@ -40,5 +40,5 @@
       }
    },
    "version" : "1.967015",
-   "x_serialization_backend" : "JSON::PP version 4.04"
+   "x_serialization_backend" : "JSON::PP version 4.16"
 }

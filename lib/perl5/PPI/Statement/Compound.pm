@@ -53,7 +53,7 @@ standard L<PPI::Statement>, L<PPI::Node> and L<PPI::Element> methods.
 use strict;
 use PPI::Statement ();
 
-our $VERSION = '1.272';
+our $VERSION = '1.291';
 
 our @ISA = "PPI::Statement";
 
@@ -119,7 +119,7 @@ sub type {
 	if ( $content =~ /^for(?:each)?\z/ ) {
 		$Element = $self->schild(++$p) or return $content;
 		if ( $Element->isa('PPI::Token') ) {
-			return 'foreach' if $Element->content =~ /^my|our|state\z/;
+			return 'foreach' if $Element->content =~ /^(?:my|our|state)\z/;
 			return 'foreach' if $Element->isa('PPI::Token::Symbol');
 			return 'foreach' if $Element->isa('PPI::Token::QuoteLike::Words');
 		}
@@ -128,8 +128,12 @@ sub type {
 		}
 		return 'for';
 	}
-	return $TYPES{$content} if $Element->isa('PPI::Token::Word');
-	return 'continue'       if $Element->isa('PPI::Structure::Block');
+	if ($Element->isa('PPI::Token::Word')) {
+		return 'try'
+			if $content eq 'try' && $self->presumed_features->{try};
+		return $TYPES{$content};
+	}
+	return 'continue' if $Element->isa('PPI::Structure::Block');
 
 	# Unknown (shouldn't exist?)
 	undef;

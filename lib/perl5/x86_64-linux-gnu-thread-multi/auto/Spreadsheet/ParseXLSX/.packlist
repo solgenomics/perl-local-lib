@@ -1,4 +1,6 @@
-/home/production/cxgn/local-lib/lib/perl5/Spreadsheet/ParseXLSX.pm
-/home/production/cxgn/local-lib/lib/perl5/Spreadsheet/ParseXLSX/Decryptor.pm
-/home/production/cxgn/local-lib/lib/perl5/Spreadsheet/ParseXLSX/Decryptor/Agile.pm
-/home/production/cxgn/local-lib/lib/perl5/Spreadsheet/ParseXLSX/Decryptor/Standard.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/Spreadsheet/ParseXLSX.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/Spreadsheet/ParseXLSX/Cell.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/Spreadsheet/ParseXLSX/Decryptor.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/Spreadsheet/ParseXLSX/Decryptor/Agile.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/Spreadsheet/ParseXLSX/Decryptor/Standard.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/Spreadsheet/ParseXLSX/Worksheet.pm

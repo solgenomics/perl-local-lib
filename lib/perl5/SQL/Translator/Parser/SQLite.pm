@@ -133,10 +133,10 @@ like-op::=
 use strict;
 use warnings;
 
-our $VERSION = '1.62';
+our $VERSION = '1.66';
 
 our $DEBUG;
-$DEBUG   = 0 unless defined $DEBUG;
+$DEBUG = 0 unless defined $DEBUG;
 
 use Data::Dumper;
 use SQL::Translator::Utils qw/ddl_parser_instance/;
@@ -147,7 +147,7 @@ our @EXPORT_OK = qw(parse);
 our $GRAMMAR = <<'END_OF_GRAMMAR';
 
 {
-    my ( %tables, $table_order, @table_comments, @views, @triggers );
+    my ( %tables, $table_order, @views, @triggers );
 
     sub _err {
       my $max_lines = 5;
@@ -179,8 +179,8 @@ eofile : /^\Z/
 statement : begin_transaction
     | commit
     | drop
-    | comment
     | create
+    | comment
     | /^\Z/ | { _err ($thisline, $text) }
 
 begin_transaction : /begin/i TRANSACTION(?) SEMICOLON
@@ -239,16 +239,17 @@ create : CREATE TEMPORARY(?) UNIQUE(?) INDEX NAME ON table_name parens_field_lis
 #
 # Create Table
 #
-create : CREATE TEMPORARY(?) TABLE table_name '(' definition(s /,/) ')' SEMICOLON
+create : comment(s?) CREATE TEMPORARY(?) TABLE table_name '(' definition(s /,/) ')' SEMICOLON
     {
-        my $db_name    = $item[4]->{'db_name'} || '';
-        my $table_name = $item[4]->{'name'};
+        my $db_name    = $item[5]->{'db_name'} || '';
+        my $table_name = $item[5]->{'name'};
 
         $tables{ $table_name }{'name'}         = $table_name;
-        $tables{ $table_name }{'is_temporary'} = $item[2][0] ? 1 : 0;
+        $tables{ $table_name }{'is_temporary'} = $item[3][0] ? 1 : 0;
+        $tables{ $table_name }{'comments'}     = $item[1];
         $tables{ $table_name }{'order'}        = ++$table_order;
 
-        for my $def ( @{ $item[6] } ) {
+        for my $def ( @{ $item[7] } ) {
             if ( $def->{'supertype'} eq 'column' ) {
                 push @{ $tables{ $table_name }{'fields'} }, $def;
             }
@@ -640,102 +641,105 @@ VALUE : /[-+]?\d*\.?\d+(?:[eE]\d+)?/
 
 END_OF_GRAMMAR
 
-
 sub parse {
-    my ( $translator, $data ) = @_;
+  my ($translator, $data) = @_;
 
-    # Enable warnings within the Parse::RecDescent module.
-    local $::RD_ERRORS = 1 unless defined $::RD_ERRORS; # Make sure the parser dies when it encounters an error
-    local $::RD_WARN   = 1 unless defined $::RD_WARN; # Enable warnings. This will warn on unused rules &c.
-    local $::RD_HINT   = 1 unless defined $::RD_HINT; # Give out hints to help fix problems.
+  # Enable warnings within the Parse::RecDescent module.
+  local $::RD_ERRORS = 1
+      unless defined $::RD_ERRORS;    # Make sure the parser dies when it encounters an error
+  local $::RD_WARN = 1
+      unless defined $::RD_WARN;      # Enable warnings. This will warn on unused rules &c.
+  local $::RD_HINT = 1
+      unless defined $::RD_HINT;      # Give out hints to help fix problems.
 
-    local $::RD_TRACE  = $translator->trace ? 1 : undef;
-    local $DEBUG       = $translator->debug;
+  local $::RD_TRACE = $translator->trace ? 1 : undef;
+  local $DEBUG      = $translator->debug;
 
-    my $parser = ddl_parser_instance('SQLite');
+  my $parser = ddl_parser_instance('SQLite');
 
-    my $result = $parser->startrule($data);
-    return $translator->error( "Parse failed." ) unless defined $result;
-    warn Dumper( $result ) if $DEBUG;
+  my $result = $parser->startrule($data);
+  return $translator->error("Parse failed.") unless defined $result;
+  warn Dumper($result) if $DEBUG;
 
-    my $schema = $translator->schema;
-    my @tables =
-        map   { $_->[1] }
-        sort  { $a->[0] <=> $b->[0] }
-        map   { [ $result->{'tables'}{ $_ }->{'order'}, $_ ] }
-        keys %{ $result->{'tables'} };
+  my $schema = $translator->schema;
+  my @tables = map { $_->[1] }
+      sort { $a->[0] <=> $b->[0] }
+      map  { [ $result->{'tables'}{$_}->{'order'}, $_ ] }
+      keys %{ $result->{'tables'} };
 
-    for my $table_name ( @tables ) {
-        my $tdata =  $result->{'tables'}{ $table_name };
-        my $table =  $schema->add_table(
-            name  => $tdata->{'name'},
-        ) or die $schema->error;
+  for my $table_name (@tables) {
+    my $tdata = $result->{'tables'}{$table_name};
+    my $table = $schema->add_table(name => $tdata->{'name'},)
+        or die $schema->error;
 
-        $table->comments( $tdata->{'comments'} );
+    $table->comments($tdata->{'comments'});
 
-        for my $fdata ( @{ $tdata->{'fields'} } ) {
-            my $field = $table->add_field(
-                name              => $fdata->{'name'},
-                data_type         => $fdata->{'data_type'},
-                size              => $fdata->{'size'},
-                default_value     => $fdata->{'default'},
-                is_auto_increment => $fdata->{'is_auto_inc'},
-                is_nullable       => $fdata->{'is_nullable'},
-                comments          => $fdata->{'comments'},
-            ) or die $table->error;
+    for my $fdata (@{ $tdata->{'fields'} }) {
+      my $field = $table->add_field(
+        name              => $fdata->{'name'},
+        data_type         => $fdata->{'data_type'},
+        size              => $fdata->{'size'},
+        default_value     => $fdata->{'default'},
+        is_auto_increment => $fdata->{'is_auto_inc'},
+        (
+          $fdata->{'is_auto_inc'}
+          ? (extra => { auto_increment_type => 'monotonic' })
+          : ()
+        ),
+        is_nullable => $fdata->{'is_nullable'},
+        comments    => $fdata->{'comments'},
+      ) or die $table->error;
 
-            $table->primary_key( $field->name ) if $fdata->{'is_primary_key'};
+      $table->primary_key($field->name) if $fdata->{'is_primary_key'};
 
-            for my $cdata ( @{ $fdata->{'constraints'} } ) {
-                next unless $cdata->{'type'} eq 'foreign_key';
-                $cdata->{'fields'} ||= [ $field->name ];
-                push @{ $tdata->{'constraints'} }, $cdata;
-            }
-        }
-
-        for my $idata ( @{ $tdata->{'indices'} || [] } ) {
-            my $index  =  $table->add_index(
-                name   => $idata->{'name'},
-                type   => uc ($idata->{'type'}||''),
-                fields => $idata->{'fields'},
-            ) or die $table->error;
-        }
-
-        for my $cdata ( @{ $tdata->{'constraints'} || [] } ) {
-            my $constraint       =  $table->add_constraint(
-                name             => $cdata->{'name'},
-                type             => $cdata->{'type'},
-                fields           => $cdata->{'fields'},
-                reference_table  => $cdata->{'reference_table'},
-                reference_fields => $cdata->{'reference_fields'},
-                match_type       => $cdata->{'match_type'} || '',
-                on_delete        => $cdata->{'on_delete'}
-                                 || $cdata->{'on_delete_do'},
-                on_update        => $cdata->{'on_update'}
-                                 || $cdata->{'on_update_do'},
-            ) or die $table->error;
-        }
+      for my $cdata (@{ $fdata->{'constraints'} }) {
+        next unless $cdata->{'type'} eq 'foreign_key';
+        $cdata->{'fields'} ||= [ $field->name ];
+        push @{ $tdata->{'constraints'} }, $cdata;
+      }
     }
 
-    for my $def ( @{ $result->{'views'} || [] } ) {
-        my $view = $schema->add_view(
-            name => $def->{'name'},
-            sql  => $def->{'sql'},
-        );
+    for my $idata (@{ $tdata->{'indices'} || [] }) {
+      my $index = $table->add_index(
+        name   => $idata->{'name'},
+        type   => uc($idata->{'type'} || ''),
+        fields => $idata->{'fields'},
+      ) or die $table->error;
     }
 
-    for my $def ( @{ $result->{'triggers'} || [] } ) {
-        my $view                = $schema->add_trigger(
-            name                => $def->{'name'},
-            perform_action_when => $def->{'when'},
-            database_events     => $def->{'db_events'},
-            action              => $def->{'action'},
-            on_table            => $def->{'on_table'},
-            scope               => 'row', # SQLite only supports row triggers
-        );
+    for my $cdata (@{ $tdata->{'constraints'} || [] }) {
+      my $constraint = $table->add_constraint(
+        name             => $cdata->{'name'},
+        type             => $cdata->{'type'},
+        fields           => $cdata->{'fields'},
+        reference_table  => $cdata->{'reference_table'},
+        reference_fields => $cdata->{'reference_fields'},
+        match_type       => $cdata->{'match_type'} || '',
+        on_delete        => $cdata->{'on_delete'}  || $cdata->{'on_delete_do'},
+        on_update        => $cdata->{'on_update'}  || $cdata->{'on_update_do'},
+      ) or die $table->error;
     }
+  }
 
-    return 1;
+  for my $def (@{ $result->{'views'} || [] }) {
+    my $view = $schema->add_view(
+      name => $def->{'name'},
+      sql  => $def->{'sql'},
+    );
+  }
+
+  for my $def (@{ $result->{'triggers'} || [] }) {
+    my $view = $schema->add_trigger(
+      name                => $def->{'name'},
+      perform_action_when => $def->{'when'},
+      database_events     => $def->{'db_events'},
+      action              => $def->{'action'},
+      on_table            => $def->{'on_table'},
+      scope               => 'row',                 # SQLite only supports row triggers
+    );
+  }
+
+  return 1;
 }
 
 1;

@@ -3,7 +3,7 @@ package SVG::Element;
 use strict;
 use warnings;
 
-our $VERSION = '2.86';
+our $VERSION = '2.89';
 
 =pod
 
@@ -19,11 +19,7 @@ Ronan Oger, cpan@roitsystems.com
 
 =head1 SEE ALSO
 
-For descreption of the methods see L<SVG>
-
-L<http://www.roitsystems.com/> ROASP.com: Serverside SVG server
-L<http://www.roitsystems.com/> ROIT Systems: Commercial SVG perl solutions
-L<http://www.w3c.org/Graphics/SVG/> SVG at the W3C
+For description of the methods see L<SVG>.
 
 =cut
 
@@ -60,10 +56,10 @@ sub new {
         if ( $key =~ /^-/ ) {
             if ( $key eq '-href' ) {
                 $self->{'xlink:href'}    = $attrs{$key};
-                $self->{'xlink:type'}    = $attrs{-type} if $attrs{-type};
-                $self->{'xlink:role'}    = $attrs{-role} if $attrs{-role};
+                $self->{'xlink:type'}    = $attrs{-type}  if $attrs{-type};
+                $self->{'xlink:role'}    = $attrs{-role}  if $attrs{-role};
                 $self->{'xlink:title'}   = $attrs{-title} if $attrs{-title};
-                $self->{'xlink:show'}    = $attrs{-show} if $attrs{-show};
+                $self->{'xlink:show'}    = $attrs{-show}  if $attrs{-show};
                 $self->{'xlink:arcrole'} = $attrs{-arcrole}
                     if $attrs{-arcrole};
                 $self->{'xlink:actuate'} = $attrs{-actuate}
@@ -114,9 +110,8 @@ sub xmlify {
     }
 
     #prep the tag
-    if ( $self->{-comment} ) {
-        $xml .= $self->xmlcomment( $self->{-comment} );
-        return $xml;
+    if ( $self->{-name} eq 'comment' && $self->{-comment} ) {
+       return $self->xmlcomment( $self->{-comment} );
     }
     elsif ( $self->{-name} eq 'document' ) {
 
@@ -393,7 +388,7 @@ sub pi {
     return $self->{-document}->{-pi} unless scalar @text;
     my @pi;
     @pi = @{ $self->{-document}->{-pi} } if $self->{-document}->{-pi};
-    unshift( @text, @pi ) if @pi;
+    unshift( @text, @pi )                if @pi;
     $self->{-document}->{-pi} = \@text;
     my $tag = $self->tag('pi');
     return $tag;
@@ -719,5 +714,13 @@ sub colorAllocate {
 }
 
 #-------------------------------------------------------------------------------
+
+# Predeclare all known built-in element methods at load time
+# so they work regardless of how SVG.pm is imported
+# (e.g. 'use SVG ()' suppresses import() but still loads this module).
+foreach my $sub ( keys %SVG::Element::autosubs ) {
+    $SVG::Element::AUTOLOAD = "SVG::Element::$sub";
+    SVG::Element::autoload();
+}
 
 1;

@@ -1,8 +1,8 @@
-use strict;
+use v5.12.0;
 use warnings;
-package Test::Fatal;
+package Test::Fatal 0.018;
 # ABSTRACT: incredibly simple helpers for testing code with exceptions
-$Test::Fatal::VERSION = '0.016';
+
 #pod =head1 SYNOPSIS
 #pod
 #pod   use Test::More;
@@ -59,12 +59,16 @@ our @EXPORT_OK = qw(exception success dies_ok lives_ok);
 #pod C<exception> takes a bare block of code and returns the exception thrown by
 #pod that block.  If no exception was thrown, it returns undef.
 #pod
-#pod B<Achtung!>  If the block results in a I<false> exception, such as 0 or the
-#pod empty string, Test::Fatal itself will die.  Since either of these cases
+#pod B<Achtung!>  If the block results in an I<unblessed false> exception, such as 0
+#pod or the empty string, Test::Fatal itself will die.  Since either of these cases
 #pod indicates a serious problem with the system under testing, this behavior is
-#pod considered a I<feature>.  If you must test for these conditions, you should use
-#pod L<Try::Tiny>'s try/catch mechanism.  (Try::Tiny is the underlying exception
-#pod handling system of Test::Fatal.)
+#pod considered a I<feature>. Note that this issue is only known to occur on perls
+#pod before 5.14.
+#pod
+#pod Exercise caution if you must test for these conditions: wrapping C<exception {
+#pod ... }> in an C<ok()> block will not give you the result you need, so make sure
+#pod you use C<is()> instead.  You can also directly use L<Try::Tiny>'s try/catch
+#pod mechanism, the underlying exception handling system of Test::Fatal.
 #pod
 #pod Note that there is no TAP assert being performed.  In other words, no "ok" or
 #pod "not ok" line is emitted.  It's up to you to use the rest of C<exception> in an
@@ -105,7 +109,7 @@ our @EXPORT_OK = qw(exception success dies_ok lives_ok);
 #pod   exception_like(sub { }, [ qr/foo/, 'foo appears in the exception' ] );
 #pod
 #pod To aid in avoiding the problem where the pattern is seen in the exception
-#pod because of the call stack, C<$Carp::MAxArgNums> is locally set to -1 when the
+#pod because of the call stack, C<$Carp::MaxArgNums> is locally set to -1 when the
 #pod code block is called.  If you really don't want that, set it back to whatever
 #pod value you like at the beginning of the code block.  Obviously, this solution
 #pod doens't affect all possible ways that args of subroutines in the call stack
@@ -158,7 +162,7 @@ sub exception (&) {
     $code->();
     return undef;
   } catch {
-    return $_ if $_;
+    return $_ if $_ or ref; # allow objects with a false boolean overload
 
     my $problem = defined $_ ? 'false' : 'undef';
     Carp::confess("$problem exception caught by Test::Fatal::exception");
@@ -197,7 +201,7 @@ sub success (&;@) {
 #pod =func lives_ok
 #pod
 #pod Exported only by request, these two functions run a given block of code, and
-#pod provide TAP output indicating if it did, or did not throw an exception. 
+#pod provide TAP output indicating if it did, or did not throw an exception.
 #pod These provide an easy upgrade path for replacing existing unit tests based on
 #pod C<Test::Exception>.
 #pod
@@ -270,7 +274,7 @@ Test::Fatal - incredibly simple helpers for testing code with exceptions
 
 =head1 VERSION
 
-version 0.016
+version 0.018
 
 =head1 SYNOPSIS
 
@@ -311,6 +315,16 @@ false positives if exceptions use stack traces that show arguments.  For a more
 magical approach involving globally overriding C<caller>, see
 L<Test::Exception>.
 
+=head1 PERL VERSION
+
+This library should run on perls released even a long time ago.  It should
+work on any version of perl released in the last five years.
+
+Although it may work on older versions of perl, no guarantee is made that the
+minimum required version will not be increased.  The version may be increased
+for any reason, and there is no promise that patches will be accepted to
+lower the minimum required perl.
+
 =head1 FUNCTIONS
 
 =head2 exception
@@ -320,12 +334,16 @@ L<Test::Exception>.
 C<exception> takes a bare block of code and returns the exception thrown by
 that block.  If no exception was thrown, it returns undef.
 
-B<Achtung!>  If the block results in a I<false> exception, such as 0 or the
-empty string, Test::Fatal itself will die.  Since either of these cases
+B<Achtung!>  If the block results in an I<unblessed false> exception, such as 0
+or the empty string, Test::Fatal itself will die.  Since either of these cases
 indicates a serious problem with the system under testing, this behavior is
-considered a I<feature>.  If you must test for these conditions, you should use
-L<Try::Tiny>'s try/catch mechanism.  (Try::Tiny is the underlying exception
-handling system of Test::Fatal.)
+considered a I<feature>. Note that this issue is only known to occur on perls
+before 5.14.
+
+Exercise caution if you must test for these conditions: wrapping C<exception {
+... }> in an C<ok()> block will not give you the result you need, so make sure
+you use C<is()> instead.  You can also directly use L<Try::Tiny>'s try/catch
+mechanism, the underlying exception handling system of Test::Fatal.
 
 Note that there is no TAP assert being performed.  In other words, no "ok" or
 "not ok" line is emitted.  It's up to you to use the rest of C<exception> in an
@@ -366,7 +384,7 @@ arguments in an array reference to hide the literal text from a stack trace:
   exception_like(sub { }, [ qr/foo/, 'foo appears in the exception' ] );
 
 To aid in avoiding the problem where the pattern is seen in the exception
-because of the call stack, C<$Carp::MAxArgNums> is locally set to -1 when the
+because of the call stack, C<$Carp::MaxArgNums> is locally set to -1 when the
 code block is called.  If you really don't want that, set it back to whatever
 value you like at the beginning of the code block.  Obviously, this solution
 doens't affect all possible ways that args of subroutines in the call stack
@@ -407,7 +425,7 @@ success blocks may sometimes help organize complex testing.
 =head2 lives_ok
 
 Exported only by request, these two functions run a given block of code, and
-provide TAP output indicating if it did, or did not throw an exception. 
+provide TAP output indicating if it did, or did not throw an exception.
 These provide an easy upgrade path for replacing existing unit tests based on
 C<Test::Exception>.
 
@@ -423,11 +441,11 @@ use Test::Fatal's C<exception> routine.
 
 =head1 AUTHOR
 
-Ricardo Signes <rjbs@cpan.org>
+Ricardo Signes <cpan@semiotic.systems>
 
 =head1 CONTRIBUTORS
 
-=for stopwords David Golden Graham Knop Jesse Luehrs Joel Bernstein Karen Etheridge
+=for stopwords David Golden Graham Knop Jesse Luehrs Joel Bernstein Karen Etheridge Ricardo Signes
 
 =over 4
 
@@ -450,6 +468,10 @@ Joel Bernstein <joel@fysh.org>
 =item *
 
 Karen Etheridge <ether@cpan.org>
+
+=item *
+
+Ricardo Signes <rjbs@semiotic.systems>
 
 =back
 

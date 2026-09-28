@@ -19,12 +19,12 @@
 
 =head1 NAME
 
-DateTime::Locale::ff_Adlm_GH - Locale data examples for the Fulah Ghana Adlam (ff-Adlm-GH) locale
+DateTime::Locale::ff_Adlm_GH - Locale data examples for the Fula Ghana Adlam (ff-Adlm-GH) locale
 
 =head1 DESCRIPTION
 
 This pod file contains examples of the locale data available for the
-Fulah Ghana Adlam locale.
+Fula Ghana Adlam locale.
 
 =head2 Days
 
@@ -302,15 +302,15 @@ Fulah Ghana Adlam locale.
 
 =head3 Full
 
-   2008-02-05T18:30:30 = 𞤃𞤢𞤱𞤦𞤢𞥄𞤪𞤫 5 𞤕𞤮𞤤𞤼𞤮⹁ 2008 𞤉 6:30:30 𞤇𞤎 UTC
-   1995-12-22T09:05:02 = 𞤃𞤢𞤱𞤲𞤣𞤫 22 𞤄𞤮𞤱𞤼𞤮⹁ 1995 𞤉 9:05:02 𞤀𞤎 UTC
-  -0010-09-15T04:44:23 = 𞤖𞤮𞤪𞤦𞤭𞤪𞥆𞤫 15 𞤅𞤭𞤤𞤼𞤮⹁ -10 𞤉 4:44:23 𞤀𞤎 UTC
+   2008-02-05T18:30:30 = 𞤃𞤢𞤱𞤦𞤢𞥄𞤪𞤫 5 𞤕𞤮𞤤𞤼𞤮⹁ 2008 6:30:30 𞤇𞤎 UTC
+   1995-12-22T09:05:02 = 𞤃𞤢𞤱𞤲𞤣𞤫 22 𞤄𞤮𞤱𞤼𞤮⹁ 1995 9:05:02 𞤀𞤎 UTC
+  -0010-09-15T04:44:23 = 𞤖𞤮𞤪𞤦𞤭𞤪𞥆𞤫 15 𞤅𞤭𞤤𞤼𞤮⹁ -10 4:44:23 𞤀𞤎 UTC
 
 =head3 Long
 
-   2008-02-05T18:30:30 = 5 𞤕𞤮𞤤𞤼𞤮⹁ 2008 𞤉 6:30:30 𞤇𞤎 UTC
-   1995-12-22T09:05:02 = 22 𞤄𞤮𞤱𞤼𞤮⹁ 1995 𞤉 9:05:02 𞤀𞤎 UTC
-  -0010-09-15T04:44:23 = 15 𞤅𞤭𞤤𞤼𞤮⹁ -10 𞤉 4:44:23 𞤀𞤎 UTC
+   2008-02-05T18:30:30 = 5 𞤕𞤮𞤤𞤼𞤮⹁ 2008 6:30:30 𞤇𞤎 UTC
+   1995-12-22T09:05:02 = 22 𞤄𞤮𞤱𞤼𞤮⹁ 1995 9:05:02 𞤀𞤎 UTC
+  -0010-09-15T04:44:23 = 15 𞤅𞤭𞤤𞤼𞤮⹁ -10 4:44:23 𞤀𞤎 UTC
 
 =head3 Medium
 
@@ -513,11 +513,11 @@ Fulah Ghana Adlam locale.
    1995-12-22T09:05:02 = 22
   -0010-09-15T04:44:23 = 15
 
-=head3 h (h a)
+=head3 h (h a)
 
-   2008-02-05T18:30:30 = 6 𞤇𞤎
-   1995-12-22T09:05:02 = 9 𞤀𞤎
-  -0010-09-15T04:44:23 = 4 𞤀𞤎
+   2008-02-05T18:30:30 = 6 𞤇𞤎
+   1995-12-22T09:05:02 = 9 𞤀𞤎
+  -0010-09-15T04:44:23 = 4 𞤀𞤎
 
 =head3 hm (h:mm a)
 

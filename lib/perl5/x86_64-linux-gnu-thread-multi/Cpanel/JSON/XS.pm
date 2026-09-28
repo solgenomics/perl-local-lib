@@ -1,5 +1,5 @@
 package Cpanel::JSON::XS;
-our $VERSION = '4.27';
+our $VERSION = '4.42';
 our $XS_VERSION = $VERSION;
 # $VERSION = eval $VERSION;
 
@@ -112,7 +112,10 @@ or        L<https://rt.cpan.org/Public/Dist/Display.html?Queue=Cpanel-JSON-XS>
 
 B<Changes to JSON::XS>
 
+- bare hashkeys are now checked for utf8. (GH #209)
+
 - stricter decode_json() as documented. non-refs are disallowed.
+  safe by default.
   added a 2nd optional argument. decode() honors now allow_nonref.
 
 - fixed encode of numbers for dual-vars. Different string
@@ -157,7 +160,13 @@ B<Changes to JSON::XS>
 
 - relaxed mode, allowing many popular extensions
 
+- protect our magic object from corruption by wrong or missing external
+  methods, like FREEZE/THAW or serialization with other methods.
+
 - additional fixes for:
+
+  - #208 - no security-relevant out-of-bounds reading of module memory
+    when decoding hash keys without ending ':'
 
   - [cpan #88061] AIX atof without USE_LONG_DOUBLE
 
@@ -180,6 +189,8 @@ B<Changes to JSON::XS>
 
   - #167 sort tied hashes with canonical.
 
+  - #212 fix utf8 object stringification
+
 - public maintenance and bugtracker
 
 - use ppport.h, sanify XS.xs comment styles, harness C coding style
@@ -187,15 +198,15 @@ B<Changes to JSON::XS>
 - common::sense is optional. When available it is not used in the
   published production module, just during development and testing.
 
-- extended testsuite, passes all http://seriot.ch/parsing_json.html
+- extended testsuite, passes all http://seriot.ch/projects/parsing_json.html
   tests.  In fact it is the only know JSON decoder which does so,
   while also being the fastest.
 
 - support many more options and methods from JSON::PP:
   stringify_infnan, allow_unknown, allow_stringify, allow_barekey,
-  encode_stringify, allow_bignum, allow_singlequote, sort_by
-  (partially), escape_slash, convert_blessed, ...  optional
-  decode_json(, allow_nonref) arg.
+  encode_stringify, allow_bignum, allow_singlequote, dupkeys_as_arrayref,
+  sort_by (partially), escape_slash, convert_blessed, ...
+  optional decode_json(, allow_nonref) arg.
   relaxed implements allow_dupkeys.
 
 - support all 5 unicode L<BOM|/BOM>'s: UTF-8, UTF-16LE, UTF-16BE, UTF-32LE,
@@ -267,12 +278,12 @@ Note that older decode_json versions in Cpanel::JSON::XS older than
 3.0116 and JSON::XS did not set allow_nonref but allowed them due to a
 bug in the decoder.
 
-If the new 2nd optional $allow_nonref argument is set and not false, the
-C<allow_nonref> option will be set and the function will act is described
-as in the relaxed RFC 7159 allowing all values such as objects,
-arrays, strings, numbers, "null", "true", and "false".
-See L</"OLD" VS. "NEW" JSON (RFC 4627 VS. RFC 7159)> below, why you don't
-want to do that.
+Since version 4.42, C<allow_nonref> is enabled by default, matching
+JSON::XS 4.0+.  The 2nd optional C<$allow_nonref> argument can be set
+to false (C<0>) to disable it.  When enabled, the function accepts all
+JSON values: objects, arrays, strings, numbers, C<null>, C<true>, and
+C<false>.  See L</"OLD" VS. "NEW" JSON (RFC 4627 VS. RFC 7159)> for
+why you might not want this.
 
 For the 3rd optional type argument see L<Cpanel::JSON::XS::Type>.
 
@@ -336,11 +347,12 @@ a Unicode string encoded in UTF-8, giving you a binary string.
 =item 5. A string containing "high" (> 255) character values is I<not>
 a UTF-8 string.
 
-=item 6. Unicode noncharacters only warn, as in core.
+=item 6. Raw non-Unicode characters below U+10FFFF are allowed.
 
-The 66 Unicode noncharacters U+FDD0..U+FDEF, and U+*FFFE, U+*FFFF just
-warn, see L<http://www.unicode.org/versions/corrigendum9.html>.  But
-illegal surrogate pairs fail to parse.
+The 66 Unicode noncharacters U+FDD0..U+FDEF, and U+*FFFE, U+*FFFF are
+allowed without warning, as JSON::PP does, see
+L<http://www.unicode.org/versions/corrigendum9.html>.  But illegal
+surrogate pairs fail to parse.
 
 =item 7. Raw non-Unicode characters above U+10FFFF are disallowed.
 
@@ -349,6 +361,17 @@ parse, because "A string is a sequence of zero or more Unicode
 characters" RFC 7159 section 1 and "JSON text SHALL be encoded in
 Unicode RFC 7159 section 8.1. We use now the UTF8_DISALLOW_SUPER
 flag when parsing unicode.
+
+=item 8. Lone surrogates or illegal surrogate pairs are disallowed.
+
+Since RFC 3629, U+D800 through U+DFFF are not legal Unicode values and
+their UTF-8 encodings must be treated as an invalid byte sequence.
+RFC 8259 section 8.2 admits the spec allows string values that contain
+bit sequences that cannot encode Unicode characters and that the
+behavior of software that receives such values is unpredictable. To
+avoid introducing non-Unicode strings into Perl we use the
+UTF8_DISALLOW_SURROGATE flag when parsing Unicode and verify escaped
+surrogates form valid pairs.
 
 =back
 
@@ -659,12 +682,11 @@ L</allow_barekey> option.
 =item * allow_dupkeys
 
 Allow decoding of duplicate keys in hashes. By default duplicate keys are forbidden.
-See L<http://seriot.ch/parsing_json.php#24>:
+See L<http://seriot.ch/projects/parsing_json.php#24>:
 RFC 7159 section 4: "The names within an object should be unique."
-See the L</allow_dupkeys> option.
+See the C<allow_dupkeys> option.
 
 =back
-
 
 =item $json = $json->canonical ([$enable])
 
@@ -721,10 +743,11 @@ This setting has no effect when decoding JSON texts.
 
     $json = $json->unblessed_bool([$enable])
 
-If C<$enable> is true (or missing), then C<decode> will return
-Perl non-object boolean variables (1 and 0) for JSON booleans
-(C<true> and C<false>). If C<$enable> is false, then C<decode>
-will return C<JSON::PP::Boolean> objects for JSON booleans.
+If C<$enable> is true (or missing), then C<decode> will return Perl
+non-object boolean variables (1 and 0 as numbers or "1" and "" as
+strings) for JSON booleans (C<true> and C<false>). If C<$enable> is
+false, then C<decode> will return C<JSON::PP::Boolean> objects for
+JSON booleans.
 
 
 =item $json = $json->allow_singlequote ([$enable])
@@ -770,6 +793,10 @@ If C<$enable> is true (or missing), then C<decode> will convert
 the big integer Perl cannot handle as integer into a L<Math::BigInt>
 object and convert a floating number (any) into a L<Math::BigFloat>.
 
+   $int = $json->allow_nonref->allow_bignum->decode(1); # => 1
+   $bigint = $json->allow_bignum->decode('100000000000000000000000000000000000000');
+   $bigfloat = $json->allow_bignum->decode(1.0);
+
 On the contrary, C<encode> converts C<Math::BigInt> objects and
 C<Math::BigFloat> objects into JSON numbers with C<allow_blessed>
 enable.
@@ -796,16 +823,17 @@ convert a non-reference into its corresponding string, number or null
 JSON value, which is an extension to RFC4627. Likewise, C<decode> will
 accept those JSON values instead of croaking.
 
-If C<$enable> is false, then the C<encode> method will croak if it isn't
-passed an arrayref or hashref, as JSON texts must either be an object
-or array. Likewise, C<decode> will croak if given something that is not a
-JSON object or array.
+B<This option is now enabled by default> (since version 4.42), matching
+the behavior of JSON::XS 4.0+ and the broken RFC 7159.  JSON texts
+consisting of a bare scalar (string, number, C<true>, C<false>, C<null>)
+are accepted by C<encode> and C<decode> without explicitly requesting it.
+If you need strict RFC 4627 compliance, you must explicitly disable it:
 
-Example, encode a Perl scalar as JSON value with enabled C<allow_nonref>,
-resulting in an invalid JSON text:
+   Cpanel::JSON::XS->new->allow_nonref(0);
 
-   Cpanel::JSON::XS->new->allow_nonref->encode ("Hello, World!")
-   => "Hello, World!"
+When disabled, C<encode> will croak if it isn't passed an arrayref or
+hashref, as JSON texts must either be an object or array. Likewise,
+C<decode> will croak if given something that is not a JSON object or array.
 
 =item $json = $json->allow_unknown ([$enable])
 
@@ -867,6 +895,11 @@ This is useful it you need deterministic JSON types, independently of used
 Perl version and other modules, but do not want to write complicated type
 definitions for L<Cpanel::JSON::XS::Type>.
 
+When combined with L</allow_blessed> and/or L</convert_blessed>, blessed
+objects are handled by those options first, B<not> stringified by
+C<type_all_string>.  For example, with C<allow_blessed + type_all_string>,
+blessed objects are encoded as the JSON value C<null> (not C<"null">).
+
 =item $json = $json->allow_dupkeys ([$enable])
 
 =item $enabled = $json->get_allow_dupkeys
@@ -880,8 +913,28 @@ disable it, however with Perl hashes they are impossible, parsing
 JSON in Perl silently ignores duplicate names, using the last value
 found.
 
-See L<http://seriot.ch/parsing_json.php#24>:
+See L<http://seriot.ch/projects/parsing_json.php#24>:
 RFC 7159 section 4: "The names within an object should be unique."
+
+=item $json = $json->dupkeys_as_arrayref ([$enable])
+
+=item $enabled = $json->get_dupkeys_as_arrayref
+
+If enabled, allow decoding of duplicate keys in hashes and store the
+values as arrayref in the hash instead.  By default duplicate keys are
+forbidden.  Enabling this also enables the L</allow_dupkeys> option,
+but disabling this does not disable the L</allow_dupkeys> option.
+
+Example:
+
+    $json->dupkeys_as_arrayref;
+    print encode_json ($json->decode ('{"a":"b","a":"c"}'));
+
+      => {"a":["b","c"]}
+
+This changes the result structure, thus cannot be enabled by default.
+The client must be aware of it. The resulting arrayref is not yet marked somehow
+(blessed or such).
 
 =item $json = $json->allow_blessed ([$enable])
 
@@ -1175,7 +1228,7 @@ as early as the full parser, for example, it doesn't detect mismatched
 parentheses. The only thing it guarantees is that it starts decoding
 as soon as a syntactically valid JSON text has been seen. This means
 you need to set resource limits (e.g. C<max_size>) to ensure the
-parser will stop parsing in the presence if syntax errors.
+parser will stop parsing in the presence of syntax errors.
 
 The following methods implement this incremental parser.
 
@@ -1955,16 +2008,20 @@ output for these property strings, e.g.:
 This works because C<__proto__> is not valid outside of strings, so every
 occurrence of C<"__proto__"\s*:> must be a string used as property name.
 
-Unicode non-characters between U+FFFD and U+10FFFF are decoded either
-to the recommended U+FFFD REPLACEMENT CHARACTER (see Unicode PR #121:
-Recommended Practice for Replacement Characters), or in the binary or
-relaxed mode left as is, keeping the illegal non-characters as before.
-
 Raw non-Unicode characters outside the valid unicode range fail now to
 parse, because "A string is a sequence of zero or more Unicode
 characters" RFC 7159 section 1 and "JSON text SHALL be encoded in
 Unicode RFC 7159 section 8.1. We use now the UTF8_DISALLOW_SUPER
 flag when parsing unicode.
+
+Since RFC 3629, U+D800 through U+DFFF are not legal Unicode values and
+their UTF-8 encodings must be treated as an invalid byte sequence.
+RFC 8259 section 8.2 admits the spec allows string values that contain
+bit sequences that cannot encode Unicode characters and that the
+behavior of software that receives such values is unpredictable. To
+avoid introducing non-Unicode strings into Perl we use the
+UTF8_DISALLOW_SURROGATE flag when parsing Unicode and verify escaped
+surrogates form valid pairs.
 
 If you know of other incompatibilities, please let me know.
 
@@ -2063,7 +2120,7 @@ output (modulo bugs, but C<JSON::XS> has found more bugs in the
 official JSON testsuite (1) than the official JSON testsuite has found
 in C<JSON::XS> (0)).
 C<Cpanel::JSON::XS> is currently the only known JSON decoder which passes all
-L<http://seriot.ch/parsing_json.html> tests, while being the fastest also.
+L<http://seriot.ch/projects/parsing_json.html> tests, while being the fastest also.
 
 When you have trouble decoding JSON generated by this module using other
 decoders, then it is very likely that you have an encoding mismatch or the
@@ -2234,43 +2291,52 @@ special escape rules to prevent from XSS attacks.
 
 =head1 "OLD" VS. "NEW" JSON (RFC 4627 VS. RFC 7159)
 
-TL;DR: Due to security concerns, Cpanel::JSON::XS will not allow
-scalar data in JSON texts by default - you need to create your own
-Cpanel::JSON::XS object and enable C<allow_nonref>:
+B<Note: Since version 4.42, Cpanel::JSON::XS defaults to the broken RFC
+7159 behavior> (like JSON::XS 4.0+), accepting scalar top-level JSON values
+without requiring C<allow_nonref>.  This was done for compatibility with the
+larger Perl JSON ecosystem, despite the security concerns outlined below.
 
+If you rely on the old strict behavior, explicitly disable it:
 
-   my $json = JSON::XS->new->allow_nonref;
+   my $json = Cpanel::JSON::XS->new->allow_nonref(0);
 
-   $text = $json->encode ($data);
-   $data = $json->decode ($text);
+The rationale for the original (pre-4.42) default, and the reason you might
+want to keep it off, follows:
+
+TL;DR: The original JSON RFC 4627 required JSON texts to be arrays or
+objects.  The IETF later standardized a broken revision (RFC 7159) that
+allows bare scalars at top-level, opening a class of protocol confusion
+attacks.
 
 The long version: JSON being an important and supposedly stable format,
 the IETF standardized it as RFC 4627 in 2006. Unfortunately the inventor
 of JSON Douglas Crockford unilaterally changed the definition of JSON in
 javascript. Rather than create a fork, the IETF decided to standardize the
-new syntax (apparently, so I as told, without finding it very amusing).
+new syntax (apparently, so I was told, without finding it very amusing).
 
 The biggest difference between the original JSON and the new JSON is that
 the new JSON supports scalars (anything other than arrays and objects) at
 the top-level of a JSON text. While this is strictly backwards compatible
+the top-level of a JSON text. While this is supposedly backwards compatible
 to older versions, it breaks a number of protocols that relied on sending
-JSON back-to-back, and is a minor security concern.
+JSON back-to-back, and is a security concern.
 
 For example, imagine you have two banks communicating, and on one side,
 the JSON coder gets upgraded. Two messages, such as C<10> and C<1000>
-might then be confused to mean C<101000>, something that couldn't happen
+might then be confused to mean C<101000>, something that could not happen
 in the original JSON, because neither of these messages would be valid
 JSON.
 
 If one side accepts these messages, then an upgrade in the coder on either
 side could result in this becoming exploitable.
 
-This module has always allowed these messages as an optional extension, by
-default disabled. The security concerns are the reason why the default is
-still disabled, but future versions might/will likely upgrade to the newer
-RFC as default format, so you are advised to check your implementation
-and/or override the default with C<< ->allow_nonref (0) >> to ensure that
-future versions are safe.
+The IETF's own I-JSON profile (RFC 7493, also edited by Tim Bray who
+authored RFC 7159) acknowledges this mistake: Section 4.1 states that
+"there are software implementations, coded to the older specification
+[RFC4627], which only accept JSON objects or JSON arrays at the top
+level of JSON texts.  For maximum interoperability with such
+implementations, protocol designers SHOULD NOT use top-level JSON
+texts that are neither objects nor arrays."
 
 =head1 THREADS
 
@@ -2315,20 +2381,32 @@ BEGIN {
   require overload;
 
   local $^W; # silence redefine warnings. no warnings 'redefine' does not help
-  &overload::import( 'overload', # workaround 5.6 reserved keyword warning
-    "0+"     => sub { ${$_[0]} },
-    "++"     => sub { $_[0] = ${$_[0]} + 1 },
-    "--"     => sub { $_[0] = ${$_[0]} - 1 },
+  # These already come with JSON::PP::Boolean. Avoid redefine warning.
+  if (!defined $JSON::PP::Boolean::VERSION or $JSON::PP::VERSION lt '4.00') {
+    &overload::unimport( 'overload', '0+', '++', '--' );
+    &overload::import( 'overload',
+                       "0+"     => sub { ${$_[0]} },
+                       "++"     => sub { $_[0] = ${$_[0]} + 1 },
+                       "--"     => sub { $_[0] = ${$_[0]} - 1 },
+      );
+  }
+  # workaround 5.6 reserved keyword warning
+  &overload::unimport( 'overload', '""', 'eq', 'ne' );
+  &overload::import( 'overload',
     '""'     => sub { ${$_[0]} == 1 ? '1' : '0' }, # GH 29
+    # NOTE: unlike JSON::PP::Boolean which relies on fallback and has no
+    # explicit eq/ne overload, we provide semantic boolean matching:
+    # false eq "false", false eq "", false eq !!0, true eq "true".
+    # JSON::PP would return FALSE for all of these (plain string eq).
     'eq'     => sub {
       my ($obj, $op) = $_[2] ? ($_[1], $_[0]) : ($_[0], $_[1]);
-      #warn "eq obj:$obj op:$op len:", length($op) > 0, " swap:$_[2]";
       if (ref $op) { # if 2nd also blessed might recurse endlessly
         return $obj ? 1 == $op : 0 == $op;
       }
       # if string, only accept numbers or true|false or "" (e.g. !!0 / SV_NO)
       elsif ($op !~ /^[0-9]+$/) {
-        return "$obj" eq '1' ? 'true' eq $op : 'false' eq $op || "" eq $op;
+        return "$obj" eq '1' ? 'true' eq $op
+             : 'false' eq $op || (defined($op) && "" eq $op); # GH #207
       }
       else {
         return $obj ? 1 == $op : 0 == $op;
@@ -2376,9 +2454,9 @@ XSLoader::load 'Cpanel::JSON::XS', $XS_VERSION;
 
 The F<cpanel_json_xs> command line utility for quick experiments.
 
-L<JSON>, L<JSON::XS>, L<JSON::MaybeXS>, L<Mojo::JSON>, L<Mojo::JSON::MaybeXS>,
-L<JSON::SL>, L<JSON::DWIW>, L<JSON::YAJL>,  L<JSON::Any>, L<Test::JSON>,
-L<Locale::Wolowitz>,
+L<JSON::PP>, L<JSON>, L<JSON::XS>, L<JSON::MaybeXS>, L<Mojo::JSON>,
+L<Mojo::JSON::MaybeXS>, L<JSON::SL>, L<JSON::DWIW>, L<JSON::YAJL>,
+L<JSON::Any>, L<Test::JSON>, L<Locale::Wolowitz>,
 L<https://metacpan.org/search?q=JSON>
 
 L<https://tools.ietf.org/html/rfc7159>

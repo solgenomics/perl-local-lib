@@ -63,6 +63,7 @@ out of Perl, this class I<no longer> uses the fields pragma.
 ## at some point.  Don't know how far how fast.
 
 use strict;
+use warnings;
 use Carp;
 use Fcntl;
 use Symbol;
@@ -73,7 +74,7 @@ use IPC::Run qw( Win32_MODE );
 use vars qw{$VERSION};
 
 BEGIN {
-    $VERSION = '20200505.0';
+    $VERSION = '20260402.0';
     if (Win32_MODE) {
         eval "use IPC::Run::Win32Helper; require IPC::Run::Win32IO; 1"
           or ( $@ && die )
@@ -102,7 +103,7 @@ sub new {
 
     my ( $external, $type, $internal ) = ( shift, shift, pop );
 
-    croak "$class: '$_' is not a valid I/O operator"
+    croak "$class: '$type' is not a valid I/O operator"
       unless $type =~ /^(?:<<?|>>?)$/;
 
     my IPC::Run::IO $self = $class->_new_internal( $type, undef, undef, $internal, undef, @_ );
@@ -136,7 +137,7 @@ sub _new_internal {
     my ( $type, $kfd, $pty_id, $internal, $binmode, @filters ) = @_;
 
     # Older perls (<=5.00503, at least) don't do list assign to
-    # psuedo-hashes well.
+    # pseudo-hashes well.
     $self->{TYPE}   = $type;
     $self->{KFD}    = $kfd;
     $self->{PTY_ID} = $pty_id;
@@ -181,11 +182,17 @@ sub _new_internal {
                     return undef
                       if $self->{SOURCE_EMPTY};
 
-                    my $in = $internal->();
-                    unless ( defined $in ) {
+                    ## Call in list context so that callbacks returning
+                    ## an empty array (return @a where @a is empty) are
+                    ## distinguished from returning the string "0".  In
+                    ## scalar context both would yield 0, but an empty
+                    ## list means "no more input".
+                    my @in = $internal->();
+                    if ( !@in || ( @in == 1 && !defined $in[0] ) ) {
                         $self->{SOURCE_EMPTY} = 1;
                         return undef;
                     }
+                    my $in = join '', @in;
                     return 0 unless length $in;
                     $$out_ref = $in;
 
@@ -205,11 +212,30 @@ sub _new_internal {
                       if IPC::Run::_empty ${ $self->{SOURCE} }
                       || $self->{SOURCE_EMPTY};
 
-                    $$out_ref = $$internal;
-                    eval { $$internal = '' }
-                      if $self->{HARNESS}->{clear_ins};
+                    ## When clear_ins is set (start/pump mode), limit the chunk
+                    ## copied per filter invocation.  Without this limit, all of
+                    ## $$internal is moved to the internal pipe buffer in one
+                    ## shot.  If the caller keeps appending to $$internal faster
+                    ## than the child can consume data, the intermediate buffer
+                    ## grows without bound -- exponential memory growth.
+                    ## See https://github.com/cpan-authors/IPC-Run/issues/154
+                    my $max_chunk = 65536;
+                    if ( $self->{HARNESS}->{clear_ins}
+                        && length($$internal) > $max_chunk )
+                    {
+                        $$out_ref = substr( $$internal, 0, $max_chunk );
+                        eval { substr( $$internal, 0, $max_chunk, '' ) };
+                        ## SOURCE_EMPTY intentionally not set here: more data
+                        ## remains in $$internal and will be picked up on the
+                        ## next filter invocation once $$out_ref has drained.
+                    }
+                    else {
+                        $$out_ref = $$internal;
+                        eval { $$internal = '' }
+                          if $self->{HARNESS}->{clear_ins};
 
-                    $self->{SOURCE_EMPTY} = $self->{HARNESS}->{auto_close_ins};
+                        $self->{SOURCE_EMPTY} = $self->{HARNESS}->{auto_close_ins};
+                    }
 
                     return 1;
                 }
@@ -311,17 +337,26 @@ sub _do_open {
     my ( $child_debug_fd, $parent_handle ) = @_;
 
     if ( $self->dir eq "<" ) {
-        ( $self->{TFD}, $self->{FD} ) = IPC::Run::_pipe_nb;
+        if ( $self->{TYPE} eq '<blocking_pipe' ) {
+            ( $self->{TFD}, $self->{FD} ) = IPC::Run::_pipe;
+        }
+        else {
+            ( $self->{TFD}, $self->{FD} ) = IPC::Run::_pipe_nb;
+        }
         if ($parent_handle) {
-            CORE::open $parent_handle, ">&=$self->{FD}"
+            my $fh = ref $parent_handle eq 'SCALAR' ? do { require Symbol; Symbol::gensym() } : $parent_handle;
+            CORE::open $fh, ">&=$self->{FD}"
               or croak "$! duping write end of pipe for caller";
+            $$parent_handle = $fh if ref $parent_handle eq 'SCALAR';
         }
     }
     else {
         ( $self->{FD}, $self->{TFD} ) = IPC::Run::_pipe;
         if ($parent_handle) {
-            CORE::open $parent_handle, "<&=$self->{FD}"
+            my $fh = ref $parent_handle eq 'SCALAR' ? do { require Symbol; Symbol::gensym() } : $parent_handle;
+            CORE::open $fh, "<&=$self->{FD}"
               or croak "$! duping read end of pipe for caller";
+            $$parent_handle = $fh if ref $parent_handle eq 'SCALAR';
         }
     }
 }

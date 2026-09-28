@@ -315,5 +315,5 @@
       "Toby Inkster <mail@tobyinkster.co.uk>",
       "Yuval Kogman <nothingmuch@woobling.org>"
    ],
-   "x_serialization_backend" : "JSON::PP version 4.04"
+   "x_serialization_backend" : "JSON::PP version 4.16"
 }

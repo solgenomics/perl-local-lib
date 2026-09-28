@@ -9,7 +9,7 @@ use File::Temp ();
 use Path::Tiny ();
 
 # ABSTRACT: Plugin to extract a tarball using Archive::Tar
-our $VERSION = '2.46'; # VERSION
+our $VERSION = '2.84'; # VERSION
 
 
 has '+format' => 'tar';
@@ -19,7 +19,7 @@ sub handles
 {
   my(undef, $ext) = @_;
 
-  return 1 if $ext =~ /^(tar|tar.gz|tar.bz2|tbz|taz)$/;
+  return 1 if $ext =~ /^(tar|tar\.gz|tar\.bz2|tar\.xz|tbz|taz|txz)$/;
 
   return 0;
 }
@@ -36,6 +36,10 @@ sub available
   elsif($ext eq 'tar.bz2')
   {
     return !! eval { require Archive::Tar; Archive::Tar->has_bzip2_support && __PACKAGE__->_can_bz2 };
+  }
+  elsif($ext eq 'tar.xz')
+  {
+    return !! eval { require Archive::Tar; Archive::Tar->has_xz_support };
   }
   else
   {
@@ -57,6 +61,11 @@ sub init
     $meta->add_requires('share' => 'IO::Uncompress::Bunzip2' => 0);
     $meta->add_requires('share' => 'IO::Compress::Bzip2' => 0);
   }
+  elsif($self->format eq 'tar.xz' || $self->format eq 'txz')
+  {
+    $meta->add_requires('share' => 'Archive::Tar' => 2.34);
+    $meta->add_requires('share' => 'IO::Uncompress::UnXz' => 0);
+  }
 
   $meta->register_hook(
     extract => sub {
@@ -71,7 +80,7 @@ sub init
 sub _can_bz2
 {
   # even when Archive::Tar reports that it supports bz2, I can sometimes get this error:
-  # 'Cannot read enough bytes from the tarfile', so lets just probe for actual support!
+  # 'Cannot read enough bytes from the tar file', so lets just probe for actual support!
   my $dir = Path::Tiny->new(File::Temp::tempdir( CLEANUP => 1 ));
   eval {
     local $CWD = $dir;
@@ -103,7 +112,7 @@ Alien::Build::Plugin::Extract::ArchiveTar - Plugin to extract a tarball using Ar
 
 =head1 VERSION
 
-version 2.46
+version 2.84
 
 =head1 SYNOPSIS
 
@@ -210,9 +219,11 @@ Håkon Hægland (hakonhagland, HAKONH)
 
 nick nauwelaerts (INPHOBIA)
 
+Florian Weimer
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2020 by Graham Ollis.
+This software is copyright (c) 2011-2022 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -1,6 +1,6 @@
 #  -*-cperl-*-
 #
-#  Copyright (c) 2002-2022 Greg Sabino Mullane and others: see the Changes file
+#  Copyright (c) 2002-2026 Greg Sabino Mullane and others: see the Changes file
 #  Portions Copyright (c) 2002 Jeffrey W. Baker
 #  Portions Copyright (c) 1997-2001 Edmund Mergl
 #  Portions Copyright (c) 1994-1997 Tim Bunce
@@ -16,12 +16,11 @@ use 5.008001;
 {
     package DBD::Pg;
 
-    use version; our $VERSION = qv('3.15.1');
+    use version; our $VERSION = qv('3.21.2');
 
     use DBI 1.614 ();
     use Exporter ();
     use XSLoader;
-    our $dbh;
     our @ISA = qw(Exporter);
 
     use constant {
@@ -65,32 +64,33 @@ use 5.008001;
             PG_LSEGARRAY PG_MACADDR PG_MACADDR8 PG_MACADDR8ARRAY PG_MACADDRARRAY
             PG_MONEY PG_MONEYARRAY PG_NAME PG_NAMEARRAY PG_NUMERIC
             PG_NUMERICARRAY PG_NUMMULTIRANGE PG_NUMMULTIRANGEARRAY PG_NUMRANGE PG_NUMRANGEARRAY
-            PG_OID PG_OIDARRAY PG_OIDVECTOR PG_OIDVECTORARRAY PG_PATH
-            PG_PATHARRAY PG_PG_ATTRIBUTE PG_PG_ATTRIBUTEARRAY PG_PG_BRIN_BLOOM_SUMMARY PG_PG_BRIN_MINMAX_MULTI_SUMMARY
-            PG_PG_CLASS PG_PG_CLASSARRAY PG_PG_DDL_COMMAND PG_PG_DEPENDENCIES PG_PG_LSN
-            PG_PG_LSNARRAY PG_PG_MCV_LIST PG_PG_NDISTINCT PG_PG_NODE_TREE PG_PG_PROC
-            PG_PG_PROCARRAY PG_PG_SNAPSHOT PG_PG_SNAPSHOTARRAY PG_PG_TYPE PG_PG_TYPEARRAY
-            PG_POINT PG_POINTARRAY PG_POLYGON PG_POLYGONARRAY PG_RECORD
-            PG_RECORDARRAY PG_REFCURSOR PG_REFCURSORARRAY PG_REGCLASS PG_REGCLASSARRAY
-            PG_REGCOLLATION PG_REGCOLLATIONARRAY PG_REGCONFIG PG_REGCONFIGARRAY PG_REGDICTIONARY
-            PG_REGDICTIONARYARRAY PG_REGNAMESPACE PG_REGNAMESPACEARRAY PG_REGOPER PG_REGOPERARRAY
-            PG_REGOPERATOR PG_REGOPERATORARRAY PG_REGPROC PG_REGPROCARRAY PG_REGPROCEDURE
-            PG_REGPROCEDUREARRAY PG_REGROLE PG_REGROLEARRAY PG_REGTYPE PG_REGTYPEARRAY
-            PG_TABLE_AM_HANDLER PG_TEXT PG_TEXTARRAY PG_TID PG_TIDARRAY
-            PG_TIME PG_TIMEARRAY PG_TIMESTAMP PG_TIMESTAMPARRAY PG_TIMESTAMPTZ
-            PG_TIMESTAMPTZARRAY PG_TIMETZ PG_TIMETZARRAY PG_TRIGGER PG_TSMULTIRANGE
-            PG_TSMULTIRANGEARRAY PG_TSM_HANDLER PG_TSQUERY PG_TSQUERYARRAY PG_TSRANGE
-            PG_TSRANGEARRAY PG_TSTZMULTIRANGE PG_TSTZMULTIRANGEARRAY PG_TSTZRANGE PG_TSTZRANGEARRAY
-            PG_TSVECTOR PG_TSVECTORARRAY PG_TXID_SNAPSHOT PG_TXID_SNAPSHOTARRAY PG_UNKNOWN
-            PG_UUID PG_UUIDARRAY PG_VARBIT PG_VARBITARRAY PG_VARCHAR
-            PG_VARCHARARRAY PG_VOID PG_XID PG_XID8 PG_XID8ARRAY
-            PG_XIDARRAY PG_XML PG_XMLARRAY
+            PG_OID PG_OID8 PG_OID8ARRAY PG_OIDARRAY PG_OIDVECTOR
+            PG_OIDVECTORARRAY PG_PATH PG_PATHARRAY PG_PG_ATTRIBUTE PG_PG_ATTRIBUTEARRAY
+            PG_PG_BRIN_BLOOM_SUMMARY PG_PG_BRIN_MINMAX_MULTI_SUMMARY PG_PG_CLASS PG_PG_CLASSARRAY PG_PG_DDL_COMMAND
+            PG_PG_DEPENDENCIES PG_PG_LSN PG_PG_LSNARRAY PG_PG_MCV_LIST PG_PG_NDISTINCT
+            PG_PG_NODE_TREE PG_PG_PROC PG_PG_PROCARRAY PG_PG_SNAPSHOT PG_PG_SNAPSHOTARRAY
+            PG_PG_TYPE PG_PG_TYPEARRAY PG_POINT PG_POINTARRAY PG_POLYGON
+            PG_POLYGONARRAY PG_RECORD PG_RECORDARRAY PG_REFCURSOR PG_REFCURSORARRAY
+            PG_REGCLASS PG_REGCLASSARRAY PG_REGCOLLATION PG_REGCOLLATIONARRAY PG_REGCONFIG
+            PG_REGCONFIGARRAY PG_REGDATABASE PG_REGDATABASEARRAY PG_REGDICTIONARY PG_REGDICTIONARYARRAY
+            PG_REGNAMESPACE PG_REGNAMESPACEARRAY PG_REGOPER PG_REGOPERARRAY PG_REGOPERATOR
+            PG_REGOPERATORARRAY PG_REGPROC PG_REGPROCARRAY PG_REGPROCEDURE PG_REGPROCEDUREARRAY
+            PG_REGROLE PG_REGROLEARRAY PG_REGTYPE PG_REGTYPEARRAY PG_TABLE_AM_HANDLER
+            PG_TEXT PG_TEXTARRAY PG_TID PG_TIDARRAY PG_TIME
+            PG_TIMEARRAY PG_TIMESTAMP PG_TIMESTAMPARRAY PG_TIMESTAMPTZ PG_TIMESTAMPTZARRAY
+            PG_TIMETZ PG_TIMETZARRAY PG_TRIGGER PG_TSMULTIRANGE PG_TSMULTIRANGEARRAY
+            PG_TSM_HANDLER PG_TSQUERY PG_TSQUERYARRAY PG_TSRANGE PG_TSRANGEARRAY
+            PG_TSTZMULTIRANGE PG_TSTZMULTIRANGEARRAY PG_TSTZRANGE PG_TSTZRANGEARRAY PG_TSVECTOR
+            PG_TSVECTORARRAY PG_TXID_SNAPSHOT PG_TXID_SNAPSHOTARRAY PG_UNKNOWN PG_UUID
+            PG_UUIDARRAY PG_VARBIT PG_VARBITARRAY PG_VARCHAR PG_VARCHARARRAY
+            PG_VOID PG_XID PG_XID8 PG_XID8ARRAY PG_XIDARRAY
+            PG_XML PG_XMLARRAY
         )],
     );
 
     {
         package DBD::Pg::DefaultValue;
-        sub new { my $self = {}; return bless $self, shift; }
+        sub new { my $class = shift; return bless {}, $class; }
     }
     our $DBDPG_DEFAULT = DBD::Pg::DefaultValue->new();
     Exporter::export_ok_tags('pg_types', 'async', 'pg_limits');
@@ -137,7 +137,7 @@ use 5.008001;
         $class .= '::dr';
 
         ## Work around for issue found in https://rt.cpan.org/Ticket/Display.html?id=83057
-        my $realversion = qv('3.15.1');
+        my $realversion = qv('3.21.2');
 
         $drh = DBI::_new_drh($class, {
             'Name'        => 'Pg',
@@ -151,14 +151,18 @@ use 5.008001;
         # uncoverable branch false
         if (!$methods_are_installed) {
             DBD::Pg::db->install_method('pg_cancel');
+            DBD::Pg::db->install_method('pg_continue_connect');
             DBD::Pg::db->install_method('pg_endcopy');
             DBD::Pg::db->install_method('pg_error_field');
             DBD::Pg::db->install_method('pg_getline');
             DBD::Pg::db->install_method('pg_getcopydata');
             DBD::Pg::db->install_method('pg_getcopydata_async');
             DBD::Pg::db->install_method('pg_notifies');
+            DBD::Pg::db->install_method('pg_flush');
             DBD::Pg::db->install_method('pg_putcopydata');
+            DBD::Pg::db->install_method('pg_putcopydata_async');
             DBD::Pg::db->install_method('pg_putcopyend');
+            DBD::Pg::db->install_method('pg_putcopyend_async');
             DBD::Pg::db->install_method('pg_ping');
             DBD::Pg::db->install_method('pg_putline');
             DBD::Pg::db->install_method('pg_ready');
@@ -166,6 +170,7 @@ use 5.008001;
             DBD::Pg::db->install_method('pg_result'); ## NOT duplicated below!
             DBD::Pg::db->install_method('pg_rollback_to');
             DBD::Pg::db->install_method('pg_savepoint');
+            DBD::Pg::db->install_method('pg_send_cancel');
             DBD::Pg::db->install_method('pg_server_trace');
             DBD::Pg::db->install_method('pg_server_untrace');
             DBD::Pg::db->install_method('pg_type_info');
@@ -192,7 +197,7 @@ use 5.008001;
             DBD::Pg::db->install_method('pg_lo_import_with_oid');
             DBD::Pg::db->install_method('pg_lo_export');
 
-            $methods_are_installed++;
+            $methods_are_installed = 1;
         }
 
         return $drh;
@@ -214,70 +219,67 @@ use 5.008001;
     sub data_sources {
 
         my $drh = shift;
-        my $conninfo = shift || '';
+        my $extra_conninfo = shift || '';
+        $extra_conninfo =~ s/^([^;])/;$1/;
+
         my $connstring = 'dbname=postgres';
         if ($ENV{DBI_DSN}) {
             ($connstring = $ENV{DBI_DSN}) =~ s/dbi:Pg://i;
         }
-        if (length $conninfo) {
-            $connstring .= ";$conninfo";
-        }
 
-        my $dbh = DBD::Pg::dr::connect($drh, $connstring) or return;
-        $dbh->{AutoCommit}=1;
-        my $SQL = 'SELECT pg_catalog.quote_ident(datname) FROM pg_catalog.pg_database ORDER BY 1';
-        my $sth = $dbh->prepare($SQL);
-        $sth->execute();
-        $conninfo and $conninfo = ";$conninfo";
-        my @sources = map { "dbi:Pg:dbname=$_->[0]$conninfo" } @{$sth->fetchall_arrayref()};
+        my $dbh = DBD::Pg::dr::connect($drh, $connstring) or die 'Could not connect to the database';
+
+        my @sources;
+        eval {
+            my $SQL = 'SELECT pg_catalog.quote_ident(datname) FROM pg_catalog.pg_database ORDER BY 1';
+            my $sth = $dbh->prepare($SQL) or die $dbh->errstr;
+            $sth->execute() or die $sth->errstr;
+            @sources = map { "dbi:Pg:dbname=$_->[0]$extra_conninfo" } @{$sth->fetchall_arrayref()};
+        };
+        my $error = $@;
+
         $dbh->disconnect;
+        die $error if $error;
+
         return @sources;
     }
 
 
     sub connect { ## no critic (ProhibitBuiltinHomonyms)
 
-        my ($drh, $dbname, $user, $pass, $attr) = @_;
+        my ($drh, $dsn, $user, $pass, $attr) = @_;
 
         ## Allow "db" and "database" as synonyms for "dbname"
-        $dbname =~ s/\b(?:db|database)\s*=/dbname=/;
+        $dsn =~ s/\b(?:db|database)\s*=/dbname=/;
 
-        my $name = $dbname;
-        if ($dbname =~ m{dbname\s*=\s*[\"\']([^\"\']+)}) {
-            $name = "'$1'";
-            $dbname =~ s/\"/\'/g;
-        }
-        elsif ($dbname =~ m{dbname\s*=\s*([^;]+)}) {
-            $name = $1;
-        }
+        ## If the database name is wrapped in double quotes, change to single quotes
+        $dsn =~ s/dbname\s*=\s*"(.+?)"/dbname='$1'/;
+
+        ## No other escaping needed here: docs indicate this is a client job:
+        #e.g. C<dbi:Pg:dbname='\'spacey\' name';host=$host>.
 
         $user = defined($user) ? $user : defined $ENV{DBI_USER} ? $ENV{DBI_USER} : '';
         $pass = defined($pass) ? $pass : defined $ENV{DBI_PASS} ? $ENV{DBI_PASS} : '';
 
         my ($dbh) = DBI::_new_dbh($drh, {
-            'Name'         => $dbname,
+            'Name'         => $dsn,
             'Username'     => $user,
             'CURRENT_USER' => $user,
          });
 
-        # Connect to the database..
-        DBD::Pg::db::_login($dbh, $dbname, $user, $pass, $attr) or return undef;
+        DBD::Pg::db::_login($dbh, $dsn, $user, $pass, $attr) or return;
 
-        my $version = $dbh->{pg_server_version};
-        $dbh->{private_dbdpg}{version} = $version;
+        $dbh->{private_dbdpg}{version} = $dbh->{pg_server_version};
 
-        if ($attr) {
-            if ($attr->{dbd_verbose}) {
-                $dbh->trace('DBD');
-            }
+        if ($attr and $attr->{dbd_verbose}) {
+            $dbh->trace('DBD');
         }
 
         return $dbh;
     }
 
     sub private_attribute_info {
-        return {
-        };
+        return {};
     }
 
 } ## end of package DBD::Pg::dr
@@ -304,7 +306,7 @@ use 5.008001;
             'Statement' => $statement,
         });
 
-        DBD::Pg::st::_prepare($sth, $statement, @attribs);
+        DBD::Pg::st::_prepare($sth, $statement, @attribs) or return;
 
         return $sth;
     }
@@ -385,7 +387,7 @@ use 5.008001;
                     ) AS seqname
                 FROM pg_class c
                     JOIN pg_catalog.pg_namespace n ON (n.oid = c.relnamespace)
-                    -- LEFT JOIN so we can distingiuish between table not found (zero rows)
+                    -- LEFT JOIN so we can distinguish between table not found (zero rows)
                     -- and no suitable column found (at least one all-NULL row)
                     LEFT JOIN pg_catalog.pg_index i
                         ON c.oid = i.indrelid AND i.indisunique
@@ -411,7 +413,7 @@ use 5.008001;
                 $SQL = 'SELECT inhparent::regclass FROM pg_inherits WHERE inhrelid = ?::regclass::oid';
                 my $isth = $dbh->prepare($SQL);
                 $count = $isth->execute($table);
-                if ($count < 1) {
+                if (!defined $count or $count eq '0E0') {
                     $isth->finish();
                     $dbh->set_err(1, qq{No suitable column found for last_insert_id of table "$table"\n});
                     return undef;
@@ -453,307 +455,336 @@ use 5.008001;
 
     sub ping {
         my $dbh = shift;
-        local $SIG{__WARN__} if $dbh->FETCH('PrintError');
+        local $SIG{__WARN__} = sub {} if $dbh->FETCH('PrintError');
         my $ret = DBD::Pg::db::_ping($dbh);
         return $ret < 1 ? 0 : $ret;
     }
 
     sub pg_ping {
         my $dbh = shift;
-        local $SIG{__WARN__} if $dbh->FETCH('PrintError');
+        local $SIG{__WARN__} = sub {} if $dbh->FETCH('PrintError');
         return DBD::Pg::db::_ping($dbh);
     }
 
     sub pg_type_info {
         my($dbh,$pg_type) = @_;
-        local $SIG{__WARN__} if $dbh->FETCH('PrintError');
         return DBD::Pg::db::_pg_type_info($pg_type);
     }
 
-    # Column expected in statement handle returned.
-    # table_cat, table_schem, table_name, column_name, data_type, type_name,
-     # column_size, buffer_length, DECIMAL_DIGITS, NUM_PREC_RADIX, NULLABLE,
-    # REMARKS, COLUMN_DEF, SQL_DATA_TYPE, SQL_DATETIME_SUB, CHAR_OCTET_LENGTH,
-    # ORDINAL_POSITION, IS_NULLABLE
-    # The result set is ordered by TABLE_SCHEM, TABLE_NAME and ORDINAL_POSITION.
-
     sub column_info {
-        my $dbh = shift;
-        my (undef, $schema, $table, $column) = @_;
 
-        my @search;
+        # Columns expected in statement handle returned (Per DBI, must be in order):
+        # TABLE_CAT, TABLE_SCHEM, TABLE_NAME, COLUMN_NAME, DATA_TYPE, TYPE_NAME,
+        # COLUMN_SIZE, BUFFER_LENGTH, DECIMAL_DIGITS, NUM_PREC_RADIX, NULLABLE,
+        # REMARKS, COLUMN_DEF, SQL_DATA_TYPE, SQL_DATETIME_SUB, CHAR_OCTET_LENGTH,
+        # ORDINAL_POSITION, IS_NULLABLE
+        # The result set is ordered by TABLE_SCHEM, TABLE_NAME and ORDINAL_POSITION.
+
+        my ($dbh, $catalog, $schema, $table, $column) = @_;
+
+        my (@search, @args);
         ## If the schema or table has an underscore or a %, use a LIKE comparison
         if (defined $schema and length $schema) {
-            push @search, 'n.nspname ' . ($schema =~ /[_%]/ ? 'LIKE ' : '= ') .
-                $dbh->quote($schema);
+            push @search, 'n.nspname ' . ($schema =~ /[_%]/ ? 'LIKE ?' : '= ?');
+            push @args, $schema;
         }
         if (defined $table and length $table) {
-            push @search, 'c.relname ' . ($table =~ /[_%]/ ? 'LIKE ' : '= ') .
-                $dbh->quote($table);
+            push @search, 'c.relname ' . ($table =~ /[_%]/ ? 'LIKE ?' : '= ?');
+            push @args, $table;
         }
         if (defined $column and length $column) {
-            push @search, 'a.attname ' . ($column =~ /[_%]/ ? 'LIKE ' : '= ') .
-                $dbh->quote($column);
+            push @search, 'a.attname ' . ($column =~ /[_%]/ ? 'LIKE ?' : '= ?');
+            push @args, $column;
         }
 
-        my $whereclause = join "\n\t\t\t\tAND ", '', @search;
+        my $whereclause = @search ? (' AND ' . join ' AND ', @search) : '';
 
-        my $col_info_sql = qq!
-            SELECT
-                pg_catalog.quote_ident(pg_catalog.current_database()) AS "TABLE_CAT"
-                , pg_catalog.quote_ident(n.nspname) AS "TABLE_SCHEM"
-                , pg_catalog.quote_ident(c.relname) AS "TABLE_NAME"
-                , pg_catalog.quote_ident(a.attname) AS "COLUMN_NAME"
-                , a.atttypid AS "DATA_TYPE"
-                , pg_catalog.format_type(a.atttypid, NULL) AS "TYPE_NAME"
-                , a.attlen AS "COLUMN_SIZE"
-                , NULL::text AS "BUFFER_LENGTH"
-                , NULL::text AS "DECIMAL_DIGITS"
-                , NULL::text AS "NUM_PREC_RADIX"
-                , CASE a.attnotnull WHEN 't' THEN 0 ELSE 1 END AS "NULLABLE"
-                , pg_catalog.col_description(a.attrelid, a.attnum) AS "REMARKS"
-                , pg_catalog.pg_get_expr(af.adbin, af.adrelid) AS "COLUMN_DEF"
-                , NULL::text AS "SQL_DATA_TYPE"
-                , NULL::text AS "SQL_DATETIME_SUB"
-                , NULL::text AS "CHAR_OCTET_LENGTH"
-                , a.attnum AS "ORDINAL_POSITION"
-                , CASE a.attnotnull WHEN 't' THEN 'NO' ELSE 'YES' END AS "IS_NULLABLE"
-                , pg_catalog.format_type(a.atttypid, a.atttypmod) AS "pg_type"
-                , '?' AS "pg_constraint"
-                , n.nspname AS "pg_schema"
-                , c.relname AS "pg_table"
-                , a.attname AS "pg_column"
-                , a.attrelid AS "pg_attrelid"
-                , a.attnum AS "pg_attnum"
-                , a.atttypmod AS "pg_atttypmod"
-                , t.typtype AS "_pg_type_typtype"
-                , t.oid AS "_pg_type_oid"
-            FROM
-                pg_catalog.pg_type t
-                JOIN pg_catalog.pg_attribute a ON (t.oid = a.atttypid)
-                JOIN pg_catalog.pg_class c ON (a.attrelid = c.oid)
-                LEFT JOIN pg_catalog.pg_attrdef af ON (a.attnum = af.adnum AND a.attrelid = af.adrelid)
-                JOIN pg_catalog.pg_namespace n ON (n.oid = c.relnamespace)
-            WHERE
-                a.attnum >= 0
-                AND c.relkind IN ('r','p','v','m','f')
-                $whereclause
-            ORDER BY "TABLE_SCHEM", "TABLE_NAME", "ORDINAL_POSITION"
-            !;
+        ## Note: we do not need to check attisdropped because attypid will be 0
+        ## for dropped columns and thus fail to join to pg_type
+        my $col_info_sql = <<"EOSQL";
+SELECT
+  pg_catalog.quote_ident(pg_catalog.current_database()) AS "TABLE_CAT",
+  pg_catalog.quote_ident(n.nspname) AS "TABLE_SCHEM",
+  pg_catalog.quote_ident(c.relname) AS "TABLE_NAME",
+  pg_catalog.quote_ident(a.attname) AS "COLUMN_NAME",
+  a.atttypid AS "DATA_TYPE",
+  pg_catalog.format_type(a.atttypid, NULL) AS "TYPE_NAME",
+  a.attlen AS "COLUMN_SIZE",
+  NULL::text AS "BUFFER_LENGTH",
+  NULL::text AS "DECIMAL_DIGITS",
+  NULL::text AS "NUM_PREC_RADIX",
+  CASE WHEN a.attnotnull THEN 0 ELSE 1 END AS "NULLABLE",
+  pg_catalog.col_description(a.attrelid, a.attnum) AS "REMARKS",
+  pg_catalog.pg_get_expr(af.adbin, af.adrelid) AS "COLUMN_DEF",
+  NULL::text AS "SQL_DATA_TYPE",
+  NULL::text AS "SQL_DATETIME_SUB",
+  NULL::text AS "CHAR_OCTET_LENGTH",
+  a.attnum AS "ORDINAL_POSITION",
+  CASE WHEN a.attnotnull THEN 'NO' ELSE 'YES' END AS "IS_NULLABLE",
+  pg_catalog.format_type(a.atttypid, a.atttypmod) AS "pg_type",
+  NULL::text AS "pg_constraint",
+  pg_catalog.current_database() AS "pg_database",
+  n.nspname AS "pg_schema",
+  c.relname AS "pg_table",
+  a.attname AS "pg_column",
+  NULL::text[] AS "pg_enum_values",
+  a.attrelid AS "_pg_attrelid",
+  a.attnum AS "_pg_attnum",
+  a.atttypmod AS "_pg_atttypmod",
+  t.typtype AS "_pg_type_typtype",
+  t.oid AS "_pg_type_oid"
+  FROM pg_catalog.pg_type t
+JOIN pg_catalog.pg_attribute a ON (t.oid = a.atttypid)
+JOIN pg_catalog.pg_class c ON (a.attrelid = c.oid)
+JOIN pg_catalog.pg_namespace n ON (n.oid = c.relnamespace)
+LEFT JOIN pg_catalog.pg_attrdef af ON (a.attnum = af.adnum AND a.attrelid = af.adrelid)
+WHERE a.attnum >= 1 AND c.relkind IN ('r','p','v','m','f')$whereclause
+ORDER BY n.nspname, c.relname, a.attnum
+EOSQL
 
-        my $data = $dbh->selectall_arrayref($col_info_sql);
+        local $dbh->{FetchHashKeyName} = 'NAME';
+        my $sth = $dbh->prepare($col_info_sql);
+        $sth->execute(@args) or die $sth->errstr;
+        ## Immediately grab all the column names in order, but exclude internal ones
+        my @colnames = grep { ! /^_pg/ } @{ $sth->{NAME} };
 
-        # To turn the data back into a statement handle, we need 
-        # to fetch the data as an array of arrays, and also have a
-        # a matching array of all the column names
-        my %col_map = (qw/
-            TABLE_CAT             0
-            TABLE_SCHEM           1
-            TABLE_NAME            2
-            COLUMN_NAME           3
-            DATA_TYPE             4
-            TYPE_NAME             5
-            COLUMN_SIZE           6
-            BUFFER_LENGTH         7
-            DECIMAL_DIGITS        8
-            NUM_PREC_RADIX        9
-            NULLABLE             10
-            REMARKS              11
-            COLUMN_DEF           12
-            SQL_DATA_TYPE        13
-            SQL_DATETIME_SUB     14
-            CHAR_OCTET_LENGTH    15
-            ORDINAL_POSITION     16
-            IS_NULLABLE          17
-            pg_type              18
-            pg_constraint        19
-            pg_schema            20
-            pg_table             21
-            pg_column            22
-            pg_enum_values       23
-            /);
+        my $data = $sth->fetchall_arrayref({});
 
+        if (!@$data) {
+            return _prepare_from_data('column_info', [], \@colnames);
+        }
+
+        ## Grab any constraints that match the columns we are looking at
+        my %colconstraint;
+        ## Also grab the list of possible enums for any relevant columns
+        my %enuminfo;
+
+        ## We cast conkey to text because we cannot control if pg_expand_array is set
+        my $csql = q{SELECT conrelid, conkey::text, pg_catalog.pg_get_constraintdef(oid) }.
+          q{FROM pg_catalog.pg_constraint WHERE contype = 'c' AND conrelid = ANY(?)};
+        my $csth = $dbh->prepare($csql);
+        my @relidlist = do {
+            my %seen;
+            grep { !$seen{$_}++ }
+              map { $_->{_pg_attrelid} }
+              @$data;
+        };
+        $csth->execute(\@relidlist) or die $csth->errstr;
+        for my $row (@{ $csth->fetchall_arrayref() }) {
+            for my $attnum ($row->[1] =~ /(\d+)/g) {
+                push @{ $colconstraint{$row->[0]}{$attnum}}, $row->[2];
+            }
+        }
+
+        my @typelist = do {
+            my %seen;
+            grep { !$seen{$_}++ }
+              map { $_->{_pg_type_oid} }
+              grep { $_->{_pg_type_typtype} eq 'e' }
+              @$data;
+        };
+        if (@typelist) {
+            ## Postgres version 9.1 added the pg_enum.enumsortorder column
+            my $order = $dbh->{private_dbdpg}{version} >= 90100 ? 'enumsortorder' : 'oid';
+            my $esql = "SELECT enumtypid, enumlabel FROM pg_catalog.pg_enum WHERE enumtypid = ANY(?) ORDER BY enumtypid, $order";
+            my $esth = $dbh->prepare($esql);
+            $esth->execute(\@typelist) or die $esth->errstr;
+            for my $row (@{ $esth->fetchall_arrayref() }) {
+                push @{$enuminfo{$row->[0]}}, $row->[1];
+            }
+        }
+
+        ## Final transformations
         for my $row (@$data) {
-            my $typoid = pop @$row;
-            my $typtype = pop @$row;
-            my $typmod = pop @$row;
-            my $attnum = pop @$row;
-            my $aid = pop @$row;
 
-            $row->[$col_map{COLUMN_SIZE}] =
-                 _calc_col_size($typmod,$row->[$col_map{COLUMN_SIZE}]);
+            ## Decode attribute mod and length into friendlier forms
+            my $attlen = $row->{COLUMN_SIZE};
+            if ($attlen <= 0) {
+                my $mod = $row->{_pg_atttypmod} - 4;
+                if ($mod < 0) {
+                    $row->{COLUMN_SIZE} = undef;
+                }
+                elsif ($mod <= 0xffff) {
+                    $row->{COLUMN_SIZE} = $mod;
+                }
+                else {
+                    $row->{COLUMN_SIZE} = $mod >> 16;
+                    $row->{DECIMAL_DIGITS} = $mod & 0xffff;
+                }
+            }
 
             # Replace the Pg type with the SQL_ type
-            $row->[$col_map{DATA_TYPE}] = DBD::Pg::db::pg_type_info($dbh,$row->[$col_map{DATA_TYPE}]);
+            $row->{DATA_TYPE} = DBD::Pg::db::pg_type_info($dbh, $row->{DATA_TYPE});
 
-            # Add pg_constraint
-            my $SQL = q{SELECT pg_catalog.pg_get_constraintdef(oid) }.
-                q{FROM pg_catalog.pg_constraint WHERE contype = 'c' AND }.
-                qq{conrelid = $aid AND conkey = '{$attnum}'};
-            my $info = $dbh->selectall_arrayref($SQL);
-            if (@$info) {
-                $row->[$col_map{pg_constraint}] = $info->[0][0];
+            # Add pg_constraint information
+            my $aid = $row->{_pg_attrelid};
+            if (exists $colconstraint{ $aid }{ $row->{_pg_attnum} }) {
+                $row->{pg_constraint} = join "\n", @{ $colconstraint{ $aid }{ $row->{_pg_attnum} }};
             }
             else {
-                $row->[$col_map{pg_constraint}] = undef;
+                $row->{pg_constraint} = undef;
             }
 
-            if ( $typtype eq 'e' ) {
-                my $order_column = $dbh->{private_dbdpg}{version} >= 90100
-                    ? 'enumsortorder' : 'oid';
-                $SQL = "SELECT enumlabel FROM pg_catalog.pg_enum WHERE enumtypid = $typoid ORDER BY $order_column";
-                $row->[$col_map{pg_enum_values}] = $dbh->selectcol_arrayref($SQL);
-            }
-            else {
-                $row->[$col_map{pg_enum_values}] = undef;
-            }
+            ## Add enum information as an arrayref of allowed values
+            $row->{pg_enum_values} = $enuminfo{ $row->{_pg_type_oid} };
+
         }
 
-        # Since we've processed the data in Perl, we have to jump through a hoop
-        # To turn it back into a statement handle
-        #
+        ## Use DBD::Sponge to turn this into a statement handle
         return _prepare_from_data(
-             'column_info',
-             $data,
-             [ sort { $col_map{$a} <=> $col_map{$b} } keys %col_map],
-        );
+                                  'column_info',
+                                  [ map { [ @{$_}{@colnames} ] } @$data ],
+                                  \@colnames
+                                 );
+
     }
 
     sub _prepare_from_data {
         my ($statement, $data, $names, %attrinfo) = @_;
         my $sponge = DBI->connect('dbi:Sponge:', '', '', { RaiseError => 1 });
-        my $sth = $sponge->prepare($statement, { rows=>$data, NAME=>$names, %attrinfo });
+        my $sth = $sponge->prepare($statement, { rows => $data, NAME => $names, %attrinfo });
         return $sth;
     }
 
     sub statistics_info {
 
-        my $dbh = shift;
-        my (undef, $schema, $table, $unique_only) = @_;
+        ## Gather statistics about a table and its columns
+        ## See https://metacpan.org/pod/DBI#statistics_info
 
-        ## Catalog is ignored, but table is mandatory
-        return undef unless defined $table and length $table;
+        my ($dbh, $catalog, $schema, $table, $unique_only, $quick) = @_;
+
+        ## Catalog is ignored, schema is optional, and table is mandatory
+        return undef if ! defined $table or $table eq '';
 
         my $schema_where = '';
         my @exe_args = ($table);
 
-        my $input_schema = (defined $schema and length $schema) ? 1 : 0;
-
-        if ($input_schema) {
+        if (defined $schema and $schema ne '') {
             $schema_where = 'AND n.nspname = ?';
-            push(@exe_args, $schema);
+            push @exe_args, $schema;
         }
 
-        my $stats_sql;
+        my $stats_sql = '';
 
         # Table-level stats
         if (!$unique_only) {
-            $stats_sql .= qq{
-                SELECT
-                    pg_catalog.current_database() AS "TABLE_CAT",
-                    n.nspname                     AS "TABLE_SCHEM",
-                    d.relname                     AS "TABLE_NAME",
-                    NULL                          AS "NON_UNIQUE",
-                    NULL                          AS "INDEX_QUALIFIER",
-                    NULL                          AS "INDEX_NAME",
-                    'table'                       AS "TYPE",
-                    NULL                          AS "ORDINAL_POSITION",
-                    NULL                          AS "COLUMN_NAME",
-                    NULL                          AS "ASC_OR_DESC",
-                    d.reltuples                   AS "CARDINALITY",
-                    d.relpages                    AS "PAGES",
-                    NULL                          AS "FILTER_CONDITION",
-                    NULL                          AS "pg_expression",
-                    NULL                          AS "pg_is_key_column",
-                    NULL                          AS "pg_null_ordering"
-                FROM   pg_catalog.pg_class d
-                JOIN   pg_catalog.pg_namespace n ON n.oid = d.relnamespace
-                WHERE  d.relname = ? $schema_where
-                UNION ALL
-            };
-            push @exe_args, @exe_args;
+            ## DBI requires NULL in most fields if the type is 'table'
+            $stats_sql = <<"EOSQL";
+SELECT pg_catalog.current_database() AS "TABLE_CAT",
+  n.nspname   AS "TABLE_SCHEM",
+  c.relname   AS "TABLE_NAME",
+  NULL        AS "NON_UNIQUE",
+  NULL        AS "INDEX_QUALIFIER",
+  NULL        AS "INDEX_NAME",
+  'table'     AS "TYPE",
+  NULL        AS "ORDINAL_POSITION",
+  NULL        AS "COLUMN_NAME",
+  NULL        AS "ASC_OR_DESC",
+  c.reltuples AS "CARDINALITY",
+  c.relpages  AS "PAGES",
+  NULL        AS "FILTER_CONDITION",
+  NULL        AS "pg_expression",
+  NULL        AS "pg_is_key_column",
+  NULL        AS "pg_null_ordering"
+FROM   pg_catalog.pg_class c
+JOIN   pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+WHERE  c.relname = ? $schema_where
+UNION ALL
+EOSQL
+            push @exe_args, $table;
+            push @exe_args, $schema if $schema_where;
         }
 
-        my $is_key_column = $dbh->{private_dbdpg}{version} >= 110000
-            ? 'col.i <= i.indnkeyatts' : 'true';
+        my $pgversion = $dbh->{private_dbdpg}{version};
+
+        ## Postgres version 11 added the pg_index.indnkeyatts column,
+        ## which tells the number of non-included columns in the index
+        my $is_key_column = $pgversion >= 110000 ? 'col.i <= i.indnkeyatts' : 'true';
 
         my ($asc_or_desc, $null_ordering);
-        if ($dbh->{private_dbdpg}{version} >= 90600) {
-            $asc_or_desc = q{
-                CASE WHEN pg_catalog.pg_index_column_has_property(c.oid, col.i, 'asc') THEN 'A'
-                     WHEN pg_catalog.pg_index_column_has_property(c.oid, col.i, 'desc') THEN 'D'
-                END};
-            $null_ordering = q{
-                CASE WHEN pg_catalog.pg_index_column_has_property(c.oid, col.i, 'nulls_first') THEN 'first'
-                     WHEN pg_catalog.pg_index_column_has_property(c.oid, col.i, 'nulls_last') THEN 'last'
-                END};
+
+        ## Postgres version 9.6 added pg_index_column_has_property(),
+        ## which can tell if the index sorts ascending or descending,
+        ## and if it sorts nulls first or nulls last
+        if ($pgversion >= 90600) {
+            $asc_or_desc = <<'EOSQL';
+CASE WHEN pg_catalog.pg_index_column_has_property(c.oid, col.i, 'asc') THEN 'A'
+     WHEN pg_catalog.pg_index_column_has_property(c.oid, col.i, 'desc') THEN 'D'
+     ELSE NULL END
+EOSQL
+            $null_ordering = <<'EOSQL';
+CASE WHEN pg_catalog.pg_index_column_has_property(c.oid, col.i, 'nulls_first') THEN 'first'
+     WHEN pg_catalog.pg_index_column_has_property(c.oid, col.i, 'nulls_last') THEN 'last'
+     ELSE NULL END
+EOSQL
         }
-        elsif ($dbh->{private_dbdpg}{version} > 80300) {
-            $asc_or_desc = q{
-                CASE WHEN a.amcanorder THEN
-                     CASE WHEN i.indoption[col.i - 1] & 1 = 0 THEN 'A' ELSE 'D' END
-                END};
-            $null_ordering = q{
-                CASE WHEN a.amcanorder THEN
-                     CASE WHEN i.indoption[col.i - 1] & 2 = 0 THEN 'last' ELSE 'first' END
-                END};
+        ## Postgres version 8.3 added the pg_am.amcanorder column,
+        ## which tells if ordering is supported
+        elsif ($pgversion >= 80300) {
+            $asc_or_desc = <<'EOSQL';
+CASE WHEN a.amcanorder THEN
+     CASE WHEN i.indoption[col.i - 1] & 1 = 0 THEN 'A' ELSE 'D' END END
+EOSQL
+            $null_ordering = <<'EOSQL';
+CASE WHEN a.amcanorder THEN
+     CASE WHEN i.indoption[col.i - 1] & 2 = 0 THEN 'last' ELSE 'first' END END
+EOSQL
         }
+        ## Postgres version 8.2 and older is simply ordered or not
         else {
-            $asc_or_desc = q{CASE WHEN a.amorderstrategy <> 0 THEN 'A' END};
-            $null_ordering = q{CASE WHEN a.amorderstrategy <> 0 THEN 'last' END};
+            $asc_or_desc = q{CASE WHEN a.amorderstrategy <> 0 THEN 'A' ELSE NULL END};
+            $null_ordering = q{CASE WHEN a.amorderstrategy <> 0 THEN 'last' ELSE NULL END};
         }
 
-        # Fetch the index definitions
-        $stats_sql .= qq{
-            SELECT
-                pg_catalog.current_database() AS "TABLE_CAT",
-                n.nspname                     AS "TABLE_SCHEM",
-                d.relname                     AS "TABLE_NAME",
-                NOT(i.indisunique)            AS "NON_UNIQUE",
-                NULL                          AS "INDEX_QUALIFIER",
-                c.relname                     AS "INDEX_NAME",
-                CASE WHEN i.indisclustered THEN 'clustered'
-                     WHEN a.amname = 'btree' THEN 'btree'
-                     WHEN a.amname = 'hash' THEN 'hashed'
-                     ELSE 'other'
-                END                           AS "TYPE",
-                col.i                         AS "ORDINAL_POSITION",
-                att.attname                   AS "COLUMN_NAME",
-                $asc_or_desc                  AS "ASC_OR_DESC",
-                c.reltuples                   AS "CARDINALITY",
-                c.relpages                    AS "PAGES",
-                pg_catalog.pg_get_expr(i.indpred,i.indrelid)
-                                              AS "FILTER_CONDITION",
-                pg_catalog.pg_get_indexdef(i.indexrelid, col.i, true)
-                                              AS "pg_expression",
-                $is_key_column                AS "pg_is_key_column",
-                $null_ordering                AS "pg_null_ordering"
-            FROM
-                pg_catalog.pg_index i
-                JOIN pg_catalog.pg_class c ON c.oid = i.indexrelid
-                JOIN pg_catalog.pg_class d ON d.oid = i.indrelid
-                JOIN pg_catalog.pg_am a ON a.oid = c.relam
-                JOIN pg_catalog.pg_namespace n ON n.oid = d.relnamespace
-                JOIN pg_catalog.generate_series(1, pg_catalog.current_setting('max_index_keys')::integer) col(i)
-                     ON col.i <= i.indnatts
-                LEFT JOIN pg_catalog.pg_attribute att
-                     ON att.attrelid = d.oid AND att.attnum = i.indkey[col.i - 1]
-            WHERE
-                d.relname = ? $schema_where
-                AND (i.indisunique OR NOT(?)) -- unique_only
-            ORDER BY
-                "NON_UNIQUE", "TYPE", "INDEX_QUALIFIER", "INDEX_NAME", "ORDINAL_POSITION"
-        };
+        my $unique_where = $unique_only ? 'AND i.indisunique' : '';
 
+        ## Grab column-level statistics
+        $stats_sql .= <<"EOSQL";
+SELECT pg_catalog.current_database() AS "TABLE_CAT",
+  n.nspname              AS "TABLE_SCHEM",
+  d.relname              AS "TABLE_NAME",
+  CASE WHEN i.indisunique THEN 0 ELSE 1 END AS "NON_UNIQUE",
+  NULL                   AS "INDEX_QUALIFIER",
+  c.relname              AS "INDEX_NAME",
+  CASE WHEN a.amname = 'btree' THEN 'btree'
+       WHEN a.amname = 'hash'  THEN 'hashed'
+       ELSE 'other' END AS "TYPE",
+  col.i                  AS "ORDINAL_POSITION",
+  att.attname            AS "COLUMN_NAME",
+  $asc_or_desc AS "ASC_OR_DESC",
+  c.reltuples            AS "CARDINALITY",
+  c.relpages             AS "PAGES",
+  pg_catalog.pg_get_expr(i.indpred,i.indrelid) AS "FILTER_CONDITION",
+  pg_catalog.pg_get_indexdef(i.indexrelid, col.i, true) AS "pg_expression",
+  $is_key_column AS "pg_is_key_column",
+  $null_ordering AS "pg_null_ordering"
+FROM
+  pg_catalog.pg_index i
+  JOIN pg_catalog.pg_class c ON c.oid = i.indexrelid
+  JOIN pg_catalog.pg_class d ON d.oid = i.indrelid
+  JOIN pg_catalog.pg_am a ON a.oid = c.relam
+  JOIN pg_catalog.pg_namespace n ON n.oid = d.relnamespace
+  JOIN pg_catalog.generate_series(1, pg_catalog.current_setting('max_index_keys')::integer) col(i)
+    ON col.i <= i.indnatts
+  LEFT JOIN pg_catalog.pg_attribute att
+    ON att.attrelid = d.oid AND att.attnum = i.indkey[col.i - 1]
+WHERE
+  d.relname = ? $schema_where $unique_where
+ORDER BY "NON_UNIQUE", "TYPE", "INDEX_QUALIFIER", "INDEX_NAME", "ORDINAL_POSITION"
+EOSQL
+
+        local $dbh->{FetchHashKeyName} = 'NAME';
         my $sth = $dbh->prepare($stats_sql);
-        $sth->execute(@exe_args, 0+!!$unique_only);
+        $sth->execute(@exe_args) or die $sth->errstr;
         return $sth;
     }
 
     sub primary_key_info {
 
-        my $dbh = shift;
-        my (undef, $schema, $table, $attr) = @_;
+        ## Return a statement handle with info on the columns of a primary key
+        ## See https://metacpan.org/pod/DBI#primary_key_info
+
+        my ($dbh, $catalog, $schema, $table, $attr) = @_;
 
         my @cols = (qw(TABLE_CAT TABLE_SCHEM TABLE_NAME
                        COLUMN_NAME KEY_SEQ PK_NAME DATA_TYPE
@@ -762,132 +793,129 @@ use 5.008001;
                        )
             );
 
-        ## Catalog is ignored, but table is mandatory
-        if (! defined $table or ! length $table) {
+        ## If no table is given, we return an empty list
+        if (! defined $table || ! length $table) {
             return _prepare_from_data('primary_key_info', [], \@cols);
         }
 
-        my $whereclause = 'AND c.relname = ' . $dbh->quote($table);
+        my $schema_where = '';
+        my @exe_args = ($table);
 
-        if (defined $schema and length $schema) {
-            $whereclause .= "\n\t\t\tAND n.nspname = " . $dbh->quote($schema);
+        if (defined $schema && $schema ne '') {
+            $schema_where = 'AND n.nspname = ?';
+            push @exe_args, $schema;
         }
 
-        my $pri_key_sql = qq{
-            SELECT
-                  c.oid
-                , pg_catalog.quote_ident(n.nspname)
-                , pg_catalog.quote_ident(c.relname)
-                , pg_catalog.quote_ident(c2.relname)
-                , i.indkey
-                , pg_catalog.quote_ident(t.spcname)
-                , pg_catalog.quote_ident(t.spclocation)
-                , n.nspname, c.relname, c2.relname
-                , pg_catalog.quote_ident(pg_catalog.current_database())
-            FROM
-                pg_catalog.pg_class c
-                JOIN pg_catalog.pg_index i ON (i.indrelid = c.oid)
-                JOIN pg_catalog.pg_class c2 ON (c2.oid = i.indexrelid)
-                LEFT JOIN pg_catalog.pg_namespace n ON (n.oid = c.relnamespace)
-                LEFT JOIN pg_catalog.pg_tablespace t ON (t.oid = c.reltablespace)
-            WHERE
-                i.indisprimary IS TRUE
-            $whereclause
-        };
+        my $pri_key_sql = <<"EOSQL";
+SELECT
+  pg_catalog.quote_ident(pg_catalog.current_database()) AS "TABLE_CAT",
+  pg_catalog.quote_ident(n.nspname) AS "TABLE_SCHEM",
+  pg_catalog.quote_ident(c.relname) AS "TABLE_NAME",
+  NULL AS "COLUMN_NAME",
+  NULL AS "KEY_SEQ",
+  pg_catalog.quote_ident(c2.relname) AS "PK_NAME",
+  NULL AS "DATA_TYPE",
+  pg_catalog.quote_ident(t.spcname) AS pg_tablespace_name,
+  pg_catalog.quote_ident(pg_catalog.pg_tablespace_location(t.oid)) AS pg_tablespace_location,
+  n.nspname AS pg_schema,
+  c.relname AS pg_table,
+  NULL AS pg_column,
+  c.oid AS "_pg_reloid",
+  i.indkey AS "_pg_indkey"
+FROM pg_catalog.pg_class c
+JOIN pg_catalog.pg_index i ON (i.indrelid = c.oid)
+JOIN pg_catalog.pg_class c2 ON (c2.oid = i.indexrelid)
+LEFT JOIN pg_catalog.pg_namespace n ON (n.oid = c.relnamespace)
+LEFT JOIN pg_catalog.pg_tablespace t ON (t.oid = c.reltablespace)
+WHERE i.indisprimary IS TRUE AND c.relname = ? $schema_where
+EOSQL
 
-        if ($dbh->{private_dbdpg}{version} >= 90200) {
-            $pri_key_sql =~ s/t.spclocation/pg_catalog.pg_tablespace_location(t.oid)/;
+        ## Postgres version 9.2 added the pg_tablespace_location() function
+        if ($dbh->{private_dbdpg}{version} < 90200) {
+            $pri_key_sql =~ s/\Qpg_catalog.pg_tablespace_location(t.oid)/t.spclocation/;
         }
 
+        local $dbh->{FetchHashKeyName} = 'NAME';
         my $sth = $dbh->prepare($pri_key_sql);
-        $sth->execute();
-        my $info = $sth->fetchall_arrayref()->[0];
+        $sth->execute(@exe_args) or die $sth->errstr;
+        my $info = $sth->fetchall_arrayref({})->[0];
         if (! defined $info) {
             return _prepare_from_data('primary_key_info', [], \@cols);
         }
 
-        # Get the attribute information
-        my $indkey = join ',', split /\s+/, $info->[4];
-        my $sql = qq{
-            SELECT a.attnum, pg_catalog.quote_ident(a.attname) AS colname,
-                pg_catalog.quote_ident(t.typname) AS typename
-            FROM pg_catalog.pg_attribute a, pg_catalog.pg_type t
-            WHERE a.attrelid = '$info->[0]'
-            AND a.atttypid = t.oid
-            AND attnum IN ($indkey);
-        };
+        ## Map pg_index.indkey to name/type for each column
+        my @index_cols = grep { /\d+/ } split /\s+/, delete $info->{_pg_indkey};
+        my $index_cols = join ', ', @index_cols;
+        my $sql = <<"EOSQL";
+SELECT a.attnum,
+  pg_catalog.quote_ident(a.attname) AS colname,
+  a.attname AS raw_colname,
+  pg_catalog.quote_ident(t.typname) AS typename
+FROM pg_catalog.pg_attribute a
+JOIN pg_catalog.pg_type t ON (t.oid = a.atttypid)
+WHERE a.attrelid = ?
+AND attnum IN ($index_cols);
+EOSQL
         $sth = $dbh->prepare($sql);
-        $sth->execute();
+        $sth->execute(delete $info->{_pg_reloid}) or die $sth->errstr;
         my $attribinfo = $sth->fetchall_hashref('attnum');
 
         my $pkinfo = [];
 
         ## Normal way: complete "row" per column in the primary key
-        if (!exists $attr->{'pg_onerow'}) {
-            my $x=0;
-            my @key_seq = split/\s+/, $info->[4];
-            for (@key_seq) {
-                # TABLE_CAT
-                $pkinfo->[$x][0] = $info->[10];
-                # SCHEMA_NAME
-                $pkinfo->[$x][1] = $info->[1];
-                # TABLE_NAME
-                $pkinfo->[$x][2] = $info->[2];
-                # COLUMN_NAME
-                $pkinfo->[$x][3] = $attribinfo->{$_}{colname};
-                # KEY_SEQ
-                $pkinfo->[$x][4] = $_;
-                # PK_NAME
-                $pkinfo->[$x][5] = $info->[3];
-                # DATA_TYPE
-                $pkinfo->[$x][6] = $attribinfo->{$_}{typename};
-                $pkinfo->[$x][7] = $info->[5];
-                $pkinfo->[$x][8] = $info->[6];
-                $pkinfo->[$x][9] = $info->[7];
-                $pkinfo->[$x][10] = $info->[8];
-                $pkinfo->[$x][11] = $info->[9];
-                $x++;
+        if (! defined $attr || ! $attr->{'pg_onerow'}) {
+            for my $colnum (@index_cols) {
+                push @$pkinfo,
+                  [
+                   $info->{TABLE_CAT},
+                   $info->{TABLE_SCHEM},
+                   $info->{TABLE_NAME},
+                   $attribinfo->{$colnum}{colname}, ## COLUMN_NAME
+                   $colnum, ## KEY_SEQ
+                   $info->{PK_NAME},
+                   $attribinfo->{$colnum}{typename}, ## DATA_TYPE
+                   $info->{pg_tablespace_name},
+                   $info->{pg_tablespace_location},
+                   $info->{pg_schema},
+                   $info->{pg_table},
+                   $attribinfo->{$colnum}{raw_colname}, ## pg_column
+                  ];
             }
         }
-        else { ## Nicer way: return only one row
+        else { ## Nicer way if pg_onerow is set
 
-            # TABLE_CAT
-            $info->[0] = $info->[10];
-            # TABLESPACES
-            $info->[7] = $info->[5];
-            $info->[8] = $info->[6];
-            # Unquoted names
-            $info->[9] = $info->[7];
-            $info->[10] = $info->[8];
-            $info->[11] = $info->[9];
-            # PK_NAME
-            $info->[5] = $info->[3];
-            # COLUMN_NAME
-            $info->[3] = 2==$attr->{'pg_onerow'} ?
-                [ map { $attribinfo->{$_}{colname} } split /\s+/, $info->[4] ] :
-                    join ', ', map { $attribinfo->{$_}{colname} } split /\s+/, $info->[4];
-            # DATA_TYPE
-            $info->[6] = 2==$attr->{'pg_onerow'} ?
-                [ map { $attribinfo->{$_}{typename} } split /\s+/, $info->[4] ] :
-                    join ', ', map { $attribinfo->{$_}{typename} } split /\s+/, $info->[4];
-            # KEY_SEQ
-            $info->[4] = 2==$attr->{'pg_onerow'} ?
-                [ split /\s+/, $info->[4] ] :
-                    join ', ', split /\s+/, $info->[4];
+            $info->{COLUMN_NAME} = 2==$attr->{'pg_onerow'} ?
+                [ map { $attribinfo->{$_}{colname} } @index_cols ] :
+                    join ', ', map { $attribinfo->{$_}{colname} } @index_cols;
 
-            $pkinfo = [$info];
+            $info->{DATA_TYPE} = 2==$attr->{'pg_onerow'} ?
+                [ map { $attribinfo->{$_}{typename} } @index_cols ] :
+                    join ', ', map { $attribinfo->{$_}{typename} } @index_cols;
+
+            $info->{KEY_SEQ} = 2==$attr->{'pg_onerow'} ? [@index_cols] : $index_cols;
+
+            $info->{pg_column} = 2==$attr->{'pg_onerow'} ?
+                [ map { $attribinfo->{$_}{raw_colname} } @index_cols ] :
+                    join ', ', map { $attribinfo->{$_}{raw_colname} } @index_cols;
+
+            $pkinfo = [[map { $info->{$_} } @cols]];
+
         }
 
         return _prepare_from_data('primary_key_info', $pkinfo, \@cols);
 
-    }
+    } ## end of primary_key_info
 
     sub primary_key {
-        my $sth = primary_key_info(@_[0..3], {pg_onerow => 2});
+
+        ## Simple interface to the primary_key_info() method.
+        ## See https://metacpan.org/pod/DBI#primary_key
+
+        my ($dbh, $catalog, $schema, $table) = @_;
+        my $sth = $dbh->primary_key_info($catalog, $schema, $table, {pg_onerow => 2});
         my $result = $sth->fetchall_arrayref();
         return defined $result->[0] ? @{$result->[0][3]} : ();
     }
-
 
     sub foreign_key_info {
 
@@ -972,7 +1000,7 @@ use 5.008001;
                 JOIN pg_catalog.pg_class fk_class ON constr.conrelid = fk_class.oid
                 JOIN pg_catalog.pg_namespace fk_ns ON fk_class.relnamespace = fk_ns.oid
                 -- can't do unnest() until 8.4, and would need WITH ORDINALITY to get the array indices,
-                -- wich isn't available until 9.4 at the earliest, so we join against a series table instead
+                -- which isn't available until 9.4 at the earliest, so we join against a series table instead
                 JOIN pg_catalog.generate_series(1, pg_catalog.current_setting('max_index_keys')::integer) colnum(i)
                     ON colnum.i <= pg_catalog.array_upper(constr.conkey,1)
                 JOIN pg_catalog.pg_attribute uk_col ON uk_col.attrelid = constr.confrelid AND uk_col.attnum = constr.confkey[colnum.i]
@@ -1037,7 +1065,7 @@ use 5.008001;
         my $dbh = shift;
         my ($catalog, $schema, $table, $type) = @_;
 
-        my $tbl_sql = ();
+        my $tbl_sql = '';
 
         my $extracols = q{,NULL::text AS pg_schema, NULL::text AS pg_table};
         if ( # Rule 19a
@@ -1182,6 +1210,8 @@ use 5.008001;
                 $tbl_sql = qq{SELECT * FROM ($tbl_sql) ti WHERE "TABLE_TYPE" IN ($type_restrict)};
             }
         }
+
+        local $dbh->{FetchHashKeyName} = 'NAME';
         my $sth = $dbh->prepare($tbl_sql);
         $sth->execute();
 
@@ -1216,6 +1246,8 @@ use 5.008001;
 
         my $attrs = $sth->fetchall_arrayref(\%convert);
 
+        my @pri_keys = $dbh->primary_key( undef, undef, $table );
+
         for my $row (@$attrs) {
             # switch the column names
             for my $name (keys %$row) {
@@ -1230,36 +1262,12 @@ use 5.008001;
             # NOTNULL inverts the sense of NULLABLE
             $row->{NOTNULL} = ($row->{NOTNULL} ? 0 : 1);
 
-            my @pri_keys = $dbh->primary_key( undef, undef, $table );
-            $row->{PRIMARY_KEY} = scalar(grep { /^$row->{NAME}$/i } @pri_keys) ? 1 : 0;
+            $row->{PRIMARY_KEY} = scalar(grep { /^\Q$row->{NAME}\E$/i } @pri_keys) ? 1 : 0;
         }
 
         return $attrs;
 
     }
-
-    sub _calc_col_size {
-
-        my $mod = shift;
-        my $size = shift;
-
-
-        if ($size > 0) {
-            return $size;
-        }
-        elsif ($mod > 0xffff) {
-            my $prec = ($mod & 0xffff) - 4;
-            $mod >>= 16;
-            my $dig = $mod;
-            return "$prec,$dig";
-        }
-        elsif ($mod >= 4) {
-            return $mod - 4;
-        }
-
-        return;
-    }
-
 
     sub type_info_all {
 
@@ -1296,7 +1304,7 @@ use 5.008001;
         my $ti =
             [
              $names,
-# name     sql_type          size   pfx/sfx crt   n/c/s    +-/P/I   local       min max  sub rdx itvl
+# name       sql_type          size   pfx/sfx    crt   n/c/s  +-/P/I   local        min max sub rdx itvl
 
 ['unknown',  SQL_UNKNOWN_TYPE,  0,    $UN,$UN,   $UN,  1,0,0, $UN,0,0, 'UNKNOWN',   $UN,$UN,
              SQL_UNKNOWN_TYPE,                                                             $UN, $UN, $UN ],
@@ -1564,29 +1572,30 @@ use 5.008001;
             no if $] >= 5.022, warnings => 'redundant';
             return sprintf '%02d.%02d.%1d%1d%1d%1d', split (/\./, "$simpleversion.0.0.0.0.0.0");
         }
-         elsif ($ans eq 'KEYWORDS') {
+        elsif ($ans eq 'KEYWORDS') {
             ## http://www.postgresql.org/docs/current/static/sql-keywords-appendix.html
             ## Basically, we want ones that are 'reserved' for PostgreSQL but not 'reserved' in SQL:2011
             return join ',' => (qw(ANALYSE ANALYZE ASC CONCURRENTLY DEFERRABLE DESC DO FREEZE ILIKE INITIALLY ISNULL LIMIT NOTNULL PLACING RETURNING VARIADIC VERBOSE));
-         }
-         elsif ($ans eq 'READONLY') {
-             my $SQL = q{SELECT CASE WHEN setting = 'on' THEN 'Y' ELSE 'N' END FROM pg_settings WHERE name = 'transaction_read_only'};
-             my $info = $dbh->selectall_arrayref($SQL);
-             return $info->[0][0];
-         }
-         elsif ($ans eq 'DEFAULTTXN') {
-             my $SQL = q{SELECT CASE WHEN setting = 'read committed' THEN 2 ELSE 8 END FROM pg_settings WHERE name = 'default_transaction_isolation'};
-             my $info = $dbh->selectall_arrayref($SQL);
-             return $info->[0][0];
-         }
+        }
+        elsif ($ans eq 'READONLY') {
+            my $SQL = q{SELECT CASE WHEN setting = 'on' THEN 'Y' ELSE 'N' END FROM pg_settings WHERE name = 'transaction_read_only'};
+            my $info = $dbh->selectall_arrayref($SQL);
+            return $info->[0][0];
+        }
+        elsif ($ans eq 'DEFAULTTXN') {
+            my $SQL = q{SELECT CASE WHEN setting = 'read committed' THEN 2 ELSE 8 END FROM pg_settings WHERE name = 'default_transaction_isolation'};
+            my $info = $dbh->selectall_arrayref($SQL);
+            return $info->[0][0];
+        }
 
-         return $ans;
+        return $ans;
     } # end of get_info
 
     sub private_attribute_info {
         return {
                 pg_async_status                => undef,
                 pg_bool_tf                     => undef,
+                pg_int8_as_string              => undef,
                 pg_db                          => undef,
                 pg_default_port                => undef,
                 pg_enable_utf8                 => undef,
@@ -1608,6 +1617,7 @@ use 5.008001;
                 pg_protocol                    => undef,
                 pg_server_prepare              => undef,
                 pg_server_version              => undef,
+                pg_skip_deallocate             => undef,
                 pg_socket                      => undef,
                 pg_standard_conforming_strings => undef,
                 pg_switch_prepared             => undef,
@@ -1619,6 +1629,8 @@ use 5.008001;
 
 {
     package DBD::Pg::st;
+
+    use strict;
 
     sub parse_trace_flag {
         return DBD::Pg->parse_trace_flag($_[1]);
@@ -1691,14 +1703,14 @@ DBD::Pg - PostgreSQL database driver for the DBI module
   # For some advanced uses you may need PostgreSQL type values:
   use DBD::Pg qw(:pg_types);
 
-  $dbh->do('INSERT INTO mytable(a) VALUES (1)');
+  $dbh->do('INSERT INTO mytable(a) VALUES (42)');
 
   $sth = $dbh->prepare('INSERT INTO mytable(a) VALUES (?)');
-  $sth->execute();
+  $sth->execute(42);
 
 =head1 VERSION
 
-This documents version 3.15.1 of the DBD::Pg module
+This documents version 3.21.2 of the DBD::Pg module
 
 =head1 DESCRIPTION
 
@@ -1719,13 +1731,13 @@ L<Latest DBI documentation.|DBI>
 
 =head3 B<connect>
 
-This method creates a database handle by connecting to a database, and is the DBI 
-equivalent of the "new" method. To connect to a Postgres database with a minimum of parameters, 
+This method creates a database handle by connecting to a database, and is the DBI
+equivalent of the "new" method. To connect to a Postgres database with a minimum of parameters,
 use the following syntax:
 
   $dbh = DBI->connect("dbi:Pg:dbname=$dbname", '', '', {AutoCommit => 0});
 
-This connects to the database named in the C<$dbname> variable on the default port (usually 5432) 
+This connects to the database named in the C<$dbname> variable on the default port (usually 5432)
 without any user authentication.
 
 The following connect statement shows almost all possible parameters:
@@ -1736,10 +1748,11 @@ The following connect statement shows almost all possible parameters:
                       {AutoCommit => 0, RaiseError => 1, PrintError => 0}
                      );
 
-Parameters containing unusual characters such as spaces can be wrapped in single quotes 
-around the value e.g. "dbi:Pg:dbname='spacey name';host=$host"
+Parameters containing unusual characters such as spaces must be wrapped in single quotes
+around the value, and single quotes and backslashes can be escaped with a backslash,
+e.g. C<dbi:Pg:dbname='\'spacey\' name';host=$host>.
 
-If a parameter is not given, the connect() method will first look for 
+If a parameter is not given, the connect() method will first look for
 specific environment variables, and then fall back to hard-coded defaults:
 
   parameter    environment variable    hard coded default
@@ -1748,24 +1761,32 @@ specific environment variables, and then fall back to hard-coded defaults:
   hostaddr     PGHOSTADDR              local domain socket
   port         PGPORT                  5432
   dbname*      PGDATABASE              current userid
-  username     PGUSER                  current userid
-  password     PGPASSWORD              (none)
   options      PGOPTIONS               (none)
   service      PGSERVICE               (none)
   sslmode      PGSSLMODE               (none)
 
+  $username    PGUSER                  current userid
+  $password    PGPASSWORD              (none)
+
 * May also use the aliases C<db> or C<database>
 
-If the username and password values passed via C<connect()> are undefined (as opposed 
-to merely being empty strings), DBI will use the environment variables I<DBI_USER> 
+If the username and password values passed via C<connect()> are undefined (as opposed
+to merely being empty strings), DBI will use the environment variables I<DBI_USER>
 and I<DBI_PASS> if they exist.
 
-You can also connect by using a service connection file, which is named 
-F<pg_service.conf>. The location of this file can be controlled by 
-setting the I<PGSYSCONFDIR> environment variable. To use one of the named 
-services within the file, set the name by using either the I<service> parameter 
-or the environment variable I<PGSERVICE>. Note that when connecting this way, 
-only the minimum parameters should be used. For example, to connect to a 
+You can also connect by using a service connection file.
+Service names can be defined in either a per-user service file or a system-wide
+file. If the same service name exists in both the user and the system file,
+the user file takes precedence. By default, the per-user service file is
+named ~/.pg_service.conf. On Microsoft Windows, it is named %APPDATA%
+\postgresql\.pg_service.conf (where %APPDATA% refers to the Application Data
+subdirectory in the user's profile). A different file name can be specified
+by setting the environment variable PGSERVICEFILE. The system-wide file is
+named F<pg_service.conf>. The location of this file can be controlled by
+setting the I<PGSYSCONFDIR> environment variable. To use one of the named
+services within the file, set the name by using either the I<service> parameter
+or the environment variable I<PGSERVICE>. Note that when connecting this way,
+only the minimum parameters should be used. For example, to connect to a
 service named "zephyr", you could use:
 
   $dbh = DBI->connect("dbi:Pg:service=zephyr", '', '');
@@ -1774,7 +1795,7 @@ You could also set C<$ENV{PGSERVICE}> to "zephyr" and connect like this:
 
   $dbh = DBI->connect("dbi:Pg:", '', '');
 
-The format of the F<pg_service.conf> file is simply a bracketed service 
+The format of the F<pg_service.conf> file is simply a bracketed service
 name, followed by one parameter per line in the format name=value.
 For example:
 
@@ -1784,7 +1805,7 @@ For example:
   password=W$2Hc00YSgP
   port=6543
 
-There are four valid arguments to the I<sslmode> parameter, which controls 
+There are four valid arguments to the I<sslmode> parameter, which controls
 whether to use SSL to connect to the database:
 
 =over 4
@@ -1797,12 +1818,41 @@ whether to use SSL to connect to the database:
 
 =item * require: connect only with SSL
 
+=item * verify-ca: connect only with SSL and verify that the server
+certificate is issued by a trusted certificate authority (CA)
+
+=item * verify-full: connect only with SSL, verify that the server
+certificate is issued by a trusted CA, and verify that the server host
+name matches that in the certificate
+
 =back
 
-You can also connect using sockets in a specific directory. This 
-may be needed if the server you are connecting to has a different 
-default socket directory from the one used to compile DBD::Pg. 
-Use the complete path to the socket directory as the name of the 
+The latter two options are only supported on Postgres version 8.4
+or higher.
+
+The I<sslrootcert> parameter can be used to specify the complete path
+to a file containing the root certificate for the server
+(C<sslrootcert=/path/to/root.crt>) or to use the certificates trusted by
+your OS (C<sslrootcert=system>). Other SSL-related connection parameters
+also can be specified and may need to be. Refer to the
+L<PostgreSQL libpq SSL documentation|https://www.postgresql.org/docs/current/libpq-ssl.html>
+for the complete list and the latest details on how to configure SSL
+connections.
+
+For example, to specify that SSL is required for connecting to a host
+over the network and and to do full verification of the server's
+certificate, you might specify this:
+
+  $dbh = DBI->connect('dbi:Pg:dbname=foo;host=example.com;' .
+    'sslmode=verify-full;sslrootcert=system',
+    $username,
+    $password,
+    {AutoCommit => 0, RaiseError => 1});
+
+You can also connect using sockets in a specific directory. This
+may be needed if the server you are connecting to has a different
+default socket directory from the one used to compile DBD::Pg.
+Use the complete path to the socket directory as the name of the
 host, like this:
 
   $dbh = DBI->connect('dbi:Pg:dbname=foo;host=/var/tmp/socket',
@@ -1810,9 +1860,9 @@ host, like this:
     $password,
     {AutoCommit => 0, RaiseError => 1});
 
-The attribute hash can also contain a key named C<dbd_verbose>, which 
-simply calls C<< $dbh->trace('DBD') >> after the handle is created. This attribute 
-is not recommended, as it is clearer to simply explicitly call C<trace> explicitly 
+The attribute hash can also contain a key named C<dbd_verbose>, which
+simply calls C<< $dbh->trace('DBD') >> after the handle is created. This attribute
+is not recommended, as it is clearer to simply explicitly call C<trace> explicitly
 in your script.
 
 =head3 B<connect_cached>
@@ -1823,29 +1873,28 @@ Implemented by DBI, no driver-specific impact.
 
 =head3 B<data_sources>
 
-  @data_sources = DBI->data_sources('Pg');
-  @data_sources = $dbh->data_sources();
+  @data_sources = $dbh->data_sources('Pg', \%attr);
+  @data_sources = DBI->data_sources('Pg', \%attr);
 
-Returns a list of available databases. Unless the environment variable C<DBI_DSN> is set, 
-a connection will be attempted to the database C<template1>. The normal connection 
-environment variables also apply, such as C<PGHOST>, C<PGPORT>, C<DBI_USER>, 
-C<DBI_PASS>, and C<PGSERVICE>.
+Returns a list of available databases as DBI connection strings.
 
-You can also pass in options to add to the connection string For example, to specify 
-an alternate port and host:
+Unless the environment variable C<DBI_DSN> is set, a connection will be attempted
+to the database C<postgres>. The normal connection environment variables also apply,
+such as C<PGHOST>, C<PGPORT>, C<DBI_USER>, C<DBI_PASS>, and C<PGSERVICE>.
+
+The first argument should always be 'Pg'
+
+The second argument is a list of options to append to the resulting connection strings.
+
+For example, to specify an alternate port and host:
 
   @data_sources = DBI->data_sources('Pg', 'port=5824;host=example.com');
 
-  or:
-
-  @data_sources = $dbh->data_sources('port=5824;host=example.com');
-
-
 =head2 Methods Common To All Handles
 
-For all of the methods below, B<$h> can be either a database handle (B<$dbh>) 
-or a statement handle (B<$sth>). Note that I<$dbh> and I<$sth> can be replaced with 
-any variable name you choose: these are just the names most often used. Another 
+For all of the methods below, B<$h> can be either a database handle (B<$dbh>)
+or a statement handle (B<$sth>). Note that I<$dbh> and I<$sth> can be replaced with
+any variable name you choose: these are just the names most often used. Another
 common variable used in this documentation is $I<rv>, which stands for "return value".
 
 =head3 B<err>
@@ -1853,9 +1902,9 @@ common variable used in this documentation is $I<rv>, which stands for "return v
   $rv = $h->err;
 
 Returns the error code from the last method called. For the connect method it returns
-C<PQstatus>, which is a number used by I<libpq> (the Postgres connection library). A value of 0 
-indicates no error (CONNECTION_OK), while any other number indicates a failed connection. The 
-only other number commonly seen is 1 (CONNECTION_BAD). See the libpq documentation for the 
+C<PQstatus>, which is a number used by I<libpq> (the Postgres connection library). A value of 0
+indicates no error (CONNECTION_OK), while any other number indicates a failed connection. The
+only other number commonly seen is 1 (CONNECTION_BAD). See the libpq documentation for the
 complete list of return codes.
 
 In all other non-connect methods C<< $h->err >> returns the C<PQresultStatus> of the current
@@ -1874,24 +1923,24 @@ handle. This is a number used by libpq and is one of:
 
   $str = $h->errstr;
 
-Returns the last error that was reported by Postgres. This message is affected 
+Returns the last error that was reported by Postgres. This message is affected
 by the L<pg_errorlevel|/pg_errorlevel (integer)> setting.
 
 =head3 B<state>
 
   $str = $h->state;
 
-Returns a five-character "SQLSTATE" code. Success is indicated by a C<00000> code, which 
-gets mapped to an empty string by DBI. A code of C<S8006> indicates a connection failure, 
+Returns a five-character "SQLSTATE" code. Success is indicated by a C<00000> code, which
+gets mapped to an empty string by DBI. A code of C<S8006> indicates a connection failure,
 usually because the connection to the Postgres server has been lost.
 
-While this method can be called as either C<< $sth->state >> or C<< $dbh->state >>, it 
+While this method can be called as either C<< $sth->state >> or C<< $dbh->state >>, it
 is usually clearer to always use C<< $dbh->state >>.
 
 The list of codes used by PostgreSQL can be found at:
 L<http://www.postgresql.org/docs/current/static/errcodes-appendix.html>
 
-Note that these codes are part of the SQL standard and only a small number 
+Note that these codes are part of the SQL standard and only a small number
 of them will be used by PostgreSQL.
 
 Common codes:
@@ -1907,14 +1956,14 @@ Common codes:
   $h->trace($trace_settings, $trace_filename);
   $trace_settings = $h->trace;
 
-Changes the trace settings on a database or statement handle. 
-The optional second argument specifies a file to write the 
-trace information to. If no filename is given, the information 
-is written to F<STDERR>. Note that tracing can be set globally as 
-well by setting C<< DBI->trace >>, or by using the environment 
+Changes the trace settings on a database or statement handle.
+The optional second argument specifies a file to write the
+trace information to. If no filename is given, the information
+is written to F<STDERR>. Note that tracing can be set globally as
+well by setting C<< DBI->trace >>, or by using the environment
 variable I<DBI_TRACE>.
 
-The value is either a numeric level or a named flag. For the 
+The value is either a numeric level or a named flag. For the
 flags that DBD::Pg uses, see L<parse_trace_flag|/parse_trace_flag and parse_trace_flags>.
 
 =head3 B<trace_msg>
@@ -1922,8 +1971,8 @@ flags that DBD::Pg uses, see L<parse_trace_flag|/parse_trace_flag and parse_trac
   $h->trace_msg($message_text);
   $h->trace_msg($message_text, $min_level);
 
-Writes a message to the current trace output (as set by the L</trace> method). If a second argument 
-is given, the message is only written if the current tracing level is equal to or greater than 
+Writes a message to the current trace output (as set by the L</trace> method). If a second argument
+is given, the message is only written if the current tracing level is equal to or greater than
 the C<$min_level>.
 
 =head3 B<parse_trace_flag> and B<parse_trace_flags>
@@ -1938,18 +1987,18 @@ the C<$min_level>.
   my $value = DBD::Pg->parse_trace_flag('pglibpq');
   DBI->trace($value);
 
-The parse_trace_flags method is used to convert one or more named 
+The parse_trace_flags method is used to convert one or more named
 flags to a number which can passed to the L</trace> method.
-DBD::Pg currently supports the DBI-specific flag, C<SQL>, 
+DBD::Pg currently supports the DBI-specific flag, C<SQL>,
 as well as the ones listed below.
 
-Flags can be combined by using the parse_trace_flags method, 
-which simply calls C<parse_trace_flag> on each item and 
+Flags can be combined by using the parse_trace_flags method,
+which simply calls C<parse_trace_flag> on each item and
 combines them.
 
-Sometimes you may wish to turn the tracing on before you connect 
-to the database. The second example above shows a way of doing this: 
-the call to C<< DBD::Pg->parse_trace_flags >> provides a number than can 
+Sometimes you may wish to turn the tracing on before you connect
+to the database. The second example above shows a way of doing this:
+the call to C<< DBD::Pg->parse_trace_flags >> provides a number than can
 be fed to C<< DBI->trace >> before you create a database handle.
 
 DBD::Pg supports the following trace flags:
@@ -1958,44 +2007,44 @@ DBD::Pg supports the following trace flags:
 
 =item SQL
 
-Outputs all SQL statements. Note that the output provided will not 
-necessarily be in a form suitable to passing directly to Postgres, 
+Outputs all SQL statements. Note that the output provided will not
+necessarily be in a form suitable to passing directly to Postgres,
 as server-side prepared statements are used extensively by DBD::Pg.
-For maximum portability of output (but with a potential performance 
+For maximum portability of output (but with a potential performance
 hit), use with C<< $dbh->{pg_server_prepare} = 0 >>.
 
 =item DBD
 
-Turns on all non-DBI flags, in other words, only the ones that are specific 
+Turns on all non-DBI flags, in other words, only the ones that are specific
 to DBD::Pg (all those below which start with the letters 'pg').
 
 =item pglibpq
 
-Outputs the name of each libpq function (without arguments) immediately 
-before running it. This is a good way to trace the flow of your program 
-at a low level. This information is also output if the trace level 
+Outputs the name of each libpq function (without arguments) immediately
+before running it. This is a good way to trace the flow of your program
+at a low level. This information is also output if the trace level
 is set to 4 or greater.
 
 =item pgstart
 
-Outputs the name of each internal DBD::Pg function, and other information such as 
-the function arguments or important global variables, as each function starts. This 
+Outputs the name of each internal DBD::Pg function, and other information such as
+the function arguments or important global variables, as each function starts. This
 information is also output if the trace level is set to 4 or greater.
 
 =item pgend
 
-Outputs a simple message at the very end of each internal DBD::Pg function. This is also 
+Outputs a simple message at the very end of each internal DBD::Pg function. This is also
 output if the trace level is set to 4 or greater.
 
 =item pgprefix
 
-Forces each line of trace output to begin with the string B<C<dbdpg: >>. This helps to 
+Forces each line of trace output to begin with the string B<C<dbdpg: >>. This helps to
 differentiate it from the normal DBI trace output.
 
 =item pglogin
 
-Outputs a message showing the connection string right before a new database connection 
-is attempted, a message when the connection was successful, and a message right after 
+Outputs a message showing the connection string right before a new database connection
+is attempted, a message when the connection was successful, and a message right after
 the database has been disconnected. Also output if trace level is 5 or greater.
 
 =back
@@ -2004,7 +2053,7 @@ See the L<DBI section on TRACING|DBI/TRACING> for more information.
 
 =head3 B<func>
 
-DBD::Pg uses the C<func> method to support a variety of functions. 
+DBD::Pg uses the C<func> method to support a variety of functions.
 Note that the name of the function comes I<last>, after the arguments.
 
 =over
@@ -2035,7 +2084,7 @@ reference to an array of hashes, each of which contains the following keys:
 
 Creates a new large object and returns the object-id. C<$mode> is a bitmask
 describing read and write access to the new object. This setting is ignored
-since Postgres version 8.1. For backwards compatibility, however, you should 
+since Postgres version 8.1. For backwards compatibility, however, you should
 set a valid mode anyway (see L</pg_lo_open> for a list of valid modes).
 
 Upon failure it returns C<undef>. This function cannot be used if AutoCommit is enabled.
@@ -2048,7 +2097,7 @@ The old way of calling large objects functions is deprecated: $dbh->func(.., 'lo
 
 Opens an existing large object and returns an object-descriptor for use in
 subsequent C<pg_lo_*> calls. C<$mode> is a bitmask describing read and write
-access to the opened object. It may be one of: 
+access to the opened object. It may be one of:
 
   $dbh->{pg_INV_READ}
   $dbh->{pg_INV_WRITE}
@@ -2089,9 +2138,9 @@ location and C<undef> upon failure. This function cannot be used if AutoCommit i
 
 =item pg_lo_lseek64
 
-  $loc = $dbh->pg_lo_lseek64($lobj_fd, $offset, $whence);
-
-Same as pg_lo_lseek, but can handle much larger offsets and returned values. Requires Postgres 9.3 or greater.
+Backwards compatible alias for L</pg_lo_lseek>. Since DBD::Pg 3.16, that
+method handles 64-bit offsets if supported by the Perl and PostgreSQL versions
+in use.
 
 =item pg_lo_tell
 
@@ -2102,9 +2151,9 @@ This function cannot be used if AutoCommit is enabled.
 
 =item pg_lo_tell64
 
-  $loc = $dbh->pg_lo_tell64($lobj_fd);
-
-Same as pg_lo_tell, but can return much larger values. Requires Postgres 9.3 or greater.
+Backwards compatible alias for L</pg_lo_tell>. Since DBD::Pg 3.16, that
+method handles 64-bit offsets if supported by the Perl and PostgreSQL versions
+in use.
 
 =item pg_lo_truncate
 
@@ -2115,9 +2164,9 @@ This function cannot be used if AutoCommit is enabled.
 
 =item pg_lo_truncate64
 
-  $loc = $dbh->pg_lo_truncate64($lobj_fd, $len);
-
-Same as pg_lo_truncate, but can handle much larger lengths. Requires Postgres 9.3 or greater.
+Backwards compatible alias for L</pg_lo_truncate>. Since DBD::Pg 3.16, that
+method handles 64-bit offsets if supported by the Perl and PostgreSQL versions
+in use.
 
 =item pg_lo_close
 
@@ -2144,11 +2193,11 @@ object or C<undef> upon failure.
 
   $lobjId = $dbh->pg_lo_import($filename, $OID);
 
-Same as pg_lo_import, but attempts to use the supplied OID as the 
-large object number. If this number is 0, it falls back to the 
+Same as pg_lo_import, but attempts to use the supplied OID as the
+large object number. If this number is 0, it falls back to the
 behavior of pg_lo_import (which assigns the next available OID).
 
-This is only available when DBD::Pg is compiled against a Postgres 
+This is only available when DBD::Pg is compiled against a Postgres
 server version 8.4 or later.
 
 =item pg_lo_export
@@ -2170,77 +2219,77 @@ Deprecated, use $dbh->{pg_socket} instead.
   $hashref = $dbh->private_attribute_info();
   $hashref = $sth->private_attribute_info();
 
-Returns a hash of all private attributes used by DBD::Pg, for either 
+Returns a hash of all private attributes used by DBD::Pg, for either
 a database or a statement handle. Currently, all the hash values are undef.
 
 =head1 ATTRIBUTES COMMON TO ALL HANDLES
 
 =head3 B<InactiveDestroy> (boolean)
 
-If set to true, then the L</disconnect> method will not be automatically called when 
-the database handle goes out of scope. This is required if you are forking, and even 
-then you must tread carefully and ensure that either the parent or the child (but not 
-both!) handles all database calls from that point forwards, so that messages from the 
-Postgres backend are only handled by one of the processes. If you don't set things up 
-properly, you will see messages such as "I<server closed the connection unexpectedly>", 
-and "I<message type 0x32 arrived from server while idle>". The best solution is to either 
-have the child process reconnect to the database with a fresh database handle, or to 
-rewrite your application not to use forking. See the section on L</Asynchronous Queries> 
+If set to true, then the L</disconnect> method will not be automatically called when
+the database handle goes out of scope. This is required if you are forking, and even
+then you must tread carefully and ensure that either the parent or the child (but not
+both!) handles all database calls from that point forwards, so that messages from the
+Postgres backend are only handled by one of the processes. If you don't set things up
+properly, you will see messages such as "I<server closed the connection unexpectedly>",
+and "I<message type 0x32 arrived from server while idle>". The best solution is to either
+have the child process reconnect to the database with a fresh database handle, or to
+rewrite your application not to use forking. See the section on L</Asynchronous Queries>
 for a way to have your script continue to work while the database is processing a request.
 
 =head3 B<AutoInactiveDestroy> (boolean)
 
-The InactiveDestroy attribute, described above, needs to be explicitly set in the child 
-process after a fork. If the code that performs the fork is in a third party module such 
-as Sys::Syslog, this can present a problem. Use AutoInactiveDestroy to get around this 
+The InactiveDestroy attribute, described above, needs to be explicitly set in the child
+process after a fork. If the code that performs the fork is in a third party module such
+as Sys::Syslog, this can present a problem. Use AutoInactiveDestroy to get around this
 problem.
 
 =head3 B<RaiseError> (boolean, inherited)
 
-Forces errors to always raise an exception. Although it defaults to off, it is recommended that this 
-be turned on, as the alternative is to check the return value of every method (prepare, execute, fetch, etc.) 
+Forces errors to always raise an exception. Although it defaults to off, it is recommended that this
+be turned on, as the alternative is to check the return value of every method (prepare, execute, fetch, etc.)
 manually, which is easy to forget to do.
 
 =head3 B<PrintError> (boolean, inherited)
 
-Forces database errors to also generate warnings, which can then be filtered with methods such as 
-locally redefining I<$SIG{__WARN__}> or using modules such as C<CGI::Carp>. This attribute is on 
+Forces database errors to also generate warnings, which can then be filtered with methods such as
+locally redefining I<$SIG{__WARN__}> or using modules such as C<CGI::Carp>. This attribute is on
 by default.
 
 =head3 B<ShowErrorStatement> (boolean, inherited)
 
-Appends information about the current statement to error messages. If placeholder information 
+Appends information about the current statement to error messages. If placeholder information
 is available, adds that as well. Defaults to false.
 
 Note that this will not work when using L</do> without any arguments.
 
 =head3 B<Warn> (boolean, inherited)
 
-Enables warnings. This is on by default, and should only be turned off in a local block 
+Enables warnings. This is on by default, and should only be turned off in a local block
 for a short a time only when absolutely needed.
 
 =head3 B<Executed> (boolean, read-only)
 
-Indicates if a handle has been executed. For database handles, this value is true after the L</do> method has been called, or 
-when one of the child statement handles has issued an L</execute>. Issuing a L</commit> or L</rollback> always resets the 
-attribute to false for database handles. For statement handles, any call to L</execute> or its variants will flip the value to 
+Indicates if a handle has been executed. For database handles, this value is true after the L</do> method has been called, or
+when one of the child statement handles has issued an L</execute>. Issuing a L</commit> or L</rollback> always resets the
+attribute to false for database handles. For statement handles, any call to L</execute> or its variants will flip the value to
 true for the lifetime of the statement handle.
 
 =head3 B<TraceLevel> (integer, inherited)
 
-Sets the trace level, similar to the L</trace> method. See the sections on 
+Sets the trace level, similar to the L</trace> method. See the sections on
 L</trace> and L<parse_trace_flag|/parse_trace_flag and parse_trace_flags> for more details.
 
 =head3 B<Active> (boolean, read-only)
 
-Indicates if a handle is active or not. For database handles, this indicates if the database has 
-been disconnected or not. For statement handles, it indicates if all the data has been fetched yet 
+Indicates if a handle is active or not. For database handles, this indicates if the database has
+been disconnected or not. For statement handles, it indicates if all the data has been fetched yet
 or not. Use of this attribute is not encouraged.
 
 =head3 B<Kids> (integer, read-only)
 
-Returns the number of child processes created for each handle type. For a driver handle, indicates the number 
-of database handles created. For a database handle, indicates the number of statement handles created. For 
+Returns the number of child processes created for each handle type. For a driver handle, indicates the number
+of database handles created. For a database handle, indicates the number of statement handles created. For
 statement handles, it always returns zero, because statement handles do not create kids.
 
 =head3 B<ActiveKids> (integer, read-only)
@@ -2249,8 +2298,8 @@ Same as C<Kids>, but only returns those that are active.
 
 =head3 B<CachedKids> (hash ref)
 
-Returns a hashref of handles. If called on a database handle, returns all statement handles created by use of the 
-C<prepare_cached> method. If called on a driver handle, returns all database handles created by the L</connect_cached> 
+Returns a hashref of handles. If called on a database handle, returns all statement handles created by use of the
+C<prepare_cached> method. If called on a driver handle, returns all database handles created by the L</connect_cached>
 method.
 
 =head3 B<ChildHandles> (array ref)
@@ -2300,7 +2349,7 @@ Implemented by DBI, no driver-specific impact.
 
 =head3 B<Type> (scalar)
 
-Returns C<dr> for a driver handle, C<db> for a database handle, and C<st> for a statement handle. 
+Returns C<dr> for a driver handle, C<db> for a database handle, and C<st> for a statement handle.
 Should be rarely needed.
 
 =head3 B<LongReadLen>
@@ -2326,32 +2375,32 @@ Not used by DBD::Pg
   $ary_ref = $dbh->selectall_arrayref($sql, \%attr, @bind_values);
 
 Returns a reference to an array containing the rows returned by preparing and executing the SQL string.
-See the DBI documentation for full details. 
+See the DBI documentation for full details.
 
 =head3 B<selectall_hashref>
 
   $hash_ref = $dbh->selectall_hashref($sql, $key_field);
 
 Returns a reference to a hash containing the rows returned by preparing and executing the SQL string.
-See the DBI documentation for full details. 
+See the DBI documentation for full details.
 
 =head3 B<selectcol_arrayref>
 
   $ary_ref = $dbh->selectcol_arrayref($sql, \%attr, @bind_values);
 
-Returns a reference to an array containing the first column 
-from each rows returned by preparing and executing the SQL string. It is possible to specify exactly 
-which columns to return. See the DBI documentation for full details. 
+Returns a reference to an array containing the first column
+from each rows returned by preparing and executing the SQL string. It is possible to specify exactly
+which columns to return. See the DBI documentation for full details.
 
 =head3 B<prepare>
 
   $sth = $dbh->prepare($statement, \%attr);
 
-WARNING: DBD::Pg now (as of version 1.40) uses true prepared statements by sending them 
-to the backend to be prepared by the Postgres server. Statements 
+WARNING: DBD::Pg now (as of version 1.40) uses true prepared statements by sending them
+to the backend to be prepared by the Postgres server. Statements
 that were legal before may no longer work. See below for details.
 
-The prepare method prepares a statement for later execution. PostgreSQL supports 
+The prepare method prepares a statement for later execution. PostgreSQL supports
 prepared statements, which enables DBD::Pg to only send the query once, and
 simply send the arguments for every subsequent call to L</execute>.
 DBD::Pg can use these server-side prepared statements, or it can
@@ -2360,11 +2409,11 @@ is automatically chosen for each query. This will be sufficient for
 most users: keep reading for a more detailed explanation and some
 optional flags.
 
-Queries that do not begin with the word "SELECT", "INSERT", 
+Queries that do not begin with the word "SELECT", "INSERT",
 "UPDATE", or "DELETE" are never sent as server-side prepared statements.
 
-Deciding whether or not to use prepared statements depends on many factors, 
-but you can force them to be used or not used by using the 
+Deciding whether or not to use prepared statements depends on many factors,
+but you can force them to be used or not used by using the
 L<pg_server_prepare|/pg_server_prepare (boolean)> attribute when calling L</prepare>.
 Setting this to false means to never use
 prepared statements. Setting pg_server_prepare to true means that prepared
@@ -2408,22 +2457,22 @@ longer has to worry about quoting each value before sending it to the server.
 However, there are some drawbacks. The server cannot always choose the ideal
 parse plan because it will not know the arguments before hand. But for most
 situations in which you will be executing similar data many times, the default
-plan will probably work out well. Programs such as PgBouncer which cache connections 
-at a low level should not use prepared statements via DBD::Pg, or must take 
-extra care in the application to account for the fact that prepared statements 
+plan will probably work out well. Programs such as PgBouncer which cache connections
+at a low level should not use prepared statements via DBD::Pg, or must take
+extra care in the application to account for the fact that prepared statements
 are not shared across database connections. Further discussion on this subject is beyond
 the scope of this documentation: please consult the pgsql-performance mailing
 list, L<http://archives.postgresql.org/pgsql-performance/>
 
 Only certain commands will be sent to a server-side prepare: currently these
 include C<SELECT>, C<INSERT>, C<UPDATE>, and C<DELETE>. DBD::Pg uses a simple
-naming scheme for the prepared statements themselves: B<dbdpg_XY_Z>, where B<Y> is the current 
-PID, B<X> is either 'p' or 'n' (depending on if the PID is a positive or negative 
-number), and B<Z> is a number that starts at 1 and increases each time a new statement 
+naming scheme for the prepared statements themselves: B<dbdpg_XY_Z>, where B<Y> is the current
+PID, B<X> is either 'p' or 'n' (depending on if the PID is a positive or negative
+number), and B<Z> is a number that starts at 1 and increases each time a new statement
 is prepared. This number is tracked at the database handle level, so multiple
 statement handles will not collide.
 
-You cannot send more than one command at a time in the same prepare command 
+You cannot send more than one command at a time in the same prepare command
 (by separating them with semi-colons) when using server-side prepares.
 
 The actual C<PREPARE> is usually not performed until the first execute is called, due
@@ -2431,8 +2480,8 @@ to the fact that information on the data types (provided by L</bind_param>) may
 be provided after the prepare but before the execute.
 
 A server-side prepare may happen before the first L</execute>, but only if the server can
-handle the server-side prepare, and the statement contains no placeholders. It will 
-also be prepared if the L<pg_prepare_now|/pg_prepare_now (boolean)> attribute is passed in and set to a true 
+handle the server-side prepare, and the statement contains no placeholders. It will
+also be prepared if the L<pg_prepare_now|/pg_prepare_now (boolean)> attribute is passed in and set to a true
 value. Similarly, the pg_prepare_now attribute can be set to 0 to ensure that
 the statement is B<not> prepared immediately, although the cases in which you would
 want this are very rare. Finally, you can set the default behavior of all prepare
@@ -2489,8 +2538,8 @@ The second type of placeholder is "dollar sign numbers". This is the method
 that Postgres uses internally and is overall probably the best method to use
 if you do not need compatibility with other database systems. DBD::Pg, like
 PostgreSQL, allows the same number to be used more than once in the query.
-Numbers must start with "1" and increment by one value (but can appear in any order 
-within the query). If the same number appears more than once in a query, it is treated as a 
+Numbers must start with "1" and increment by one value (but can appear in any order
+within the query). If the same number appears more than once in a query, it is treated as a
 single parameter and all instances are replaced at once. Examples:
 
 Not legal:
@@ -2521,21 +2570,21 @@ While a simple execute with no bind_param calls requires only a single argument 
   $sth->execute(2045);
 
 The final placeholder type is "named parameters" in the format ":foo". While this
-syntax is supported by DBD::Pg, its use is discouraged in favor of 
+syntax is supported by DBD::Pg, its use is discouraged in favor of
 dollar-sign numbers.
 
 The different types of placeholders cannot be mixed within a statement, but you may
-use different ones for each statement handle you have. This is confusing at best, so 
+use different ones for each statement handle you have. This is confusing at best, so
 stick to one style within your program.
 
-If your queries use operators that contain question marks (e.g. some of the native 
-Postgres geometric operators and JSON operators) or array slices (e.g. C<data[100:300]>), 
-there are methods to instruct DBD::Pg to not treat some symbols as placeholders. First, you 
-may simply add a backslash before the start of a placeholder, and DBD::Pg will strip the 
-backslash and not treat the character as a placeholder. 
+If your queries use operators that contain question marks (e.g. some of the native
+Postgres geometric operators and JSON operators) or array slices (e.g. C<data[100:300]>),
+there are methods to instruct DBD::Pg to not treat some symbols as placeholders. First, you
+may simply add a backslash before the start of a placeholder, and DBD::Pg will strip the
+backslash and not treat the character as a placeholder.
 
-You can also tell DBD::Pg to ignore any non-dollar sign placeholders by setting the 
-L<pg_placeholder_dollaronly|/pg_placeholder_dollaronly (boolean)> attribute at either the database handle or the statement 
+You can also tell DBD::Pg to ignore any non-dollar sign placeholders by setting the
+L<pg_placeholder_dollaronly|/pg_placeholder_dollaronly (boolean)> attribute at either the database handle or the statement
 handle level. Examples:
 
   $dbh->{pg_placeholder_dollaronly} = 1;
@@ -2585,8 +2634,8 @@ the prepare to happen immediately via the L<pg_prepare_now|/pg_prepare_now (bool
   $rv = $dbh->do($statement, \%attr);
   $rv = $dbh->do($statement, \%attr, @bind_values);
 
-Prepare and execute a single statement. Returns the number of rows affected if the 
-query was successful, returns undef if an error occurred, and returns -1 if the 
+Prepare and execute a single statement. Returns the number of rows affected if the
+query was successful, returns undef if an error occurred, and returns -1 if the
 number of rows is unknown or not available. Note that this method will return B<0E0> instead
 of 0 for 'no rows were affected', in order to always return a true value if no error occurred.
 
@@ -2604,9 +2653,9 @@ the server; if you want a simple test, use "SELECT 123" or the L</ping> method.
 
 Attempts to return the id of the last value to be inserted into a table.
 You can either provide a sequence name (preferred) or provide a table
-name with optional schema, and DBD::Pg will attempt to find the sequence itself. 
-The current value of the sequence is returned by a call to the C<CURRVAL()> 
-PostgreSQL function. This will fail if the sequence has not yet been used in the 
+name with optional schema, and DBD::Pg will attempt to find the sequence itself.
+The current value of the sequence is returned by a call to the C<CURRVAL()>
+PostgreSQL function. This will fail if the sequence has not yet been used in the
 current database connection.
 
 If you do not know the name of the sequence, you can provide a table name and
@@ -2623,8 +2672,8 @@ to the final (hashref) argument for last_insert_id.
 Please keep in mind that this method is far from foolproof, so make your
 script use it properly. Specifically, make sure that it is called
 immediately after the insert, and that the insert does not add a value
-to the column that is using the sequence as a default value. However, because 
-we are using sequences, you can be sure that the value you got back has not 
+to the column that is using the sequence as a default value. However, because
+we are using sequences, you can be sure that the value you got back has not
 been used by any other process.
 
 Some examples:
@@ -2654,12 +2703,25 @@ If you did not want to worry about the sequence name:
     print "Last insert id was $newid\n";
   }
 
+Alternatively, using C<RETURNING>:
+
+  $dbh->do('CREATE TABLE lii2 (
+    foobar SERIAL UNIQUE,
+    baz VARCHAR)');
+  $SQL = 'INSERT INTO lii2(baz) VALUES (?) RETURNING foobar';
+  $sth = $dbh->prepare($SQL);
+  for (qw(uno dos tres cuatro)) {
+    $sth->execute($_);
+    my ($newid) = $sth->fetchrow_array;
+    print "Last insert id was $newid\n";
+  }
+
 =head3 B<commit>
 
   $rv = $dbh->commit;
 
-Issues a COMMIT to the server, indicating that the current transaction is finished and that 
-all changes made will be visible to other processes. If AutoCommit is enabled, then 
+Issues a COMMIT to the server, indicating that the current transaction is finished and that
+all changes made will be visible to other processes. If AutoCommit is enabled, then
 a warning is given and no COMMIT is issued. Returns true on success, false on error.
 See also the section on L</Transactions>.
 
@@ -2667,14 +2729,14 @@ See also the section on L</Transactions>.
 
   $rv = $dbh->rollback;
 
-Issues a ROLLBACK to the server, which discards any changes made in the current transaction. If AutoCommit 
-is enabled, then a warning is given and no ROLLBACK is issued. Returns true on success, and 
+Issues a ROLLBACK to the server, which discards any changes made in the current transaction. If AutoCommit
+is enabled, then a warning is given and no ROLLBACK is issued. Returns true on success, and
 false on error. See also the the section on L</Transactions>.
 
 =head3 B<begin_work>
 
-This method turns on transactions until the next call to L</commit> or L</rollback>, if L<AutoCommit|/AutoCommit (boolean)> is 
-currently enabled. If it is not enabled, calling begin_work will issue an error. Note that the 
+This method turns on transactions until the next call to L</commit> or L</rollback>, if L<AutoCommit|/AutoCommit (boolean)> is
+currently enabled. If it is not enabled, calling begin_work will issue an error. Note that the
 transaction will not actually begin until the first statement after begin_work is called.
 Example:
 
@@ -2696,36 +2758,36 @@ Example:
 
   $rv = $dbh->disconnect;
 
-Disconnects from the Postgres database. Any uncommitted changes will be rolled back upon disconnection. It's 
-good policy to always explicitly call commit or rollback at some point before disconnecting, rather than 
+Disconnects from the Postgres database. Any uncommitted changes will be rolled back upon disconnection. It's
+good policy to always explicitly call commit or rollback at some point before disconnecting, rather than
 relying on the default rollback behavior.
 
-This method may give warnings about "disconnect invalidates X active statement handle(s)". This means that 
-you called C<< $sth->execute() >> but did not finish fetching all the rows from them. To avoid seeing this 
+This method may give warnings about "disconnect invalidates X active statement handle(s)". This means that
+you called C<< $sth->execute() >> but did not finish fetching all the rows from them. To avoid seeing this
 warning, either fetch all the rows or call C<< $sth->finish() >> for each executed statement handle.
 
-If the script exits before disconnect is called (or, more precisely, if the database handle is no longer 
-referenced by anything), then the database handle's DESTROY method will call the rollback() and disconnect() 
+If the script exits before disconnect is called (or, more precisely, if the database handle is no longer
+referenced by anything), then the database handle's DESTROY method will call the rollback() and disconnect()
 methods automatically. It is best to explicitly disconnect rather than rely on this behavior.
 
 =head3 B<quote>
 
   $rv = $dbh->quote($value, $data_type);
 
-This module implements its own C<quote> method. For simple string types, both backslashes 
-and single quotes are doubled. You may also quote arrayrefs and receive a string 
+This module implements its own C<quote> method. For simple string types, both backslashes
+and single quotes are doubled. You may also quote arrayrefs and receive a string
 suitable for passing into Postgres array columns.
 
-If the value contains backslashes, and the server is version 8.1 or higher, 
-then the escaped string syntax will be used (which places a capital E before 
-the first single quote). This syntax is always used when quoting bytea values 
+If the value contains backslashes, and the server is version 8.1 or higher,
+then the escaped string syntax will be used (which places a capital E before
+the first single quote). This syntax is always used when quoting bytea values
 on servers 8.1 and higher.
 
-The C<data_type> argument is optional and should be one of the type constants 
-exported by DBD::Pg (such as PG_BYTEA). In addition to string, bytea, char, bool, 
-and other standard types, the following geometric types are supported: point, line, 
-lseg, box, path, polygon, and circle (PG_POINT, PG_LINE, PG_LSEG, PG_BOX, 
-PG_PATH, PG_POLYGON, and PG_CIRCLE respectively). To quote a Postgres-specific 
+The C<data_type> argument is optional and should be one of the type constants
+exported by DBD::Pg (such as PG_BYTEA). In addition to string, bytea, char, bool,
+and other standard types, the following geometric types are supported: point, line,
+lseg, box, path, polygon, and circle (PG_POINT, PG_LINE, PG_LSEG, PG_BOX,
+PG_PATH, PG_POLYGON, and PG_CIRCLE respectively). To quote a Postgres-specific
 data type, you must use a 'hashref' argument like so:
 
   my $quotedval = $dbh->quote($value, { pg_type => PG_VARCHAR });
@@ -2741,8 +2803,8 @@ type is officially deprecated. Use C<PG_BYTEA> with C<bind_param()> instead:
   $string = $dbh->quote_identifier( $name );
   $string = $dbh->quote_identifier( undef, $schema, $table);
 
-Returns a quoted version of the supplied string, which is commonly a schema, 
-table, or column name. The three argument form will return the schema and 
+Returns a quoted version of the supplied string, which is commonly a schema,
+table, or column name. The three argument form will return the schema and
 the table together, separated by a dot. Examples:
 
   print $dbh->quote_identifier('grapefruit'); ## Prints: "grapefruit"
@@ -2756,10 +2818,10 @@ the table together, separated by a dot. Examples:
 
   $ret = $dbh->pg_notifies;
 
-Looks for any asynchronous notifications received and returns either C<undef> 
-or a reference to a three-element array consisting of an event name, the PID 
-of the backend that sent the NOTIFY command, and the optional payload string. 
-Note that this does not check if the connection to the database is still valid first - 
+Looks for any asynchronous notifications received and returns either C<undef>
+or a reference to a three-element array consisting of an event name, the PID
+of the backend that sent the NOTIFY command, and the optional payload string.
+Note that this does not check if the connection to the database is still valid first -
 for that, use the C<ping> method. You may need to commit if not in autocommit mode -
 new notices will not be picked up while in the middle of a transaction. An example:
 
@@ -2779,18 +2841,18 @@ new notices will not be picked up while in the middle of a transaction. An examp
     redo;
   }
 
-Payloads will always be an empty string unless you are connecting to a Postgres 
+Payloads will always be an empty string unless you are connecting to a Postgres
 server version 9.0 or higher.
 
 =head3 B<ping>
 
   $rv = $dbh->ping;
 
-The C<ping> method determines if there is a working connection to an active 
-database server. It does this by sending a small query to the server, currently 
-B<'DBD::Pg ping test v3.15.1'>. It returns 0 (false) if the connection is not valid, 
-otherwise it returns a positive number (true). The value returned indicates the 
-current state:
+The C<ping> method determines if there is a working connection to an active
+database server. It does this by sending a small query to the server, currently
+B<'DBD::Pg ping test v3.21.2'>. It returns 0 (false) if the connection is not valid,
+otherwise it returns a positive number (true). It should never throw an exception.
+The value returned indicates the current state:
 
   Value    Meaning
   --------------------------------------------------
@@ -2799,17 +2861,17 @@ current state:
     3      Database is idle within a transaction
     4      Database is idle, within a failed transaction
 
-Additional information on why a handle is not valid can be obtained by using the 
+Additional information on why a handle is not valid can be obtained by using the
 L</pg_ping> method.
 
 =head3 B<pg_ping>
 
   $rv = $dbh->pg_ping;
 
-This is a DBD::Pg-specific extension to the L</ping> method. This will check the 
-validity of a database handle in exactly the same way as C<ping>, but instead of 
-returning a 0 for an invalid connection, it will return a negative number. So in 
-addition to returning the positive numbers documented for C<ping>, it may also 
+This is a DBD::Pg-specific extension to the L</ping> method. This will check the
+validity of a database handle in exactly the same way as C<ping>, but instead of
+returning a 0 for an invalid connection, it will return a negative number. So in
+addition to returning the positive numbers documented for C<ping>, it may also
 return the following:
 
   Value    Meaning
@@ -2823,19 +2885,19 @@ return the following:
 
   $value = $dbh->pg_error_field('context');
 
-The B<pg_error_field> returns specific information about the last error that occurred. 
-It needs to be called as soon as possible after an error occurs, as any other query 
-sent to Postgres (via $dbh or $sth) will reset all the error information. Note that 
-this is called at the database handle ($dbh) level, but can return errors that occurred 
-via both database handles (e.g. $dbh->do) and statement handles (e.g. $sth->execute). 
-It takes a single argument, indicating which field to return. The value returned will be 
+The B<pg_error_field> returns specific information about the last error that occurred.
+It needs to be called as soon as possible after an error occurs, as any other query
+sent to Postgres (via $dbh or $sth) will reset all the error information. Note that
+this is called at the database handle ($dbh) level, but can return errors that occurred
+via both database handles (e.g. $dbh->do) and statement handles (e.g. $sth->execute).
+It takes a single argument, indicating which field to return. The value returned will be
 undef if the previous command was not an error, or if the field is not applicable to the current error.
 
 The canonical list of field types can be found at:
 
 L<https://www.postgresql.org/docs/current/libpq-exec.html#LIBPQ-PQRESULTERRORFIELD>
 
-The literal names on that page can be used (e.g. B<PG_DIAG_STATEMENT_HINT>), but lowercase 
+The literal names on that page can be used (e.g. B<PG_DIAG_STATEMENT_HINT>), but lowercase
 is accepted too, as well as the following abbreviated forms:
 
 =over 4
@@ -2882,7 +2944,7 @@ is accepted too, as well as the following abbreviated forms:
 
   $value = $dbh->get_info($info_type);
 
-Supports a very large set (> 250) of the information types, including the minimum 
+Supports a very large set (> 250) of the information types, including the minimum
 recommended by DBI.
 
 Items of note:
@@ -2922,7 +2984,7 @@ B<TABLE_SCHEM>: The name of the schema that the table or view is in.
 B<TABLE_NAME>: The name of the table or view.
 
 B<TABLE_TYPE>: The type of object returned. Will be one of "TABLE", "VIEW",
-"MATERIALIZED VIEW", "SYSTEM VIEW", "SYSTEM MATERIALIZED VIEW", "SYSTEM TABLE", 
+"MATERIALIZED VIEW", "SYSTEM VIEW", "SYSTEM MATERIALIZED VIEW", "SYSTEM TABLE",
 "FOREIGN TABLE", "SYSTEM FOREIGN TABLE", or "LOCAL TEMPORARY".
 
 The TABLE_SCHEM and TABLE_NAME will be quoted via C<quote_ident()>.
@@ -2961,21 +3023,22 @@ Examples of use:
 
   $sth = $dbh->column_info( undef, $schema, $table, $column );
 
-Supported by this driver as proposed by DBI with the follow exceptions.
-These fields are currently always returned with NULL (C<undef>) values:
+Supported by this driver as proposed by DBI with the following exceptions.
+These fields always return NULL (C<undef>):
 
    BUFFER_LENGTH
-   DECIMAL_DIGITS
    NUM_PREC_RADIX
    SQL_DATA_TYPE
    SQL_DATETIME_SUB
    CHAR_OCTET_LENGTH
 
-Also, six additional non-standard fields are returned:
+Seven additional non-standard fields are returned:
 
 B<pg_type>: data type with additional info i.e. "character varying(20)"
 
-B<pg_constraint>: holds column constraint definition
+B<pg_constraint>: shows CHECK constraints which reference the column (multiple constraints are newline separated)
+
+B<pg_database>: the unquoted name of the database
 
 B<pg_schema>: the unquoted name of the schema
 
@@ -2985,23 +3048,23 @@ B<pg_column>: the unquoted name of the column
 
 B<pg_enum_values>: an array reference of allowed values for an enum column
 
-Note that the TABLE_SCHEM, TABLE_NAME, and COLUMN_NAME fields all return 
-output wrapped in quote_ident(). If you need the unquoted version, use 
+Note that the TABLE_CAT, TABLE_SCHEM, TABLE_NAME, and COLUMN_NAME fields all return
+output wrapped in quote_ident(). If you need the unquoted version, use
 the pg_ fields above.
 
 =head3 B<primary_key_info>
 
   $sth = $dbh->primary_key_info( undef, $schema, $table, \%attr );
 
-Supported by this driver as proposed by DBI. There are no search patterns allowed, but leaving the 
-$schema argument blank will cause the first table found in the schema 
-search path to be used. An additional field, "DATA_TYPE", is returned and 
+Supported by this driver as proposed by DBI. There are no search patterns allowed, but leaving the
+$schema argument blank will cause the first table found in the schema
+search path to be used. An additional field, "DATA_TYPE", is returned and
 shows the data type for each of the arguments in the "COLUMN_NAME" field.
 
 This method will also return tablespace information for servers that support
 tablespaces. See the L</table_info> entry for more information.
 
-The five additional custom fields returned are:
+Five additional fields are returned:
 
 B<pg_tablespace_name>: name of the tablespace, if any
 
@@ -3011,7 +3074,7 @@ B<pg_schema>: the unquoted name of the schema
 
 B<pg_table>: the unquoted name of the table
 
-B<pg_column>: the unquoted name of the column
+B<pg_column>: the unquoted name of the column or columns
 
 In addition to the standard format of returning one row for each column
 found for the primary key, you can pass the C<pg_onerow> attribute to force
@@ -3034,8 +3097,8 @@ involved:
 
   @key_column_names = $dbh->primary_key(undef, $schema, $table);
 
-Simple interface to the L</primary_key_info> method. Returns a list of the column names that 
-comprise the primary key of the specified table. The list is in primary key column sequence 
+Simple interface to the L</primary_key_info> method. Returns a list of the column names that
+comprise the primary key of the specified table. The list is in primary key column sequence
 order. If there is no primary key then an empty list is returned.
 
 =head3 B<foreign_key_info>
@@ -3055,11 +3118,11 @@ an unique index) will return C<undef> for the "UK_NAME" field.
 
   $sth = $dbh->statistics_info( undef, $schema, $table, $unique_only, $quick );
 
-Returns a statement handle that can be fetched from to give statistics information 
-on a specific table and its indexes. The C<$table> argument is mandatory. The 
-C<$schema> argument is optional but recommended. The C<$unique_only> argument, if true, 
-causes only information about unique indexes to be returned. The C<$quick> argument is 
-not used by DBD::Pg. For information on the format of the standard rows returned, please 
+Returns a statement handle that can be fetched from to give statistics information
+on a specific table and its indexes. The C<$table> argument is mandatory. The
+C<$schema> argument is optional but recommended. The C<$unique_only> argument, if true,
+causes only information about unique indexes to be returned. The C<$quick> argument is
+not used by DBD::Pg. For information on the format of the standard rows returned, please
 see the DBI documentation.
 
 L<DBI section on statistics_info|DBI/statistics_info>
@@ -3070,9 +3133,9 @@ In addition, the following Postgres specific columns are returned:
 
 =item pg_expression
 
-Postgres allows indexes on functions and scalar expressions based on one or more columns. This field 
-will always be populated if an index, but the lack of an entry in the COLUMN_NAME should indicate 
-that this is an index expression.
+Postgres allows indexes on functions and scalar expressions based on one or more columns. This field
+will always be populated if this is an index row. The lack of an entry in the COLUMN_NAME should
+indicate that this is an index expression.
 
 =item pg_is_key_column
 
@@ -3136,7 +3199,7 @@ according to the following table:
 
   @type_info = $dbh->type_info($data_type);
 
-Returns a list of hash references holding information about one or more variants of $data_type. 
+Returns a list of hash references holding information about one or more variants of $data_type.
 See the DBI documentation for more details.
 
 =head3 B<pg_server_trace>
@@ -3170,9 +3233,9 @@ Stop server logging to a previously opened file.
   @row_ary = $dbh->selectrow_array($sql, \%attr);
   @row_ary = $dbh->selectrow_array($sql, \%attr, @bind_values);
 
-Returns an array of row information after preparing and executing the provided SQL string. The rows are returned 
-by calling L</fetchrow_array>. The string can also be a statement handle generated by a previous prepare. Note that 
-only the first row of data is returned. If called in a scalar context, only the first column of the first row is 
+Returns an array of row information after preparing and executing the provided SQL string. The rows are returned
+by calling L</fetchrow_array>. The string can also be a statement handle generated by a previous prepare. Note that
+only the first row of data is returned. If called in a scalar context, only the first column of the first row is
 returned. Because this is not portable, it is not recommended that you use this method in that way.
 
 =head3 B<selectrow_arrayref>
@@ -3181,7 +3244,7 @@ returned. Because this is not portable, it is not recommended that you use this 
   $ary_ref = $dbh->selectrow_arrayref($statement, \%attr);
   $ary_ref = $dbh->selectrow_arrayref($statement, \%attr, @bind_values);
 
-Exactly the same as L</selectrow_array>, except that it returns a reference to an array, by internal use of 
+Exactly the same as L</selectrow_array>, except that it returns a reference to an array, by internal use of
 the L</fetchrow_arrayref> method.
 
 =head3 B<selectrow_hashref>
@@ -3190,15 +3253,34 @@ the L</fetchrow_arrayref> method.
   $hash_ref = $dbh->selectrow_hashref($sql, \%attr);
   $hash_ref = $dbh->selectrow_hashref($sql, \%attr, @bind_values);
 
-Exactly the same as L</selectrow_array>, except that it returns a reference to an hash, by internal use of 
+Exactly the same as L</selectrow_array>, except that it returns a reference to an hash, by internal use of
 the L</fetchrow_hashref> method.
 
 =head3 B<clone>
 
   $other_dbh = $dbh->clone();
 
-Creates a copy of the database handle by connecting with the same parameters as the original 
+Creates a copy of the database handle by connecting with the same parameters as the original
 handle, then trying to merge the attributes. See the DBI documentation for complete usage.
+
+=head3 B<pg_continue_connect>
+
+  $rc = $dbh->pg_continue_connect();
+
+Continues an asynchronous connect operation. See B<Asynchronous
+Connect> below. After an asynchronous connect was initiated, this
+method must be called in a loop for as long as it returns either 1 or
+2, indicating a desire to read or write data,
+respectively. Afterwards, the next call to pg_continue_connect must
+not take place until an indication that data can either be
+read or written on the current pg_socket was obtained (e.g. via
+select).
+
+The method returns -1 if no asynchronous connect was in progress, -2 to
+indicate that an asynchronous connect failed and 0 if the connection
+was successfully established.
+
+The socket may have changed after each call to the method.
 
 =head2 Database Handle Attributes
 
@@ -3224,63 +3306,65 @@ should the query fail (see C<ShowErrorStatement>).
 =head3 B<pg_bool_tf> (boolean)
 
 DBD::Pg specific attribute. If true, boolean values will be returned
-as the characters 't' and 'f' instead of '1' and '0'.
+as the characters 't' and 'f' instead of '1' and '0'.  On Perl 5.36
+and newer, distinguished boolean values (see L<builtin/is_bool>) will
+also be sent as 't' and 'f' when used as placeholder values.
 
 =head3 B<ReadOnly> (boolean)
 
 $dbh->{ReadOnly} = 1;
 
-Specifies if the current database connection should be in read-only mode or not. 
-In this mode, changes that change the database are not allowed and will throw 
-an error. Note: this method will B<not> work if L</AutoCommit> is true. The 
-read-only effect is accomplished by sending a S<SET TRANSACTION READ ONLY> after 
+Specifies if the current database connection should be in read-only mode or not.
+In this mode, changes that change the database are not allowed and will throw
+an error. Note: this method will B<not> work if L</AutoCommit> is true. The
+read-only effect is accomplished by sending a S<SET TRANSACTION READ ONLY> after
 every begin. For more details, please see:
 
 http://www.postgresql.org/docs/current/interactive/sql-set-transaction.html
 
-Please not that this method is not foolproof: there are still ways to update the 
-database. Consider this a safety net to catch applications that should not be 
+Please not that this method is not foolproof: there are still ways to update the
+database. Consider this a safety net to catch applications that should not be
 issuing commands such as INSERT, UPDATE, or DELETE.
 
 This method requires DBI version 1.55 or better.
 
 =head3 B<pg_server_prepare> (boolean)
 
-DBD::Pg specific attribute. Indicates if DBD::Pg should attempt to use server-side 
+DBD::Pg specific attribute. Indicates if DBD::Pg should attempt to use server-side
 prepared statements. The default value, true, indicates that prepared statements should
 be used whenever possible. See the section on the L</prepare> method for more information.
 
 =head3 B<pg_switch_prepared> (integer)
 
-DBD::Pg specific attribute. Indicates when DBD::Pg will internally switch from using 
-PQexecParams to PQexecPrepared. In other words, when it will start using server-side 
-prepared statements (assuming all other requirements for them are met). The default value, 
-2, means that a prepared statement will be prepared and used the second and subsequent 
-time execute is called. To always use PQexecPrepared instead of PQexecParams, set 
-pg_switch_prepared to 1 (this was the default behavior in earlier versions). 
+DBD::Pg specific attribute. Indicates when DBD::Pg will internally switch from using
+PQexecParams to PQexecPrepared. In other words, when it will start using server-side
+prepared statements (assuming all other requirements for them are met). The default value,
+2, means that a prepared statement will be prepared and used the second and subsequent
+time execute is called. To always use PQexecPrepared instead of PQexecParams, set
+pg_switch_prepared to 1 (this was the default behavior in earlier versions).
 Setting pg_switch_prepared to 0 will force DBD::Pg to always use PQexecParams.
 
 =head3 B<pg_placeholder_dollaronly> (boolean)
 
-DBD::Pg specific attribute. Defaults to false. When true, question marks inside of statements 
-are not treated as L<placeholders|/Placeholders>. Useful for statements that contain unquoted question 
-marks, such as geometric operators. Note that you may also simply escape question marks with 
+DBD::Pg specific attribute. Defaults to false. When true, question marks inside of statements
+are not treated as L<placeholders|/Placeholders>. Useful for statements that contain unquoted question
+marks, such as geometric operators. Note that you may also simply escape question marks with
 a backslash to prevent them from being treated as placeholders.
 
 =head3 B<pg_placeholder_nocolons> (boolean)
 
 DBD::Pg specific attribute. Defaults to false. When true, colons inside of statements
 are not treated as L<placeholders|/Placeholders>. Useful for statements that contain an
-array slice. You may also place a backslash directly before the colon to prevent it from 
+array slice. You may also place a backslash directly before the colon to prevent it from
 being treated as a placeholder.
 
 =head3 B<pg_enable_utf8> (integer)
 
-DBD::Pg specific attribute. The behavior of DBD::Pg with regards to this flag has 
+DBD::Pg specific attribute. The behavior of DBD::Pg with regards to this flag has
 changed as of version 3.0.0. The default value for this attribute, -1, tells
 DBD::Pg to UTF8-decode all strings coming back
-from the database if the client_encoding is set to C<UTF8>. Use of this default 
-is highly encouraged. If your code was previously using pg_enable_utf8, you can 
+from the database if the client_encoding is set to C<UTF8>. Use of this default
+is highly encouraged. If your code was previously using pg_enable_utf8, you can
 probably remove mention of it entirely.
 
 If this attribute is set to 0, then DBD::Pg will B<never> UTF8-decode
@@ -3290,15 +3374,31 @@ If this attribute is set to 1, then DBD::Pg will B<always> UTF8-decode
 returned data, regardless of the current client_encoding
 (with the exception of bytea data).
 
-Note that the value of client_encoding is only checked on connection time. If 
-you change the client_encoding to/from 'UTF8' after connecting, you can set 
-pg_enable_utf8 to -1 to force DBD::Pg to read in the new client_encoding and 
+Note that the value of client_encoding is only checked on connection time. If
+you change the client_encoding to/from 'UTF8' after connecting, you can set
+pg_enable_utf8 to -1 to force DBD::Pg to read in the new client_encoding and
 act accordingly.
+
+=head3 B<pg_int8_as_string> (integer)
+
+DBD::Pg specific attribute. Since version 3.0.0 the processing of SQL_INT8 has
+changed, before that 64 bit values were returned as strings, starting from
+version 3.0.0 64 bit values are returned as numbers. This flag makes it
+possible to return the old behavior. The old behavior is useful when encoding
+the results of a call in JSON format and passing it to JavaScript for
+processing, where integer values have a precision of no more than 53 bits.
+
+=head3 B<pg_skip_deallocate> (integer)
+
+DBD::Pg specific attribute. By default this is false, and causes prepared statements
+created by us to be deallocated when no longer needed (i.e. when the handle is destroyed).
+By setting this to true, this deallocation is skipped entirely. This is useful when
+there is something else taking over responsibility for prepared statements.
 
 =head3 B<pg_errorlevel> (integer)
 
-DBD::Pg specific attribute. Sets the amount of information returned by the server's 
-error messages. Valid entries are 0, 1, and 2. Any other number will be forced to the 
+DBD::Pg specific attribute. Sets the amount of information returned by the server's
+error messages. Valid entries are 0, 1, and 2. Any other number will be forced to the
 default value of 1.
 
 A value of 0 ("TERSE") will show severity, primary text, and position only
@@ -3308,22 +3408,22 @@ show all available information.
 
 =head3 B<pg_lib_version> (integer, read-only)
 
-DBD::Pg specific attribute. Indicates which version of PostgreSQL that 
-DBD::Pg was compiled against. In other words, which libraries were used. 
-Returns a number with major, minor, and revision together; version 8.1.4 
+DBD::Pg specific attribute. Indicates which version of PostgreSQL that
+DBD::Pg was compiled against. In other words, which libraries were used.
+Returns a number with major, minor, and revision together; version 8.1.4
 would be returned as C<80104>.
 
 =head3 B<pg_server_version> (integer, read-only)
 
-DBD::Pg specific attribute. Indicates which version of PostgreSQL that 
-the current database handle is connected to. Returns a number with major, 
+DBD::Pg specific attribute. Indicates which version of PostgreSQL that
+the current database handle is connected to. Returns a number with major,
 minor, and revision together; version 8.0.1 would be C<80001>.
 
 =head3 B<Name> (string, read-only)
 
-Returns the name of the current database. This is the same as the DSN, without the 
-"dbi:Pg:" part. Before version 2.0.0, this only returned the bare database name 
-(e.g. 'foo'). From version 2.0.0 onwards, it returns the more correct 
+Returns the name of the current database. This is the same as the DSN, without the
+"dbi:Pg:" part. Before version 2.0.0, this only returned the bare database name
+(e.g. 'foo'). From version 2.0.0 onwards, it returns the more correct
 output (e.g. 'dbname=foo')
 
 =head3 B<Username> (string, read-only)
@@ -3377,25 +3477,25 @@ backend server process handling the connection.
 
 =head3 B<pg_prepare_now> (boolean)
 
-DBD::Pg specific attribute. Default is off. If true, then the L</prepare> method will 
+DBD::Pg specific attribute. Default is off. If true, then the L</prepare> method will
 immediately prepare commands, rather than waiting until the first execute.
 
 =head3 B<pg_expand_array> (boolean)
 
-DBD::Pg specific attribute. Defaults to true. If false, arrays returned from the server will 
+DBD::Pg specific attribute. Defaults to true. If false, arrays returned from the server will
 not be changed into a Perl arrayref, but remain as a string.
 
 =head3 B<pg_async_status> (integer, read-only)
 
 DBD::Pg specific attribute. Returns the current status of an L<asynchronous|/Asynchronous Queries>
-command. 0 indicates no asynchronous command is in progress, 1 indicates that 
-an asynchronous command has started and -1 indicated that an asynchronous command 
+command. 0 indicates no asynchronous command is in progress, 1 indicates that
+an asynchronous command has started and -1 indicated that an asynchronous command
 has been cancelled.
 
 =head3 B<pg_standard_conforming_strings> (boolean, read-only)
 
-DBD::Pg specific attribute. Returns true if the server is currently using 
-standard conforming strings. Only available if the target 
+DBD::Pg specific attribute. Returns true if the server is currently using
+standard conforming strings. Only available if the target
 server is version 8.2 or better.
 
 =head3 B<pg_INV_READ> (integer, read-only)
@@ -3408,7 +3508,7 @@ Constant to be used for the mode in L</pg_lo_creat> and L</pg_lo_open>.
 
 =head3 B<Driver> (handle, read-only)
 
-Holds the handle of the parent driver. The only recommended use for this is to find the name 
+Holds the handle of the parent driver. The only recommended use for this is to find the name
 of the driver using:
 
   $dbh->{Driver}->{Name}
@@ -3434,7 +3534,7 @@ Not used by DBD::Pg
   $rv = $sth->bind_param($param_num, $bind_value, \%attr);
 
 Allows the user to bind a value and/or a data type to a placeholder. This is
-especially important when using server-side prepares. See the 
+especially important when using server-side prepares. See the
 L</prepare> method for more information.
 
 The value of C<$param_num> is a number if using the '?' or '$1' style
@@ -3484,23 +3584,26 @@ The current list of Postgres data types exported is:
  PG_LINEARRAY PG_LSEG PG_LSEGARRAY PG_MACADDR PG_MACADDR8 PG_MACADDR8ARRAY
  PG_MACADDRARRAY PG_MONEY PG_MONEYARRAY PG_NAME PG_NAMEARRAY PG_NUMERIC
  PG_NUMERICARRAY PG_NUMMULTIRANGE PG_NUMMULTIRANGEARRAY PG_NUMRANGE PG_NUMRANGEARRAY PG_OID
- PG_OIDARRAY PG_OIDVECTOR PG_OIDVECTORARRAY PG_PATH PG_PATHARRAY PG_PG_ATTRIBUTE
- PG_PG_ATTRIBUTEARRAY PG_PG_BRIN_BLOOM_SUMMARY PG_PG_BRIN_MINMAX_MULTI_SUMMARY PG_PG_CLASS PG_PG_CLASSARRAY PG_PG_DDL_COMMAND
- PG_PG_DEPENDENCIES PG_PG_LSN PG_PG_LSNARRAY PG_PG_MCV_LIST PG_PG_NDISTINCT PG_PG_NODE_TREE
- PG_PG_PROC PG_PG_PROCARRAY PG_PG_SNAPSHOT PG_PG_SNAPSHOTARRAY PG_PG_TYPE PG_PG_TYPEARRAY
- PG_POINT PG_POINTARRAY PG_POLYGON PG_POLYGONARRAY PG_RECORD PG_RECORDARRAY
- PG_REFCURSOR PG_REFCURSORARRAY PG_REGCLASS PG_REGCLASSARRAY PG_REGCOLLATION PG_REGCOLLATIONARRAY
- PG_REGCONFIG PG_REGCONFIGARRAY PG_REGDICTIONARY PG_REGDICTIONARYARRAY PG_REGNAMESPACE PG_REGNAMESPACEARRAY
- PG_REGOPER PG_REGOPERARRAY PG_REGOPERATOR PG_REGOPERATORARRAY PG_REGPROC PG_REGPROCARRAY
- PG_REGPROCEDURE PG_REGPROCEDUREARRAY PG_REGROLE PG_REGROLEARRAY PG_REGTYPE PG_REGTYPEARRAY
- PG_TABLE_AM_HANDLER PG_TEXT PG_TEXTARRAY PG_TID PG_TIDARRAY PG_TIME
- PG_TIMEARRAY PG_TIMESTAMP PG_TIMESTAMPARRAY PG_TIMESTAMPTZ PG_TIMESTAMPTZARRAY PG_TIMETZ
- PG_TIMETZARRAY PG_TRIGGER PG_TSMULTIRANGE PG_TSMULTIRANGEARRAY PG_TSM_HANDLER PG_TSQUERY
- PG_TSQUERYARRAY PG_TSRANGE PG_TSRANGEARRAY PG_TSTZMULTIRANGE PG_TSTZMULTIRANGEARRAY PG_TSTZRANGE
- PG_TSTZRANGEARRAY PG_TSVECTOR PG_TSVECTORARRAY PG_TXID_SNAPSHOT PG_TXID_SNAPSHOTARRAY PG_UNKNOWN
- PG_UUID PG_UUIDARRAY PG_VARBIT PG_VARBITARRAY PG_VARCHAR PG_VARCHARARRAY
- PG_VOID PG_XID PG_XID8 PG_XID8ARRAY PG_XIDARRAY PG_XML
- PG_XMLARRAY
+ PG_OID8 PG_OID8ARRAY PG_OIDARRAY PG_OIDVECTOR PG_OIDVECTORARRAY PG_PATH
+ PG_PATHARRAY PG_PG_ATTRIBUTE PG_PG_ATTRIBUTEARRAY PG_PG_BRIN_BLOOM_SUMMARY PG_PG_BRIN_MINMAX_MULTI_SUMMARY PG_PG_CLASS
+ PG_PG_CLASSARRAY PG_PG_DDL_COMMAND PG_PG_DEPENDENCIES PG_PG_LSN PG_PG_LSNARRAY PG_PG_MCV_LIST
+ PG_PG_NDISTINCT PG_PG_NODE_TREE PG_PG_PROC PG_PG_PROCARRAY PG_PG_SNAPSHOT PG_PG_SNAPSHOTARRAY
+ PG_PG_TYPE PG_PG_TYPEARRAY PG_POINT PG_POINTARRAY PG_POLYGON PG_POLYGONARRAY
+ PG_RECORD PG_RECORDARRAY PG_REFCURSOR PG_REFCURSORARRAY PG_REGCLASS PG_REGCLASSARRAY
+ PG_REGCOLLATION PG_REGCOLLATIONARRAY PG_REGCONFIG PG_REGCONFIGARRAY PG_REGDATABASE PG_REGDATABASEARRAY
+ PG_REGDICTIONARY PG_REGDICTIONARYARRAY PG_REGNAMESPACE PG_REGNAMESPACEARRAY PG_REGOPER PG_REGOPERARRAY
+ PG_REGOPERATOR PG_REGOPERATORARRAY PG_REGPROC PG_REGPROCARRAY PG_REGPROCEDURE PG_REGPROCEDUREARRAY
+ PG_REGROLE PG_REGROLEARRAY PG_REGTYPE PG_REGTYPEARRAY PG_TABLE_AM_HANDLER PG_TEXT
+ PG_TEXTARRAY PG_TID PG_TIDARRAY PG_TIME PG_TIMEARRAY PG_TIMESTAMP
+ PG_TIMESTAMPARRAY PG_TIMESTAMPTZ PG_TIMESTAMPTZARRAY PG_TIMETZ PG_TIMETZARRAY PG_TRIGGER
+ PG_TSMULTIRANGE PG_TSMULTIRANGEARRAY PG_TSM_HANDLER PG_TSQUERY PG_TSQUERYARRAY PG_TSRANGE
+ PG_TSRANGEARRAY PG_TSTZMULTIRANGE PG_TSTZMULTIRANGEARRAY PG_TSTZRANGE PG_TSTZRANGEARRAY PG_TSVECTOR
+ PG_TSVECTORARRAY PG_TXID_SNAPSHOT PG_TXID_SNAPSHOTARRAY PG_UNKNOWN PG_UUID PG_UUIDARRAY
+ PG_VARBIT PG_VARBITARRAY PG_VARCHAR PG_VARCHARARRAY PG_VOID PG_XID
+ PG_XID8 PG_XID8ARRAY PG_XIDARRAY PG_XML PG_XMLARRAY
+
+Be warned that PG_CHAR is probably not what you think it is. When in doubt, use PG_TEXT
+for anything storing a non-numeric string.
 
 Data types are "sticky," in that once a data type is set to a certain placeholder,
 it will remain for that placeholder, unless it is explicitly set to something
@@ -3547,11 +3650,11 @@ Examples:
   $rv = $sth->bind_param_inout($param_num, \$scalar, 0);
 
 
-Experimental support for this feature is provided. The first argument to 
-bind_param_inout should be a placeholder number. The second argument 
-should be a reference to a scalar variable in your script. The third argument 
-is not used and should simply be set to 0. Note that what this really does is 
-assign a returned column to the variable, in the order in which the column 
+Experimental support for this feature is provided. The first argument to
+bind_param_inout should be a placeholder number. The second argument
+should be a reference to a scalar variable in your script. The third argument
+is not used and should simply be set to 0. Note that what this really does is
+assign a returned column to the variable, in the order in which the column
 appears. For example:
 
   my $foo = 123;
@@ -3562,9 +3665,9 @@ appears. For example:
   $sth->fetch;
 
 The above will cause $foo to have a new value of "223" after the final fetch.
-Note that the variables bound in this manner are very sticky, and will trump any 
-values passed in to execute. This is because the binding is done as late as possible, 
-at the execute() stage, allowing the value to be changed between the time it was bound 
+Note that the variables bound in this manner are very sticky, and will trump any
+values passed in to execute. This is because the binding is done as late as possible,
+at the execute() stage, allowing the value to be changed between the time it was bound
 and the time the query is executed. Thus, the above execute is the same as:
 
   $sth->execute();
@@ -3576,7 +3679,7 @@ and the time the query is executed. Thus, the above execute is the same as:
   $rv = $sth->bind_param_array($param_num, $array_ref_or_value, $bind_type)
   $rv = $sth->bind_param_array($param_num, $array_ref_or_value, \%attr)
 
-Binds an array of values to a placeholder, so that each is used in turn by a call 
+Binds an array of values to a placeholder, so that each is used in turn by a call
 to the L</execute_array> method.
 
 =head3 B<execute>
@@ -3591,17 +3694,17 @@ The "prepare/bind/execute" process has changed significantly for PostgreSQL
 servers 7.4 and later: please see the C<prepare()> and C<bind_param()> entries for
 much more information.
 
-Setting one of the bind_values to "undef" is the equivalent of setting the value 
-to NULL in the database. Setting the bind_value to $DBDPG_DEFAULT is equivalent 
-to sending the literal string 'DEFAULT' to the backend. Note that using this 
-option will force server-side prepares off until such time as PostgreSQL 
+Setting one of the bind_values to "undef" is the equivalent of setting the value
+to NULL in the database. Setting the bind_value to $DBDPG_DEFAULT is equivalent
+to sending the literal string 'DEFAULT' to the backend. Note that using this
+option will force server-side prepares off until such time as PostgreSQL
 supports using DEFAULT in prepared statements.
 
-DBD::Pg also supports passing in arrays to execute: simply pass in an arrayref, 
+DBD::Pg also supports passing in arrays to execute: simply pass in an arrayref,
 and DBD::Pg will flatten it into a string suitable for input on the backend.
 
-If you are using Postgres version 8.2 or greater, you can also use any of the 
-fetch methods to retrieve the values of a C<RETURNING> clause after you execute 
+If you are using Postgres version 8.2 or greater, you can also use any of the
+fetch methods to retrieve the values of a C<RETURNING> clause after you execute
 an C<UPDATE>, C<DELETE>, or C<INSERT>. For example:
 
   $dbh->do(q{CREATE TABLE abc (id SERIAL, country TEXT)});
@@ -3621,8 +3724,8 @@ an C<UPDATE>, C<DELETE>, or C<INSERT>. For example:
   ($tuples, $rows) = $sth->execute_array(\%attr) or die $sth->errstr;
   ($tuples, $rows) = $sth->execute_array(\%attr, @bind_values) or die $sth->errstr;
 
-Execute a prepared statement once for each item in a passed-in hashref, or items that 
-were previously bound via the L</bind_param_array> method. See the DBI documentation 
+Execute a prepared statement once for each item in a passed-in hashref, or items that
+were previously bound via the L</bind_param_array> method. See the DBI documentation
 for more details.
 
 =head3 B<execute_for_fetch>
@@ -3633,29 +3736,29 @@ for more details.
   ($tuples, $rows) = $sth->execute_for_fetch($fetch_tuple_sub);
   ($tuples, $rows) = $sth->execute_for_fetch($fetch_tuple_sub, \@tuple_status);
 
-Used internally by the L</execute_array> method, and rarely used directly. See the 
+Used internally by the L</execute_array> method, and rarely used directly. See the
 DBI documentation for more details.
 
 =head3 B<fetchrow_arrayref>
 
   $ary_ref = $sth->fetchrow_arrayref;
 
-Fetches the next row of data from the statement handle, and returns a reference to an array 
+Fetches the next row of data from the statement handle, and returns a reference to an array
 holding the column values. Any columns that are NULL are returned as undef within the array.
 
-If there are no more rows or if an error occurs, then this method return undef. You should 
-check C<< $sth->err >> afterwards (or use the L<RaiseError|/RaiseError (boolean, inherited)> attribute) to discover if the undef returned 
+If there are no more rows or if an error occurs, then this method returns undef. You should
+check C<< $sth->err >> afterwards (or use the L<RaiseError|/RaiseError (boolean, inherited)> attribute) to discover if the undef returned
 was due to an error.
 
-Note that the same array reference is returned for each fetch, so don't store the reference and 
-then use it after a later fetch. Also, the elements of the array are also reused for each row, 
+Note that the same array reference is returned for each fetch, so don't store the reference and
+then use it after a later fetch. Also, the elements of the array are also reused for each row,
 so take care if you want to take a reference to an element. See also L</bind_columns>.
 
 =head3 B<fetchrow_array>
 
   @ary = $sth->fetchrow_array;
 
-Similar to the L</fetchrow_arrayref> method, but returns a list of column information rather than 
+Similar to the L</fetchrow_arrayref> method, but returns a list of column information rather than
 a reference to a list. Do not use this in a scalar context.
 
 =head3 B<fetchrow_hashref>
@@ -3663,14 +3766,14 @@ a reference to a list. Do not use this in a scalar context.
   $hash_ref = $sth->fetchrow_hashref;
   $hash_ref = $sth->fetchrow_hashref($name);
 
-Fetches the next row of data and returns a hashref containing the name of the columns as the keys 
+Fetches the next row of data and returns a hashref containing the name of the columns as the keys
 and the data itself as the values. Any NULL value is returned as an undef value.
 
-If there are no more rows or if an error occurs, then this method return undef. You should 
-check C<< $sth->err >> afterwards (or use the L<RaiseError|/RaiseError (boolean, inherited)> attribute) to discover if the undef returned 
+If there are no more rows or if an error occurs, then this method returns undef. You should
+check C<< $sth->err >> afterwards (or use the L<RaiseError|/RaiseError (boolean, inherited)> attribute) to discover if the undef returned
 was due to an error.
 
-The optional C<$name> argument should be either C<NAME>, C<NAME_lc> or C<NAME_uc>, and indicates 
+The optional C<$name> argument should be either C<NAME>, C<NAME_lc> or C<NAME_uc>, and indicates
 what sort of transformation to make to the keys in the hash.
 
 =head3 B<fetchall_arrayref>
@@ -3679,13 +3782,13 @@ what sort of transformation to make to the keys in the hash.
   $tbl_ary_ref = $sth->fetchall_arrayref( $slice );
   $tbl_ary_ref = $sth->fetchall_arrayref( $slice, $max_rows );
 
-Returns a reference to an array of arrays that contains all the remaining rows to be fetched from the 
-statement handle. If there are no more rows, an empty arrayref will be returned. If an error occurs, 
-the data read in so far will be returned. Because of this, you should always check C<< $sth->err >> after 
+Returns a reference to an array of arrays that contains all the remaining rows to be fetched from the
+statement handle. If there are no more rows, an empty arrayref will be returned. If an error occurs,
+the data read in so far will be returned. Because of this, you should always check C<< $sth->err >> after
 calling this method, unless L<RaiseError|/RaiseError (boolean, inherited)> has been enabled.
 
-If C<$slice> is an array reference, fetchall_arrayref uses the L</fetchrow_arrayref> method to fetch each 
-row as an array ref. If the C<$slice> array is not empty then it is used as a slice to select individual 
+If C<$slice> is an array reference, fetchall_arrayref uses the L</fetchrow_arrayref> method to fetch each
+row as an array ref. If the C<$slice> array is not empty then it is used as a slice to select individual
 columns by perl array index number (starting at 0, unlike column and parameter numbers which start at 1).
 
 With no parameters, or if $slice is undefined, fetchall_arrayref acts as if passed an empty array ref.
@@ -3698,23 +3801,23 @@ See the DBI documentation for a complete discussion.
 
   $hash_ref = $sth->fetchall_hashref( $key_field );
 
-Returns a hashref containing all rows to be fetched from the statement handle. See the DBI documentation for 
+Returns a hashref containing all rows to be fetched from the statement handle. See the DBI documentation for
 a full discussion.
 
 =head3 B<finish>
 
   $rv = $sth->finish;
 
-Indicates to DBI that you are finished with the statement handle and are not going to use it again. Only needed 
+Indicates to DBI that you are finished with the statement handle and are not going to use it again. Only needed
 when you have not fetched all the possible rows.
 
 =head3 B<rows>
 
   $rv = $sth->rows;
 
-Returns the number of rows returned by the last query. In contrast to many other DBD modules, 
-the number of rows is available immediately after calling C<< $sth->execute >>. Note that 
-the L</execute> method itself returns the number of rows itself, which means that this 
+Returns the number of rows returned by the last query. In contrast to many other DBD modules,
+the number of rows is available immediately after calling C<< $sth->execute >>. Note that
+the L</execute> method itself returns the number of rows itself, which means that this
 method is rarely needed.
 
 =head3 B<bind_col>
@@ -3723,7 +3826,7 @@ method is rarely needed.
   $rv = $sth->bind_col($column_number, \$var_to_bind, \%attr );
   $rv = $sth->bind_col($column_number, \$var_to_bind, $bind_type );
 
-Binds a Perl variable and/or some attributes to an output column of a SELECT statement. 
+Binds a Perl variable and/or some attributes to an output column of a SELECT statement.
 Column numbers count up from 1. You do not need to bind output columns in order to fetch data.
 
 See the DBI documentation for a discussion of the optional parameters C<\%attr> and C<$bind_type>
@@ -3738,13 +3841,13 @@ Calls the L</bind_col> method for each column in the SELECT statement, using the
 
   $rows = $sth->dump_results($maxlen, $lsep, $fsep, $fh);
 
-Fetches all the rows from the statement handle, calls C<DBI::neat_list> for each row, and 
-prints the results to C<$fh> (which defaults to F<STDOUT>). Rows are separated by C<$lsep> (which defaults 
-to a newline). Columns are separated by C<$fsep> (which defaults to a comma). The C<$maxlen> controls 
+Fetches all the rows from the statement handle, calls C<DBI::neat_list> for each row, and
+prints the results to C<$fh> (which defaults to F<STDOUT>). Rows are separated by C<$lsep> (which defaults
+to a newline). Columns are separated by C<$fsep> (which defaults to a comma). The C<$maxlen> controls
 how wide the output can be, and defaults to 35.
 
-This method is designed as a handy utility for prototyping and testing queries. Since it uses 
-"neat_list" to format and edit the string for reading by humans, it is not recommended 
+This method is designed as a handy utility for prototyping and testing queries. Since it uses
+"neat_list" to format and edit the string for reading by humans, it is not recommended
 for data transfer applications.
 
 =head3 B<blob_read>
@@ -3806,8 +3909,8 @@ C<< $dbh->last_insert_id >>.
 
 =head3 B<NUM_OF_FIELDS> (integer, read-only)
 
-Returns the number of columns returned by the current statement. A number will only be returned for 
-SELECT statements, for SHOW statements (which always return C<1>), and for INSERT, 
+Returns the number of columns returned by the current statement. A number will only be returned for
+SELECT statements, for SHOW statements (which always return C<1>), and for INSERT,
 UPDATE, and DELETE statements which contain a RETURNING clause.
 This method returns undef if called before C<execute()>.
 
@@ -3817,8 +3920,8 @@ Returns the number of placeholders in the current statement.
 
 =head3 B<NAME> (arrayref, read-only)
 
-Returns an arrayref of column names for the current statement. This 
-method will only work for SELECT statements, for SHOW statements, and for 
+Returns an arrayref of column names for the current statement. This
+method will only work for SELECT statements, for SHOW statements, and for
 INSERT, UPDATE, and DELETE statements which contain a RETURNING clause.
 This method returns undef if called before C<execute()>.
 
@@ -3832,7 +3935,7 @@ The same as the C<NAME> attribute, except that all column names are forced to up
 
 =head3 B<NAME_hash> (hashref, read-only)
 
-Similar to the C<NAME> attribute, but returns a hashref of column names instead of an arrayref. The names of the columns 
+Similar to the C<NAME> attribute, but returns a hashref of column names instead of an arrayref. The names of the columns
 are the keys of the hash, and the values represent the order in which the columns are returned, starting at 0.
 This method returns undef if called before C<execute()>.
 
@@ -3846,27 +3949,27 @@ The same as the C<NAME_hash> attribute, except that all column names are forced 
 
 =head3 B<TYPE> (arrayref, read-only)
 
-Returns an arrayref indicating the data type for each column in the statement. 
+Returns an arrayref indicating the data type for each column in the statement.
 This method returns undef if called before C<execute()>.
 
 =head3 B<PRECISION> (arrayref, read-only)
 
-Returns an arrayref of integer values for each column returned by the statement. 
-The number indicates the precision for C<NUMERIC> columns, the size in number of 
-characters for C<CHAR> and C<VARCHAR> columns, and for all other types of columns 
+Returns an arrayref of integer values for each column returned by the statement.
+The number indicates the precision for C<NUMERIC> columns, the size in number of
+characters for C<CHAR> and C<VARCHAR> columns, and for all other types of columns
 it returns the number of I<bytes>.
 This method returns undef if called before C<execute()>.
 
 =head3 B<SCALE> (arrayref, read-only)
 
-Returns an arrayref of integer values for each column returned by the statement. The number 
+Returns an arrayref of integer values for each column returned by the statement. The number
 indicates the scale of the that column. The only type that will return a value is C<NUMERIC>.
 This method returns undef if called before C<execute()>.
 
 =head3 B<NULLABLE> (arrayref, read-only)
 
-Returns an arrayref of integer values for each column returned by the statement. The number 
-indicates if the column is nullable or not. 0 = not nullable, 1 = nullable, 2 = unknown. 
+Returns an arrayref of integer values for each column returned by the statement. The number
+indicates if the column is nullable or not. 0 = not nullable, 1 = nullable, 2 = unknown.
 This method returns undef if called before C<execute()>.
 
 =head3 B<Database> (dbh, read-only)
@@ -3875,22 +3978,22 @@ Returns the database handle this statement handle was created from.
 
 =head3 B<ParamValues> (hash ref, read-only)
 
-Returns a reference to a hash containing the values currently bound to placeholders. If the "named parameters" 
-type of placeholders are being used (such as ":foo"), then the keys of the hash will be the names of the 
-placeholders (without the colon). If the "dollar sign numbers" type of placeholders are being used, the keys of the hash will 
-be the numbers, without the dollar signs. If the "question mark" type is used, integer numbers will be returned, 
+Returns a reference to a hash containing the values currently bound to placeholders. If the "named parameters"
+type of placeholders are being used (such as ":foo"), then the keys of the hash will be the names of the
+placeholders (without the colon). If the "dollar sign numbers" type of placeholders are being used, the keys of the hash will
+be the numbers, without the dollar signs. If the "question mark" type is used, integer numbers will be returned,
 starting at one and increasing for every placeholder.
 
-If this method is called before L</execute>, the literal values passed in are returned. If called after 
+If this method is called before L</execute>, the literal values passed in are returned. If called after
 L</execute>, then the quoted versions of the values are returned.
 
 =head3 B<ParamTypes> (hash ref, read-only)
 
-Returns a reference to a hash containing the type names currently bound to placeholders. The keys 
-are the same as returned by the ParamValues method. The values are hashrefs containing a single key value 
-pair, in which the key is either 'TYPE' if the type has a generic SQL equivalent, and 'pg_type' if the type can 
-only be expressed by a Postgres type. The value is the internal number corresponding to the type originally 
-passed in. (Placeholders that have not yet been bound will return undef as the value). This allows the output of 
+Returns a reference to a hash containing the type names currently bound to placeholders. The keys
+are the same as returned by the ParamValues method. The values are hashrefs containing a single key value
+pair, in which the key is either 'TYPE' if the type has a generic SQL equivalent, and 'pg_type' if the type can
+only be expressed by a Postgres type. The value is the internal number corresponding to the type originally
+passed in. (Placeholders that have not yet been bound will return undef as the value). This allows the output of
 ParamTypes to be passed back to the L</bind_param> method.
 
 =head3 B<Statement> (string, read-only)
@@ -3928,7 +4031,7 @@ for each column. The string shows the name of the data_type.
 
 =head3 B<pg_segments> (arrayref, read-only)
 
-DBD::Pg specific attribute. Returns an arrayref of the query split on the 
+DBD::Pg specific attribute. Returns an arrayref of the query split on the
 placeholders.
 
 =head3 B<pg_oid_status> (integer, read-only)
@@ -3942,61 +4045,61 @@ command. Possible types are: "INSERT", "DELETE", "UPDATE", "SELECT".
 
 =head3 B<pg_direct> (boolean)
 
-DBD::Pg specific attribute. Default is false. If true, the query is passed 
+DBD::Pg specific attribute. Default is false. If true, the query is passed
 directly to the backend without parsing for placeholders.
 
 =head3 B<pg_prepare_now> (boolean)
 
-DBD::Pg specific attribute. Default is off. If true, the query will be immediately 
+DBD::Pg specific attribute. Default is off. If true, the query will be immediately
 prepared, rather than waiting for the L</execute> call.
 
 =head3 B<pg_prepare_name> (string)
 
-DBD::Pg specific attribute. Specifies the name of the prepared statement to use for this 
-statement handle. Not normally needed, see the section on the L</prepare> method for 
+DBD::Pg specific attribute. Specifies the name of the prepared statement to use for this
+statement handle. Not normally needed, see the section on the L</prepare> method for
 more information.
 
 =head3 B<pg_server_prepare> (boolean)
 
-DBD::Pg specific attribute. Indicates if DBD::Pg should attempt to use server-side 
+DBD::Pg specific attribute. Indicates if DBD::Pg should attempt to use server-side
 prepared statements for this statement handle. The default value, true, indicates that prepared
-statements should be used whenever possible. See the section on the L</prepare> method for 
+statements should be used whenever possible. See the section on the L</prepare> method for
 more information.
 
 =head3 B<pg_switch_prepared> (integer)
 
-DBD::Pg specific attribute. Indicates when DBD::Pg will internally switch from using 
-PQexecParams to PQexecPrepared. In other words, when it will start using server-side 
-prepared statements (assuming all other requirements for them are met). The default value, 
-2, means that a prepared statement will be prepared and used the second and subsequent 
-time execute is called. To always use PQexecPrepared instead of PQexecParams, set 
-pg_switch_prepared to 1 (this was the default behavior in earlier versions). 
+DBD::Pg specific attribute. Indicates when DBD::Pg will internally switch from using
+PQexecParams to PQexecPrepared. In other words, when it will start using server-side
+prepared statements (assuming all other requirements for them are met). The default value,
+2, means that a prepared statement will be prepared and used the second and subsequent
+time execute is called. To always use PQexecPrepared instead of PQexecParams, set
+pg_switch_prepared to 1 (this was the default behavior in earlier versions).
 Setting pg_switch_prepared to 0 will force DBD::Pg to always use PQexecParams.
 
 =head3 B<pg_placeholder_dollaronly> (boolean)
 
-DBD::Pg specific attribute. Defaults to false. When true, question marks inside of the query 
-being prepared are not treated as placeholders. Useful for statements that contain unquoted question 
-marks, such as geometric operators. Note that you may also simply escape question marks with 
+DBD::Pg specific attribute. Defaults to false. When true, question marks inside of the query
+being prepared are not treated as placeholders. Useful for statements that contain unquoted question
+marks, such as geometric operators. Note that you may also simply escape question marks with
 a backslash to prevent them from being treated as placeholders.
 
 =head3 B<pg_placeholder_nocolons> (boolean)
 
 DBD::Pg specific attribute. Defaults to false. When true, colons inside of statements
 are not treated as L<placeholders|/Placeholders>. Useful for statements that contain an
-array slice. You may also place a backslash directly before the colon to prevent it from 
+array slice. You may also place a backslash directly before the colon to prevent it from
 being treated as a placeholder.
 
 =head3 B<pg_async> (integer)
 
-DBD::Pg specific attribute. Indicates the current behavior for asynchronous queries. See the section 
+DBD::Pg specific attribute. Indicates the current behavior for asynchronous queries. See the section
 on L</Asynchronous Constants> for more information.
 
 =head3 B<pg_async_status> (integer, read-only)
 
 DBD::Pg specific attribute. Returns the current status of an L<asynchronous|/Asynchronous Queries>
-command. 0 indicates no asynchronous command is in progress, 1 indicates that 
-an asynchronous command has started and -1 indicated that an asynchronous command 
+command. 0 indicates no asynchronous command is in progress, 1 indicates that
+an asynchronous command has started and -1 indicated that an asynchronous command
 has been cancelled.
 
 =head3 B<RowsInCache>
@@ -4015,12 +4118,12 @@ Not used by DBD::Pg. See the note about L</Cursors> elsewhere in this document.
 
 =head2 Encoding
 
-DBD::Pg has extensive support for a client_encoding of UTF-8, and most 
-things like encoding and decoding should happen automatically. If you are 
-using a different encoding, you will need do the encoding and decoding 
-yourself. For this reason, it is highly recommended to always use a 
-client_encoding of UTF-8. The server_encoding can be anything, and no 
-recommendations are made there, other than avoid SQL_ASCII whenever 
+DBD::Pg has extensive support for a client_encoding of UTF-8, and most
+things like encoding and decoding should happen automatically. If you are
+using a different encoding, you will need do the encoding and decoding
+yourself. For this reason, it is highly recommended to always use a
+client_encoding of UTF-8. The server_encoding can be anything, and no
+recommendations are made there, other than avoid SQL_ASCII whenever
 possible.
 
 =head2 Transactions
@@ -4030,45 +4133,45 @@ complete definition of C<AutoCommit> please refer to the DBI documentation.
 
 According to the DBI specification the default for C<AutoCommit> is a true
 value. In this mode, any change to the database becomes valid immediately. Any
-C<BEGIN>, C<COMMIT> or C<ROLLBACK> statements will be rejected. Note that 
-preparing a statement does not always contact the server, as the actual 
+C<BEGIN>, C<COMMIT> or C<ROLLBACK> statements will be rejected. Note that
+preparing a statement does not always contact the server, as the actual
 C<PREPARE> is usually postponed until the first call to L</execute>.
 
 =head2 Savepoints
 
-PostgreSQL version 8.0 introduced the concept of savepoints, which allows 
-transactions to be rolled back to a certain point without affecting the 
-rest of the transaction. DBD::Pg encourages using the following methods to 
+PostgreSQL version 8.0 introduced the concept of savepoints, which allows
+transactions to be rolled back to a certain point without affecting the
+rest of the transaction. DBD::Pg encourages using the following methods to
 control savepoints:
 
 =head3 C<pg_savepoint>
 
-Creates a savepoint. This will fail unless you are inside of a transaction. The 
-only argument is the name of the savepoint. Note that PostgreSQL DOES allow 
+Creates a savepoint. This will fail unless you are inside of a transaction. The
+only argument is the name of the savepoint. Note that PostgreSQL DOES allow
 multiple savepoints with the same name to exist.
 
   $dbh->pg_savepoint("mysavepoint");
 
 =head3 C<pg_rollback_to>
 
-Rolls the database back to a named savepoint, discarding any work performed after 
-that point. If more than one savepoint with that name exists, rolls back to the 
+Rolls the database back to a named savepoint, discarding any work performed after
+that point. If more than one savepoint with that name exists, rolls back to the
 most recently created one.
 
   $dbh->pg_rollback_to("mysavepoint");
 
 =head3 C<pg_release>
 
-Releases (or removes) a named savepoint. If more than one savepoint with that name 
-exists, it will only destroy the most recently created one. Note that all savepoints 
+Releases (or removes) a named savepoint. If more than one savepoint with that name
+exists, it will only destroy the most recently created one. Note that all savepoints
 created after the one being released are also destroyed.
 
   $dbh->pg_release("mysavepoint");
 
 =head2 Asynchronous Queries
 
-It is possible to send a query to the backend and have your script do other work while the query is 
-running on the backend. Both queries sent by the L</do> method, and by the L</execute> method can be 
+It is possible to send a query to the backend and have your script do other work while the query is
+running on the backend. Both queries sent by the L</do> method, and by the L</execute> method can be
 sent asynchronously. The basic usage is as follows:
 
   print "Async do() example:\n";
@@ -4112,18 +4215,18 @@ There are currently three asynchronous constants automatically exported by DBD::
 
 =item PG_ASYNC
 
-This is a constant for the number 1. It is passed to either the L</do> or the L</prepare> method as a value 
+This is a constant for the number 1. It is passed to either the L</do> or the L</prepare> method as a value
 to the pg_async key and indicates that the query should be sent asynchronously.
 
 =item PG_OLDQUERY_CANCEL
 
-This is a constant for the number 2. When passed to either the L</do> or the L</prepare> method, it causes any 
-currently running asynchronous query to be cancelled and rolled back. It has no effect if no asynchronous 
+This is a constant for the number 2. When passed to either the L</do> or the L</prepare> method, it causes any
+currently running asynchronous query to be cancelled and rolled back. It has no effect if no asynchronous
 query is currently running.
 
 =item PG_OLDQUERY_WAIT
 
-This is a constant for the number 4. When passed to either the L</do> or the L</prepare> method, it waits for any 
+This is a constant for the number 4. When passed to either the L</do> or the L</prepare> method, it waits for any
 currently running asynchronous query to complete. It has no effect if there is no asynchronous query currently running.
 
 =back
@@ -4134,19 +4237,19 @@ currently running asynchronous query to complete. It has no effect if there is n
 
 =item B<pg_cancel>
 
-This database-level method attempts to cancel any currently running asynchronous query. It returns true if 
-the cancel succeeded, and false otherwise. Note that a query that has finished before this method is executed 
-will also return false. B<WARNING>: a successful cancellation may leave the database in an unusable state, 
-so you may need to ROLLBACK or ROLLBACK TO a savepoint. As of version 2.17.0 of DBD::Pg, rollbacks are 
+This database-level method attempts to cancel any currently running asynchronous query. It returns true if
+the cancel succeeded, and false otherwise. Note that a query that has finished before this method is executed
+will also return false. B<WARNING>: a successful cancellation may leave the database in an unusable state,
+so you may need to ROLLBACK or ROLLBACK TO a savepoint. As of version 2.17.0 of DBD::Pg, rollbacks are
 not done automatically.
 
   $result = $dbh->pg_cancel();
 
 =item B<pg_ready>
 
-This method can be called as a database handle method or (for convenience) as a statement handle method. Both simply 
-see if a previously issued asynchronous query has completed yet. It returns true if the statement has finished, in which 
-case you should then call the L</pg_result> method. Calls to C<pg_ready()> should only be used when you have other 
+This method can be called as a database handle method or (for convenience) as a statement handle method. Both simply
+see if a previously issued asynchronous query has completed yet. It returns true if the statement has finished, in which
+case you should then call the L</pg_result> method. Calls to C<pg_ready()> should only be used when you have other
 things to do while the query is running. If you simply want to wait until the query is done, do not call pg_ready()
 over and over, but simply call the pg_result() method.
 
@@ -4160,17 +4263,25 @@ over and over, but simply call the pg_result() method.
 
 =item B<pg_result>
 
-This database handle method returns the results of a previously issued asynchronous query. If the query is still 
-running, this method will wait until it has finished. The result returned is the number of rows: the same thing 
+This database handle method returns the results of a previously issued asynchronous query. If the query is still
+running, this method will wait until it has finished. The result returned is the number of rows: the same thing
 that would have been returned by the asynchronous L</do> or L</execute> if it had been called without an asynchronous flag.
 
   $result = $dbh->pg_result;
+
+=item B<pg_send_cancel>
+
+Send a request to cancel a running asynchronous query to the
+server. Returns true if this succeeded, false otherwise. The actual
+outcome of the query still needs to be determined in the ordinary
+way. If a running query was actually cancelled, C<pg_result> will
+return zero and the C<state> method will return 57014.
 
 =back
 
 =head3 Asynchronous Examples
 
-Here are some working examples of asynchronous queries. Note that we'll use the B<pg_sleep> function to emulate a 
+Here are some working examples of asynchronous queries. Note that we'll use the B<pg_sleep> function to emulate a
 long-running query.
 
   use strict;
@@ -4199,14 +4310,14 @@ long-running query.
   print "Result: $result\n";
   my $info = $sth->fetchall_arrayref();
 
-Without asynchronous queries, the above script would take about 8 seconds to run: five seconds waiting 
-for the execute to finish, then three for the check_on_the_kids() function to return. With asynchronous 
-queries, the script takes about 6 seconds to run, and gets in two iterations of check_on_the_kids in 
+Without asynchronous queries, the above script would take about 8 seconds to run: five seconds waiting
+for the execute to finish, then three for the check_on_the_kids() function to return. With asynchronous
+queries, the script takes about 6 seconds to run, and gets in two iterations of check_on_the_kids in
 the process.
 
-Here's an example showing the ability to cancel a long-running query. Imagine two slave databases in 
-different geographic locations over a slow network. You need information as quickly as possible, so 
-you query both at once. When you get an answer, you tell the other one to stop working on your query, 
+Here's an example showing the ability to cancel a long-running query. Imagine two replica databases in
+different geographic locations over a slow network. You need information as quickly as possible, so
+you query both at once. When you get an answer, you tell the other one to stop working on your query,
 as you don't need it anymore.
 
   use strict;
@@ -4214,13 +4325,13 @@ as you don't need it anymore.
   use Time::HiRes 'sleep';
   use DBD::Pg ':async';
 
-  my $dbhslave1 = DBI->connect('dbi:Pg:dbname=postgres;host=slave1', 'postgres', '', {AutoCommit=>0,RaiseError=>1});
-  my $dbhslave2 = DBI->connect('dbi:Pg:dbname=postgres;host=slave2', 'postgres', '', {AutoCommit=>0,RaiseError=>1});
+  my $dbhrep1 = DBI->connect('dbi:Pg:dbname=postgres;host=replica1', 'postgres', '', {AutoCommit=>0,RaiseError=>1});
+  my $dbhrep2 = DBI->connect('dbi:Pg:dbname=postgres;host=replica2', 'postgres', '', {AutoCommit=>0,RaiseError=>1});
 
   $SQL = "SELECT count(*) FROM largetable WHERE flavor='blueberry'";
 
-  my $sth1 = $dbhslave1->prepare($SQL, {pg_async => PG_ASYNC});
-  my $sth2 = $dbhslave2->prepare($SQL, {pg_async => PG_ASYNC});
+  my $sth1 = $dbhrep1->prepare($SQL, {pg_async => PG_ASYNC});
+  my $sth2 = $dbhrep2->prepare($SQL, {pg_async => PG_ASYNC});
 
   $sth1->execute();
   $sth2->execute();
@@ -4248,16 +4359,29 @@ as you don't need it anymore.
     $count = $sth2->fetchall_arrayref()->[0][0];
   }
 
+=head3 Asynchronous Connect
+
+Passing a true value for the attribute pg_async_connect to the DBI
+connect method, e.g.
+
+  $dbh = DBI->connect('dbi:Pg:...', $username, $password,
+                      { pg_async_connect => 1 });
+
+starts an asynchronous connect. The B<pg_continue_connect> method must
+be used afterwards to complete the connection establishment process. If
+the attribute is present but its value is false, an ordinary
+synchronous connect will be done instead.
+
 =head2 Array support
 
-DBD::Pg allows arrays (as arrayrefs) to be passed in to both 
-the L</quote> and the L</execute> methods. In both cases, the array is 
+DBD::Pg allows arrays (as arrayrefs) to be passed in to both
+the L</quote> and the L</execute> methods. In both cases, the array is
 flattened into a string representing a Postgres array.
 
-When fetching rows from a table that contains a column with an 
+When fetching rows from a table that contains a column with an
 array type, the result will be passed back to your script as an arrayref.
 
-To turn off the automatic parsing of returned arrays into arrayrefs, 
+To turn off the automatic parsing of returned arrays into arrayrefs,
 you can set the attribute L<pg_expand_array|/pg_expand_array (boolean)>, which is true by default.
 
   $dbh->{pg_expand_array} = 0;
@@ -4265,63 +4389,66 @@ you can set the attribute L<pg_expand_array|/pg_expand_array (boolean)>, which i
 
 =head2 COPY support
 
-DBD::Pg allows for quick (bulk) reading and storing of data by using 
-the B<COPY> command. The basic process is to use C<< $dbh->do >> to issue a 
-COPY command, and then to either add rows using L</pg_putcopydata>, or to 
+DBD::Pg allows for quick (bulk) reading and storing of data by using
+the B<COPY> command. The basic process is to use C<< $dbh->do >> to issue a
+COPY command, and then to either add rows using L</pg_putcopydata>, or to
 read them by using L</pg_getcopydata>.
 
-The first step is to put the server into "COPY" mode. This is done by 
-sending a complete COPY command to the server, by using the L</do> method. 
+The first step is to put the server into "COPY" mode. This is done by
+sending a complete COPY command to the server, by using the L</do> method.
 For example:
 
   $dbh->do("COPY foobar FROM STDIN");
 
-This would tell the server to enter a COPY IN mode (yes, that's confusing, but 
-the I<mode> is COPY IN because of the I<command> COPY FROM). It is now ready to 
-receive information via the L</pg_putcopydata> method. The complete syntax of the 
-COPY command is more complex and not documented here: the canonical 
+This would tell the server to enter a COPY IN mode (yes, that's confusing, but
+the I<mode> is COPY IN because of the I<command> COPY FROM). It is now ready to
+receive information via the L</pg_putcopydata> method. The complete syntax of the
+COPY command is more complex and not documented here: the canonical
 PostgreSQL documentation for COPY can be found at:
 
 http://www.postgresql.org/docs/current/static/sql-copy.html
 
-Once a COPY command has been issued, no other SQL commands are allowed 
-until L</pg_putcopyend> has been issued (for COPY FROM), or the final 
+Once a COPY command has been issued, no other SQL commands are allowed
+until L</pg_putcopyend> has been issued (for COPY FROM), or the final
 L</pg_getcopydata> has been called (for COPY TO).
 
-Note: All other COPY methods (pg_putline, pg_getline, etc.) are now 
-heavily deprecated in favor of the pg_getcopydata, pg_putcopydata, and 
+Note: All other COPY methods (pg_putline, pg_getline, etc.) are now
+heavily deprecated in favor of the pg_getcopydata, pg_putcopydata, and
 pg_putcopyend methods.
 
 =head3 B<pg_getcopydata>
 
-Used to retrieve data from a table after the server has been put into a 
-COPY OUT mode by calling "COPY tablename TO STDOUT". Data is always returned 
-one data row at a time. The first argument to pg_getcopydata 
-is the variable into which the data will be stored (this variable should not 
-be undefined, or it may throw a warning, although it may be a reference). The 
-pg_getcopydata method returns a number greater than 1 indicating the new size of 
-the variable, or a -1 when the COPY has finished. Once a -1 has been returned, no 
-other action is necessary, as COPY mode will have already terminated. Example:
+Used to retrieve data from a table after the server has been put into a
+COPY OUT mode by calling "COPY tablename TO STDOUT". Data is always returned
+one data row at a time. Note that the server will add a newline to
+each returned row.
+
+The first argument to pg_getcopydata is the variable into which the data will
+be stored (this variable should not be undefined, or it may throw a warning,
+although it may be a reference). The pg_getcopydata method returns a number
+greater than 1 indicating the new size of the variable, or a -1 when the
+COPY has finished. Once a -1 has been returned, no other action is necessary,
+as COPY mode will have already terminated. Example:
 
   $dbh->do("COPY mytable TO STDOUT");
   my @data;
   my $x=0;
   1 while $dbh->pg_getcopydata($data[$x++]) >= 0;
 
-There is also a variation of this method called B<pg_getcopydata_async>, which, 
-as the name suggests, returns immediately. The only difference from the original 
-method is that this version may return a 0, indicating that the row is not 
-ready to be delivered yet. When this happens, the variable has not been changed, 
+There is also a variation of this method called B<pg_getcopydata_async>, which,
+as the name suggests, returns immediately. The only difference from the original
+method is that this version may return a 0, indicating that the row is not
+ready to be delivered yet. When this happens, the variable has not been changed,
 and you will need to call the method again until you get a non-zero result.
 (Data is still always returned one data row at a time.)
 
 =head3 B<pg_putcopydata>
 
-Used to put data into a table after the server has been put into COPY IN mode 
-by calling "COPY tablename FROM STDIN". The only argument is the data you want 
+Used to put data into a table after the server has been put into COPY IN mode
+by calling "COPY tablename FROM STDIN". The only argument is the data you want
 inserted. Issue a pg_putcopyend() when you have added all your rows.
 
-The default delimiter is a tab character, but this can be changed in 
+The default delimiter is a tab character, but this can be changed in
 the COPY statement. Returns a 1 on successful input. Examples:
 
   ## Simple example:
@@ -4338,15 +4465,91 @@ the COPY statement. Returns a 1 on successful input. Examples:
   $dbh->pg_putcopydata("Anchovies~6\n");
   $dbh->pg_putcopyend();
 
+=head3 B<pg_putcopydata_async>
+
+Non-blocking version of pg_putcopydata for use by async libraries. When called, the
+connection is switched into non-blocking mode (via C<PQsetnonblocking>), which is safe
+because no other operations are permitted on this connection during a COPY. The
+non-blocking mode is automatically restored to blocking when L</pg_putcopyend_async>
+completes.
+
+Note: the connection performing the COPY is restricted to COPY operations until
+the COPY ends. However, the non-blocking methods allow the event loop to service
+other connections and tasks between calls, which is the primary benefit over the
+blocking variants.
+
+Return values match C<PQputCopyData>:
+
+  1  = data queued successfully (caller should call pg_flush to send)
+  0  = output buffer full; caller should poll the socket for
+       write-ready and retry the same pg_putcopydata_async call
+  -1 = error
+
+After a successful return of 1, call L</pg_flush> to push the data to the
+server. If C<pg_flush> returns 1 (data pending), poll the socket for
+write-ready and call C<pg_flush> again.
+
+Example usage:
+  use Time::HiRes 'sleep';
+
+  $dbh->do("COPY mytable(id, flavor, slices) FROM STDIN");
+  my @data = ("123\tPepperoni\t3\n", "314\tMushroom\t8\n",
+              "6\tAnchovies\t100\n");
+  for my $row (@data) {
+      my $status = $dbh->pg_putcopydata_async($row);
+      while ($status == 0) {         # buffer full, retry
+          sleep 0.01;
+          $status = $dbh->pg_putcopydata_async($row);
+      }
+      die "COPY error" if $status == -1;
+      while ($dbh->pg_flush()) {     # push to server
+          sleep 0.01;
+      }
+  }
+
+  ## Non-blocking end: poll until server confirms
+  while ((my $end = $dbh->pg_putcopyend_async()) == 0) {
+      sleep 0.01;
+  }
+  die "COPY end error" if $end == -1;
+
 =head3 B<pg_putcopyend>
 
-When you are finished with pg_putcopydata, call pg_putcopyend to let the server know 
-that you are done, and it will return to a normal, non-COPY state. Returns a 1 on 
+When you are finished with pg_putcopydata, call pg_putcopyend to let the server know
+that you are done, and it will return to a normal, non-COPY state. Returns a 1 on
 success. This method will fail if called when not in COPY IN mode.
+
+=head3 B<pg_putcopyend_async>
+
+Non-blocking version of pg_putcopyend for use by async libraries. Sends the COPY
+end marker and attempts to collect the server result without blocking. Designed to
+be called in a poll loop.
+
+Return values:
+
+  1  = COPY completed successfully, connection is back in normal blocking mode
+  0  = not ready yet; caller should poll the socket for readiness, then call
+       pg_putcopyend_async again
+  -1 = error
+
+After pg_putcopyend_async returns 1, the connection is back in blocking mode and
+normal queries can be issued.
+
+=head3 B<pg_flush>
+
+Flushes the libpq output buffer. Wraps C<PQflush> directly. Used after
+L</pg_putcopydata_async> returns 1 to push queued data to the server.
+
+Return values match C<PQflush>:
+
+  0  = all data flushed successfully
+  1  = data still pending; caller should poll the socket for write-ready
+       and call pg_flush again
+  -1 = error
 
 =head2 Postgres limits
 
-For convenience, DBD::Pg can export certain constants representing the limits of 
+For convenience, DBD::Pg can export certain constants representing the limits of
 Postgres data types. To use them, just add C<:pg_limits> when DBD::Pg is used:
 
   use DBD::Pg qw/:pg_limits/;
@@ -4374,8 +4577,12 @@ The constants and their values are:
 =head2 Large Objects
 
 DBD::Pg supports all largeobject functions provided by libpq via the
-C<< $dbh->pg_lo* >> methods. Please note that access to a large object, even read-only 
+C<< $dbh->pg_lo* >> methods. Please note that access to a large object, even read-only
 large objects, must be put into a transaction.
+
+If DBD::Pg is compiled against and connected to PostgreSQL 9.3 or newer, and
+your Perl has 64-bit integers, it will use the 64-bit variants of the seek,
+tell and truncate methods.
 
 =head2 Cursors
 
@@ -4410,14 +4617,24 @@ double loop, like this:
 The current implementation of PostgreSQL returns 't' for true and 'f' for
 false. From the Perl point of view, this is a rather unfortunate
 choice. DBD::Pg therefore translates the result for the C<BOOL> data type in a
-Perlish manner: 'f' becomes the number C<0> and 't' becomes the number C<1>. This way 
-the application does not have to check the database-specific returned values for 
-the data-type C<BOOL> because Perl treats C<0> as false and C<1> as true. You may 
+Perlish manner: 'f' becomes the number C<0> and 't' becomes the number C<1>. This way
+the application does not have to check the database-specific returned values for
+the data-type C<BOOL> because Perl treats C<0> as false and C<1> as true. You may
 set the L<pg_bool_tf|/pg_bool_tf (boolean)> attribute to a true value to change the values back to 't' and
 'f' if you wish.
 
 Boolean values can be passed to PostgreSQL as TRUE, 't', 'true', 'y', 'yes' or
 '1' for true and FALSE, 'f', 'false', 'n', 'no' or '0' for false.
+
+On Perl 5.36 and newer, distinguished boolean values (see
+L<builtin/is_bool>) can be used as placeholder values.  They will be
+sent as C<1> and C<0>, or C<t> and C<f> if C<pg_bool_tf> is set to a
+true value.
+
+On older versions of Perl, false values returned by built-in operators
+(such as C<!!0>) must be converted to one of the above false values,
+or bound with C<< pg_type => PG_BOOL >>, since they stringify to the
+empty string.
 
 =head2 Schema support
 
@@ -4443,13 +4660,13 @@ L<The B<DBI> module|DBI>
 
 =head1 BUGS
 
-To report a bug, or view the current list of bugs, please visit 
+To report a bug, or view the current list of bugs, please visit
 https://github.com/bucardo/dbdpg/issues
 
 =head1 DEVELOPMENT
 
-Pull requests can be submitted to github. Detailed information on how to 
-help out with this module can be found in the README.dev file. The latest 
+Pull requests can be submitted to github. Detailed information on how to
+help out with this module can be found in the README.dev file. The latest
 development version can be obtained via: git clone git://github.com/bucardo/dbdpg.git
 
 =head1 AUTHORS
@@ -4458,8 +4675,8 @@ DBI by Tim Bunce L<http://www.tim.bunce.name>
 
 The original DBD-Pg was by Edmund Mergl (E.Mergl@bawue.de) and Jeffrey W. Baker
 (jwbaker@acm.org). Major developers include David Wheeler <david@justatheory.com>, Jason
-Stewart <jason@openinformatics.com>, Bruce Momjian <pgman@candle.pha.pa.us>, and 
-Greg Sabino Mullane <greg@turnstep.com>, with help from many others: see the Changes 
+Stewart <jason@openinformatics.com>, Bruce Momjian <pgman@candle.pha.pa.us>, and
+Greg Sabino Mullane <greg@turnstep.com>, with help from many others: see the Changes
 file (L<http://search.cpan.org/dist/DBD-Pg/Changes>) for a complete list.
 
 Parts of this package were originally copied from DBI and DBD-Oracle.
@@ -4467,15 +4684,15 @@ Parts of this package were originally copied from DBI and DBD-Oracle.
 B<Mailing List>
 
 The current maintainers may be reached through the 'dbd-pg' mailing list:
-<dbd-pg@perl.org>. Subscribe by sending an email to dbd-pg-subscribe@perl.org. 
+<dbd-pg@perl.org>. Subscribe by sending an email to dbd-pg-subscribe@perl.org.
 Visit the archives at http://grokbase.com/g/perl/dbd-pg
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 1994-2022, Greg Sabino Mullane
+Copyright (C) 1994-2026, Greg Sabino Mullane
 
-This module (DBD::Pg) is free software; you can redistribute it and/or modify it 
-under the same terms as Perl 5.10.0. For more details, see the full text of the 
+This module (DBD::Pg) is free software; you can redistribute it and/or modify it
+under the same terms as Perl 5.10.0. For more details, see the full text of the
 licenses in the directory LICENSES.
 
 =cut

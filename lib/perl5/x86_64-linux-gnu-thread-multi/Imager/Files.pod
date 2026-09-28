@@ -37,7 +37,7 @@ Imager::Files - working with image files
   my $data;
   $img->write(data => \$data, type => $type) or die;
 
-  my $fh = ... ; # eg. IO::File
+  open my $fh, "+>:raw", ... ;
   $img->write(fh => $fh, type => $type) or die;
 
   $img->write(fd => fileno($fh), type => $type) or die;
@@ -177,6 +177,15 @@ and can be any of the following:
   tga   TARGA
   tiff  Tagged Image File Format (TIFF)
 
+Support for other formats can be found on CPAN, including:
+X<C<heif>> X<C<QOI>> X<C<webp>>
+
+  apng        Imager::File::APNG
+  avif        Imager::File::AVIF
+  heif/heic   Imager::File::HEIF
+  qoi         Imager::File::QOI
+  webp        Imager::File::WEBP
+
 When you read an image, Imager may set some tags, possibly including
 information about the spatial resolution, textual information, and
 animation information.  See L<Imager::ImageTypes/Tags> for specifics.
@@ -209,9 +218,9 @@ file you do not need to supply a C<type>.
 
 =item *
 
-C<fh> - C<fh> is a file handle, typically either returned from
-C<<IO::File->new()>>, or a glob from an C<open> call.  You should call
-C<binmode> on the handle before passing it to Imager.
+C<fh> - C<fh> is a file handle, typically returned from an C<open>
+call.  You should call C<binmode> on the handle before passing it to
+Imager.
 
 Imager will set the handle to autoflush to make sure any buffered data
 is flushed , since Imager will write to the file descriptor (from
@@ -267,7 +276,7 @@ C<io> - an L<Imager::IO> object.
 
 =back
 
-X<buffering>X<unbuffered>By default Imager will use buffered I/O when
+X<buffering> X<unbuffered> By default Imager will use buffered I/O when
 reading or writing an image.  You can disabled buffering for output by
 supplying a C<< buffered => 0 >> parameter to C<write()> or
 C<write_multi()>.
@@ -382,9 +391,9 @@ buffered data.
 Return true on success.
 
 =head2 Guessing types
-X<FORMATGUESS>
 
-When writing to a file, if you don't supply a C<type> parameter Imager
+X<C<FORMATGUESS>>
+When writing to a file, if you don't supply a C<type> parameter, Imager
 will attempt to guess it from the file name.  This is done by calling
 the code reference stored in C<$Imager::FORMATGUESS>.  This is only
 done when write() or write_multi() is called with a C<file> parameter,
@@ -402,19 +411,19 @@ X<methods, def_guess_type()>
 This is the default function Imager uses to derive a file type from a
 file name.  This is a function, not a method.
 
-Accepts a single parameter, the file name and returns the type or
-undef.
+Accepts a single parameter, the file name, and returns the type or
+C<undef>.
 
 =back
 
-You can replace function with your own implementation if you have some
+You can replace the function with your own implementation if you have some
 specialized need.  The function takes a single parameter, the name of
-the file, and should return either a file type or under.
+the file, and should return either a file type or C<undef>.
 
   # I'm writing jpegs to weird filenames
   local $Imager::FORMATGUESS = sub { 'jpeg' };
 
-When reading a file Imager examines beginning of the file for
+When reading a file Imager examines the beginning of the file for
 identifying information.  The current implementation attempts to
 detect the following image types beyond those supported by Imager:
 
@@ -455,8 +464,8 @@ C<mask> - a mask controlling which parts of I<bits> are significant.
 
 =back
 
-While I<mask> is mostly a bit mask, some byte values are translated,
-the space character is treated as all zeros (C<"\x00">), and the C<x> character as
+While I<mask> is mostly a bit mask, some byte values are translated:
+The space character is treated as all zeros (C<"\x00">), and the C<x> character as
 all ones (C<"\xFF">).
 
 New magic entries take priority over old entries.
@@ -536,7 +545,7 @@ You can get the current limits with the get_file_limits() method:
      Imager->get_file_limits();
 
 =item check_file_limits()
-X<class methods, check_file_limits()>X<check_file_limits()>
+X<class methods, check_file_limits()> X<check_file_limits()>
 
 Intended for use by file handlers to check that the size of a file is
 within the limits set by C<set_file_limits()>.
@@ -615,12 +624,12 @@ The following tags are set when reading a PNM file:
 
 =item *
 
-X<pnm_maxval>C<pnm_maxval> - the C<maxvals> number from the PGM/PPM header.
+X<pnm_maxval> C<pnm_maxval> - the C<maxvals> number from the PGM/PPM header.
 Always set to 2 for a C<PBM> file.
 
 =item *
 
-X<pnm_type>C<pnm_type> - the type number from the C<PNM> header, 1 for ASCII
+X<pnm_type> C<pnm_type> - the type number from the C<PNM> header, 1 for ASCII
 C<PBM> files, 2 for ASCII C<PGM> files, 3 for ASCII c<PPM> files, 4 for binary
 C<PBM> files, 5 for binary C<PGM> files, 6 for binary C<PPM> files.
 
@@ -633,7 +642,7 @@ The following tag is checked when writing an image with more than
 
 =item *
 
-X<pnm_write_wide_data>pnm_write_wide_data - if this is non-zero then
+X<pnm_write_wide_data> pnm_write_wide_data - if this is non-zero then
 write() can write C<PGM>/C<PPM> files with 16-bits/sample.  Some
 applications, for example GIMP 2.2, and tools can only read
 8-bit/sample binary PNM files, so Imager will only write a 16-bit
@@ -700,10 +709,141 @@ not set in the image when reading:
 
 =over
 
+=item *
+
 C<jpeg_optimize> - set to a non-zero integer to compute optimal
 Huffman coding tables for the image.  This will increase memory usage
 and processing time (about 12% in my simple tests) but can
 significantly reduce file size without a loss of quality.
+
+=item *
+
+C<jpeg_compress_profile> - set to either C<fastest>, the default, or
+only with C<MozJPEG>, to C<max>.  Setting this to any other value will
+cause an error, failing the write() call.  Setting this to C<max>
+without C<MozJPEG> will cause an error.
+
+  use Imager::File::JPEG;
+  my $prof = Imager::File::JPEG->is_mozjpeg ? "max" : "fastest";
+  $im->write(file => "foo.jpeg", jpeg_compress_profile => $prof)
+     or die $im->errstr;
+
+Note that unlike C<MozJPEG>, Imager always defaults to C<fastest>.
+
+=item *
+
+C<jpeg_tune> - corresponds to the C<MozJPEG> C<cjpeg> C<-tune>
+parameters, this can be any of:
+
+=over
+
+=item * C<psnr>
+
+=item * C<ssim>
+
+=item * C<ms-ssim>
+
+=item * C<hvs-psnr>
+
+=back
+
+These set the same values as the C<jpeg_base_quant_tbl_idx>,
+C<jpeg_lambda_log_scale1>, C<jpeg_lambda_log_scale2> and
+C<jpeg_use_lambda_weight_tbl> tags, which can override the values set
+by C<jpeg_tune>.
+
+Unlike C<cjpeg> C<-tune>, C<jpeg_tune> doesn't force the quality to
+75.
+
+Requires that Imager::File::JPEG was built with C<MozJPEG>.
+
+=item *
+
+C<jpeg_arithmetic> - if set to non-zero, use arithmetic coding when
+writing the image.  This requires that the C<libjpeg> variant that
+L<Imager::File::JPEG> was built with had encode support for arithmetic
+coding enabled when it was built.
+
+=item *
+
+=for stopwords JFIF
+
+C<jpeg_jfif> - if set to zero, disable writing the JFIF header even if
+one is technically required, which it is for the color spaces Imager
+works with.  This saves 18 bytes in the output file and most
+applications including web browsers will successfully read the file,
+but your experience may differ.
+
+This will prevent the C<i_xres>, C<i_yres> and C<jpeg_density_units>
+tags from having an effect.
+
+=item *
+
+C<jpeg_smooth> - if set to a value from 1 to 100 apply smoothing to
+the image to eliminate dithering noise (without modifying the Imager
+image).  Default: 0 (no smoothing).
+
+=item *
+
+=for stopwords MCUs
+
+C<jpeg_restart> - if set to a plain integer C<N>, generate a JPEG
+restart marker every C<N> rows, if set to an integer followed by C<B>,
+generate a JPEG restart marker every C<N> MCUs, the 8x8 pixel blocks
+that make up a JPEG image.  Note that if this is specified in rows it
+will be translated to MCUs by C<libjpeg>.
+
+This allows a decoder to recover from corruption, but it makes the
+file slightly larger.
+
+Default: 0, no restart markers are produced.
+
+=item *
+
+=for stopwords subsampling YCbCr
+
+C<jpeg_sample> - control subsampling of the YCbCr components,
+equivalent to the C<-sample> parameter for C<cjpeg>.
+
+Default: "2x2,1x1,1x1", default 4:2:0 JPEG subsampling.
+
+=back
+
+The following options can be set on writing with C<MozJPEG> and
+correspond directly to the API options described in the C<MozJPEG>
+F<README-mozilla.txt>.  Attempting to set them when Imager::File::JPEG
+has been built with another C<libjpeg> will result in an error.
+
+=over
+
+=item *
+
+C<jpeg_optimize_scans>, C<jpeg_trellis_quant>,
+C<jpeg_trellis_quant_dc>, C<jpeg_tresllis_eob_opt>,
+C<jpeg_use_lambda_weight_tbl>, C<jpeg_use_scans_in_trellis>,
+C<jpeg_overshoot_deringing> - boolean options, set to 0 or 1.
+
+C<jpeg_lambda_log_scale1>, C<jpeg_lambda_log_scale2>,
+C<jpeg_trellis_delta_dc_weight> - integer options.
+
+
+C<jpeg_trellis_freq_split>, C<jpeg_trellis_num_loops>,
+C<jpeg_base_quant_tbl_idx>, C<jpeg_dc_scan_opt_mode> - floating point
+options.
+
+=back
+
+When reading a JPEG image, the following tag will be set, and ignored
+on writing:
+
+=over
+
+=item *
+
+C<jpeg_read_arithmetic> - the image had been written with arithmetic
+coding.  This uses a separate name from writing to avoid arithmetic
+coding from being accidentally propagated to a file that might need
+to be read by an implementation without arithmetic coding support.
 
 =back
 
@@ -1131,7 +1271,7 @@ compression quality.  High values are better quality and larger files.
 
 =item *
 
-X<tags, tiff_resolutionunit>C<tiff_resolutionunit> - The value of the
+X<tags, tiff_resolutionunit> C<tiff_resolutionunit> - The value of the
 C<ResolutionUnit> tag.  This is ignored on writing if the
 i_aspect_only tag is non-zero.
 
@@ -1141,7 +1281,7 @@ stored in the TIFF file.
 
 =item *
 
-X<tags, tiff_resolutionunit_name>C<tiff_resolutionunit_name> - This is
+X<tags, tiff_resolutionunit_name> C<tiff_resolutionunit_name> - This is
 set when reading a TIFF file to the name of the unit given by
 C<tiff_resolutionunit>.  Possible results include C<inch>,
 C<centimeter>, C<none> (the C<i_aspect_only> tag is also set reading
@@ -1149,13 +1289,13 @@ these files) or C<unknown>.
 
 =item *
 
-X<tags, tiff_bitspersample>C<tiff_bitspersample> - Bits per sample
+X<tags, tiff_bitspersample> C<tiff_bitspersample> - Bits per sample
 from the image.  This value is not used when writing an image, it is
 only set on a read image.
 
 =item *
 
-X<tags, tiff_photometric>C<tiff_photometric> - Value of the
+X<tags, tiff_photometric> C<tiff_photometric> - Value of the
 C<PhotometricInterpretation> tag from the image.  This value is not
 used when writing an image, it is only set on a read image.
 
@@ -1406,39 +1546,39 @@ directly supported:
 
 =item *
 
-C<i_comment>X<tags,i_comment> - keyword of "Comment".
+C<i_comment> X<tags,i_comment> - keyword of "Comment".
 
 =item *
 
-C<png_author>X<tags,PNG,png_author> - keyword "Author".
+C<png_author> X<tags,PNG,png_author> - keyword "Author".
 
 =item *
 
-C<png_copyright>X<tags,PNG,png_copyright> - keyword "Copyright".
+C<png_copyright> X<tags,PNG,png_copyright> - keyword "Copyright".
 
 =item *
 
-C<png_creation_time>X<tags,PNG,png_creation_time> - keyword "Creation Time".
+C<png_creation_time> X<tags,PNG,png_creation_time> - keyword "Creation Time".
 
 =item *
 
-C<png_description>X<tags,PNG,png_description> - keyword "Description".
+C<png_description> X<tags,PNG,png_description> - keyword "Description".
 
 =item *
 
-C<png_disclaimer>X<tags,PNG,png_disclaimer> - keyword "Disclaimer".
+C<png_disclaimer> X<tags,PNG,png_disclaimer> - keyword "Disclaimer".
 
 =item *
 
-C<png_software>X<tags,PNG,png_software> - keyword "Software".
+C<png_software> X<tags,PNG,png_software> - keyword "Software".
 
 =item *
 
-C<png_title>X<tags,PNG,png_title> - keyword "Title".
+C<png_title> X<tags,PNG,png_title> - keyword "Title".
 
 =item *
 
-C<png_warning>X<tags,PNG,png_warning> - keyword "Warning".
+C<png_warning> X<tags,PNG,png_warning> - keyword "Warning".
 
 =back
 
@@ -1483,7 +1623,7 @@ or text do not satisfy the requirements above the write will fail.
 
 =item *
 
-X<tags, png_interlace>C<png_interlace>, C<png_interlace_name> - only
+X<tags, png_interlace> C<png_interlace>, C<png_interlace_name> - only
 set when reading, C<png_interlace> is set to the type of interlacing
 used by the file, 0 for one, 1 for Adam7.  C<png_interlace_name> is
 set to a keyword describing the interlacing, either C<none> or
@@ -1491,7 +1631,7 @@ C<adam7>.
 
 =item *
 
-X<tags, png_srgb_intent>C<png_srgb_intent> - the sRGB rendering intent
+X<tags, png_srgb_intent> C<png_srgb_intent> - the sRGB rendering intent
 for the image. an integer from 0 to 3, per the PNG specification.  If
 this chunk is found in the PNG file the C<gAMA> and C<cHRM> are
 ignored and the C<png_gamma> and C<png_chroma_...> tags are not set.
@@ -1500,13 +1640,13 @@ C<cHRM> chunks are not written.
 
 =item *
 
-X<tags, png_gamma>C<png_gamma> - the gamma of the image. This value is
+X<tags, png_gamma> C<png_gamma> - the gamma of the image. This value is
 not currently used by Imager when processing the image, but this may
 change in the future.
 
 =item *
 
-X<tags, png_chroma_...>C<png_chroma_white_x>, C<png_chroma_white_y>,
+X<tags, png_chroma_...> C<png_chroma_white_x>, C<png_chroma_white_y>,
 C<png_chroma_red_x>, C<png_chroma_red_y>, C<png_chroma_green_x>,
 C<png_chroma_green_y>, C<png_chroma_blue_x>, C<png_chroma_blue_y> -
 the primary chromaticities of the image, defining the color model.
@@ -1520,12 +1660,12 @@ I<Imager::ImageTypes/CommonTags>.
 
 =item *
 
-X<tags, png_bits>C<png_bits> - the number of bits per sample in the
+X<tags, png_bits> C<png_bits> - the number of bits per sample in the
 representation.  Ignored when writing.
 
 =item *
 
-X<tags, png_time>C<png_time> - the creation time of the file formatted
+X<tags, png_time> C<png_time> - the creation time of the file formatted
 as C<< I<year>-I<month>-I<day>TI<hour>:I<minute>:I<second> >>.  This
 is stored as time data structure in the file, not a string.  If you
 set C<png_time> and it cannot be parsed as above, writing the PNG file
@@ -1537,7 +1677,7 @@ C<i_background> - set from the C<sBKG> when reading an image file.
 
 =back
 
-X<compression>X<png_compression_level>You can control the level of
+X<compression> X<png_compression_level>You can control the level of
 F<zlib> compression used when writing with the
 C<png_compression_level> parameter.  This can be an integer between 0
 (uncompressed) and 9 (best compression).
@@ -1545,7 +1685,7 @@ C<png_compression_level> parameter.  This can be an integer between 0
 =for stopwords
 CRC
 
-X<png_ignore_benign_errors>If you're using F<libpng> 1.6 or later, or
+X<png_ignore_benign_errors> If you're using F<libpng> 1.6 or later, or
 an earlier release configured with C<PNG_BENIGN_ERRORS_SUPPORTED>, you
 can choose to ignore file format errors the authors of F<libpng>
 consider I<benign>, this includes at least CRC errors and palette
@@ -1933,9 +2073,32 @@ to autoload it.
 
 =item preload()
 
-This preloads the file support modules included with or that have been
-included with Imager in the past.  This is intended for use in forking
-servers such as mod_perl.
+C<< Imager->preload >> preloads the file support modules included with or
+that have been included with Imager in the past.
+
+It isn't typically needed, but some cases where you might want to use
+it:
+
+=over
+
+=item *
+
+For use in forking servers such as mod_perl to allow as many pages as
+possible to be shared between parent and child processes.
+
+=item *
+
+to avoid runtime loading of a module from delaying output in an
+animation.
+
+=item *
+
+if you're loading modules from a relative C<$ENV{PERL5LIB}> and expect
+to change directories.
+
+=back
+
+You probably don't need it.
 
 If the module is not available no error occurs.
 

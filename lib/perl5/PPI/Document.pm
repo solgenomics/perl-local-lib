@@ -71,11 +71,12 @@ use Digest::MD5                   ();
 use PPI::Util                     ();
 use PPI                           ();
 use PPI::Node                     ();
+use YAML::PP                      ();
 
 use overload 'bool' => \&PPI::Util::TRUE;
 use overload '""'   => 'content';
 
-our $VERSION = '1.272';
+our $VERSION = '1.291';
 
 our ( $errstr, @ISA ) = ( "", "PPI::Node" );
 
@@ -128,17 +129,62 @@ In all cases, the document is considered to be "anonymous" and not tied back
 to where it was created from. Specifically, if you create a PPI::Document from
 a filename, the document will B<not> remember where it was created from.
 
-The constructor also takes attribute flags.
-
-At this time, the only available attribute is the C<readonly> flag.
-
-Setting C<readonly> to true will allow various systems to provide
-additional optimisations and caching. Note that because C<readonly> is an
-optimisation flag, it is off by default and you will need to explicitly
-enable it.
-
 Returns a C<PPI::Document> object, or C<undef> if parsing fails.
 L<PPI::Exception> objects can also be thrown if there are parsing problems.
+
+The constructor also takes attribute flags.
+
+=head3 readonly
+
+Setting C<readonly> to true will allow various systems to provide additional
+optimisations and caching. Note that because C<readonly> is an optimisation
+flag, it is off by default and you will need to explicitly enable it.
+
+=head3 feature_mods
+
+Setting feature_mods with a hashref allows defining perl parsing features to be
+enabled for the whole document. (e.g. when the code is assumed to be run as a
+oneliner)
+
+=head3 custom_feature_includes
+
+  custom_feature_includes =>
+    { $my_custom_pragma_name => { $feature_name => $feature_provider } }
+  
+  # e.g.
+  custom_feature_includes =>
+    { MyStrict => { try => "Syntax::Keyword::Try" } }
+
+Setting custom_feature_includes with a hashref allows defining include names
+which act like pragmas that enable parsing features within their scope. This
+is mostly useful when your work project has its own boilerplate module. The
+provider is either perl, or the name of a cpan module that implements the
+feature.
+
+It can also be provided as JSON or YAML in the environment variable
+PPI_CUSTOM_FEATURE_INCLUDES, like so:
+
+  PPI_CUSTOM_FEATURE_INCLUDES='MyStrict: {signatures: perl}' \
+    perlcritic lib/OurModule.pm
+
+  PPI_CUSTOM_FEATURE_INCLUDES='{"MyStrict":{"signatures":"perl"}}' \
+    perlcritic lib/OurModule.pm
+
+=head3 custom_feature_include_cb
+
+  custom_feature_include_cb => sub {
+    my ($statement) = @_;
+    return $statement->module eq "MyStrict" ? { signatures => "perl" } : ();
+  },
+
+Setting custom_feature_include_cb with a code reference causes all inspections
+on includes to call that sub before doing any other inspections. The sub can
+decide to either return a hashref of features to be enabled or disabled, which
+will be used for the scope the include was called in, or undef to continue with
+the default inspections. The argument to the sub will be the
+L<PPI::Statement::Include> object.
+
+This can be useful when your work project has a complex boilerplate module.
 
 =cut
 
@@ -181,25 +227,24 @@ sub new {
 			my $document = $CACHE->get_document($file_contents);
 			return $class->_setattr( $document, %attr ) if $document;
 
-			$document = PPI::Lexer->lex_source( $$file_contents );
+			$document = PPI::Lexer->lex_source( $$file_contents, %attr );
 			if ( $document ) {
 				# Save in the cache
 				$CACHE->store_document( $document );
-				return $class->_setattr( $document, %attr );
+				return $document;
 			}
 		} else {
-			my $document = PPI::Lexer->lex_file( $source );
-			return $class->_setattr( $document, %attr ) if $document;
+			my $document = PPI::Lexer->lex_file( $source, %attr );
+			return $document if $document;
 		}
 
 	} elsif ( _SCALAR0($source) ) {
-		my $document = PPI::Lexer->lex_source( $$source );
-		return $class->_setattr( $document, %attr ) if $document;
+		my $document = PPI::Lexer->lex_source( $$source, %attr );
+		return $document if $document;
 
 	} elsif ( _ARRAY0($source) ) {
-		$source = join '', map { "$_\n" } @$source;
-		my $document = PPI::Lexer->lex_source( $source );
-		return $class->_setattr( $document, %attr ) if $document;
+		my $document = PPI::Lexer->lex_file( $source, %attr );
+		return $document if $document;
 
 	} else {
 		$class->_error("Unknown object or reference was passed to PPI::Document::new");
@@ -207,13 +252,13 @@ sub new {
 
 	# Pull and store the error from the lexer
 	my $errstr;
-	if ( _INSTANCE($@, 'PPI::Exception') ) {
+	if ( PPI::Lexer->errstr ) {
+		$errstr = PPI::Lexer->errstr;
+	} elsif ( _INSTANCE($@, 'PPI::Exception') ) {
 		$errstr = $@->message;
 	} elsif ( $@ ) {
 		$errstr = $@;
 		$errstr =~ s/\sat line\s.+$//;
-	} elsif ( PPI::Lexer->errstr ) {
-		$errstr = PPI::Lexer->errstr;
 	} else {
 		$errstr = "Unknown error parsing Perl document";
 	}
@@ -226,9 +271,21 @@ sub load {
 }
 
 sub _setattr {
-	my ($class, $document, %attr) = @_;
-	$document->{readonly} = !! $attr{readonly};
-	$document->{filename} = $attr{filename};
+	my ( $class, $document, %attr ) = @_;
+	$document->{readonly}                  = !!$attr{readonly};
+	$document->{filename}                  = $attr{filename};
+	$document->{feature_mods}              = $attr{feature_mods};
+	$document->{custom_feature_includes}   = $attr{custom_feature_includes};
+	$document->{custom_feature_include_cb} = $attr{custom_feature_include_cb};
+	if ( $ENV{PPI_CUSTOM_FEATURE_INCLUDES} ) {
+		my $includes = YAML::PP::Load $ENV{PPI_CUSTOM_FEATURE_INCLUDES};
+		die "\$ENV{PPI_CUSTOM_FEATURE_INCLUDES} "
+		  . "does not contain valid perl:\n"
+		  . "val: '$ENV{PPI_CUSTOM_FEATURE_INCLUDES}'\nerr: $@"
+		  if $@;
+		$document->{custom_feature_includes} =
+		  { %{ $document->{custom_feature_includes} || {} }, %{$includes} };
+	}
 	return $document;
 }
 
@@ -344,6 +401,36 @@ sub tab_width {
 	$self->{tab_width} = shift;
 }
 
+=head2 feature_mods { feature_name => $provider }
+
+=cut
+
+sub feature_mods {
+	my $self = shift;
+	return $self->{feature_mods} unless @_;
+	$self->{feature_mods} = shift;
+}
+
+=head2 custom_feature_includes { module_name => { feature_name => $provider } }
+
+=cut
+
+sub custom_feature_includes {
+	my $self = shift;
+	return $self->{custom_feature_includes} unless @_;
+	$self->{custom_feature_includes} = shift;
+}
+
+=head2 custom_feature_include_cb sub { ... }
+
+=cut
+
+sub custom_feature_include_cb {
+	my $self = shift;
+	return $self->{custom_feature_include_cb} unless @_;
+	$self->{custom_feature_include_cb} = shift;
+}
+
 =pod
 
 =head2 save
@@ -428,9 +515,12 @@ sub serialize {
 		# case will definitely not contain a newline.
 		$output .= $Token->content;
 
+		# Pick up the indentation, which may be undef.
+		my $indentation = $Token->indentation || '';
+
 		# Now add all of the here-doc content to the heredoc buffer.
 		foreach my $line ( $Token->heredoc ) {
-			$heredoc .= $line;
+			$heredoc .= "\n" eq $line ? $line : $indentation . $line;
 		}
 
 		if ( $Token->{_damaged} ) {
@@ -494,7 +584,7 @@ sub serialize {
 
 		# Now add the termination line to the heredoc buffer
 		if ( defined $Token->{_terminator_line} ) {
-			$heredoc .= $Token->{_terminator_line};
+			$heredoc .= $indentation . $Token->{_terminator_line};
 		}
 	}
 
@@ -568,18 +658,17 @@ sub index_locations {
 	my ($first, $location) = ();
 	foreach ( 0 .. $#tokens ) {
 		my $Token = $tokens[$_];
-		next if $Token->{_location};
+		if ($Token->{_location}) {
+			$location = $Token->{_location};
+			next;
+		}
 
 		# Found the first Token without a location
 		# Calculate the new location if needed.
-		if ($_) {
-			$location =
-				$self->_add_location( $location, $tokens[$_ - 1], \$heredoc );
-		} else {
-			my $logical_file =
-				$self->can('filename') ? $self->filename : undef;
-			$location = [ 1, 1, 1, 1, $logical_file ];
-		}
+		$location =
+			$_
+		  ? $self->_add_location( $location, $tokens[ $_ - 1 ], \$heredoc )
+		  : $self->_default_location;
 		$first = $_;
 		last;
 	}
@@ -599,6 +688,17 @@ sub index_locations {
 	}
 
 	1;
+}
+
+sub _default_location {
+	my ($self) = @_;
+	my $logical_file = $self->can('filename') ? $self->filename : undef;
+	return [ 1, 1, 1, 1, $logical_file ];
+}
+
+sub location {
+	my ($self) = @_;
+	return $self->SUPER::location || $self->_default_location;
 }
 
 sub _add_location {
@@ -911,7 +1011,7 @@ Adam Kennedy E<lt>adamk@cpan.orgE<gt>
 
 =head1 SEE ALSO
 
-L<PPI>, L<http://ali.as/>
+L<PPI>, L<https://web.archive.org/web/20230911221703/http://ali.as/>
 
 =head1 COPYRIGHT
 

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use boolean qw(true false);
 
-our $VERSION = '0.10';
+our $VERSION = '0.12';
 
 sub _parse_formatted_ymd
 {
@@ -95,6 +95,7 @@ sub _parse_formatted_ymd
         day   => $day,
     );
     $self->{datetime}->truncate(to => 'day');
+    $self->_set_truncated;
     $self->_set_valid_exp;
 
     $self->_process_tokens;
@@ -111,14 +112,9 @@ sub _parse_formatted_md
 
     my @date_chunks = split /\//, $date;
 
-    # This method used to split the date with a format of m/d implicitly
-    # assumed, so provide it if needed to retain backward compatibility.
     my $format = $self->{Format} =~ m{^[dm]{1,2}/[dm]{1,2}$}i
       ? do { local $_ = lc $self->{Format}; tr/dm//s; $_ }
-      # XXX hack, remove implicit m/d after 2022-09-22
-      : $self->{format_provided}
-        ? undef
-        : 'm/d';
+      : undef;
 
     unless (defined $format && $format =~ m{^(?:(?:m/d)|(?:d/m))$}) {
         $self->_set_failure;
@@ -142,6 +138,7 @@ sub _parse_formatted_md
         day   => $day,
     );
     $self->{datetime}->truncate(to => 'day');
+    $self->_set_truncated;
     $self->_set_valid_exp;
 
     $self->_process_tokens;
@@ -172,6 +169,7 @@ sub _process_tokens
 
     if (@{$self->{tokens}}) {
         $self->{count}{tokens}--;
+        $self->_unset_truncated;
         $self->_unset_valid_exp;
         $self->_process;
     }

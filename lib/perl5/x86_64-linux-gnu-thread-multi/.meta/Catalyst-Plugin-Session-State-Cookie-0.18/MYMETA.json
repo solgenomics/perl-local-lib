@@ -68,5 +68,5 @@
    },
    "version" : "0.18",
    "x_authority" : "cpan:NUFFIN",
-   "x_serialization_backend" : "JSON::PP version 4.04"
+   "x_serialization_backend" : "JSON::PP version 4.16"
 }

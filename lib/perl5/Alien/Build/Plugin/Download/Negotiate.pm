@@ -8,7 +8,7 @@ use Alien::Build::Util qw( _has_ssl );
 use Carp ();
 
 # ABSTRACT: Download negotiation plugin
-our $VERSION = '2.46'; # VERSION
+our $VERSION = '2.84'; # VERSION
 
 
 has '+url' => undef;
@@ -82,10 +82,10 @@ sub _pick
     {
       return ('Fetch::HTTPTiny', __PACKAGE__->_pick_decoder);
     }
-    elsif(do { require Alien::Build::Plugin::Fetch::CurlCommand; Alien::Build::Plugin::Fetch::CurlCommand->protocol_ok('https') })
-    {
-      return ('Fetch::CurlCommand', __PACKAGE__->_pick_decoder);
-    }
+    #elsif(do { require Alien::Build::Plugin::Fetch::CurlCommand; Alien::Build::Plugin::Fetch::CurlCommand->protocol_ok('https') })
+    #{
+    #  return ('Fetch::CurlCommand', __PACKAGE__->_pick_decoder);
+    #}
     else
     {
       return ('Fetch::HTTPTiny', __PACKAGE__->_pick_decoder);
@@ -132,6 +132,17 @@ sub init
     {
       Carp::croak "url is a required property unless you use the start_url directive";
     }
+  }
+
+  if($self->url =~ /^http.*github.com.*releases$/)
+  {
+    Alien::Build->log('!! WARNING !! WARNING !!');
+    Alien::Build->log('!! WARNING !! It looks like this alien is using the regular download negotiator');
+    Alien::Build->log('plugin on a GitHub release page.  This will typically not work due to changes');
+    Alien::Build->log('in the way GitHub release page works now.  The Alien should instead be updated');
+    Alien::Build->log('to use the Download::GitHub plugin, which uses the GitHub API to find available');
+    Alien::Build->log('releases.  See: https://metacpan.org/pod/Alien::Build::Plugin::Download::GitHub');
+    Alien::Build->log('!! WARNING !! WARNING !!');
   }
 
   $meta->add_requires('share' => 'Alien::Build::Plugin::Download::Negotiate' => '0.61')
@@ -195,7 +206,7 @@ Alien::Build::Plugin::Download::Negotiate - Download negotiation plugin
 
 =head1 VERSION
 
-version 2.46
+version 2.84
 
 =head1 SYNOPSIS
 
@@ -369,9 +380,11 @@ Håkon Hægland (hakonhagland, HAKONH)
 
 nick nauwelaerts (INPHOBIA)
 
+Florian Weimer
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2020 by Graham Ollis.
+This software is copyright (c) 2011-2022 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

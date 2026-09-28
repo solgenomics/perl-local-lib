@@ -4,16 +4,16 @@ use strict;
 use warnings;
 
 use Carp qw( confess );
-use List::Util qw( all );
+use List::Util 1.33 qw( all );
 use MRO::Compat;
 use Role::Tiny;
-use Scalar::Util qw( weaken );
-use Specio::Helpers qw( perlstring );
+use Scalar::Util        qw( weaken );
+use Specio              qw( _clone );
+use Specio::Helpers     qw( perlstring );
 use Specio::PartialDump qw( partial_dump );
 use Specio::TypeChecks;
-use Storable qw( dclone );
 
-our $VERSION = '0.47';
+our $VERSION = '0.53';
 
 use Exporter qw( import );
 
@@ -327,16 +327,6 @@ sub clone {
             next;
         }
 
-        # We need to special case arrays of Specio objects, as they may
-        # contain code refs which cannot be cloned with dclone. Not using
-        # blessed is a small optimization.
-        if ( ( ref $value eq 'ARRAY' )
-            && all { ( ref($_) || q{} ) =~ /Specio/ } @{$value} ) {
-
-            $new->{$key} = [ map { $_->clone } @{$value} ];
-            next;
-        }
-
         # This is a weird hacky way of trying to avoid calling
         # Scalar::Util::blessed, which showed up as a hotspot in profiling of
         # loading DateTime. That's because we call ->clone a _lot_ (it's
@@ -345,7 +335,7 @@ sub clone {
         $new->{$key}
             = !$ref               ? $value
             : $ref eq 'CODE'      ? $value
-            : $BuiltinTypes{$ref} ? dclone($value)
+            : $BuiltinTypes{$ref} ? _clone($value)
             :                       $value->clone;
     }
 
@@ -375,7 +365,7 @@ Specio::OO - A painfully poor reimplementation of Moo(se)
 
 =head1 VERSION
 
-version 0.47
+version 0.53
 
 =head1 DESCRIPTION
 
@@ -388,8 +378,6 @@ reimplementation of a small slice of their features.
 
 Bugs may be submitted at L<https://github.com/houseabsolute/Specio/issues>.
 
-I am also usually active on IRC as 'autarch' on C<irc://irc.perl.org>.
-
 =head1 SOURCE
 
 The source code repository for Specio can be found at L<https://github.com/houseabsolute/Specio>.
@@ -400,7 +388,7 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2012 - 2021 by Dave Rolsky.
+This software is Copyright (c) 2012 - 2025 by Dave Rolsky.
 
 This is free software, licensed under:
 

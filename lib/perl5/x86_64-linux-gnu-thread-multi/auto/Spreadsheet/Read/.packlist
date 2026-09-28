@@ -1,7 +1,7 @@
-/home/production/cxgn/local-lib/bin/ss2tk
-/home/production/cxgn/local-lib/bin/ssdiff
-/home/production/cxgn/local-lib/bin/xls2csv
-/home/production/cxgn/local-lib/bin/xlscat
-/home/production/cxgn/local-lib/bin/xlsgrep
-/home/production/cxgn/local-lib/bin/xlsx2csv
-/home/production/cxgn/local-lib/lib/perl5/Spreadsheet/Read.pm
+/home/production/cxgn/sgn/../newperl/bin/ss2tk
+/home/production/cxgn/sgn/../newperl/bin/ssdiff
+/home/production/cxgn/sgn/../newperl/bin/xls2csv
+/home/production/cxgn/sgn/../newperl/bin/xlscat
+/home/production/cxgn/sgn/../newperl/bin/xlsgrep
+/home/production/cxgn/sgn/../newperl/bin/xlsx2csv
+/home/production/cxgn/sgn/../newperl/lib/perl5/Spreadsheet/Read.pm

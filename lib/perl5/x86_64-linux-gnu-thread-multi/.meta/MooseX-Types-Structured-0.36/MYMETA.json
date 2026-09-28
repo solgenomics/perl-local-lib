@@ -1296,6 +1296,6 @@
       "Jesse Luehrs <doy@tozt.net>",
       "D. Ilmari Mannsåker <ilmari@cpan.org>"
    ],
-   "x_serialization_backend" : "JSON::PP version 4.04",
+   "x_serialization_backend" : "JSON::PP version 4.16",
    "x_static_install" : 1
 }

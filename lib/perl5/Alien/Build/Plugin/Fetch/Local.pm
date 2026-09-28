@@ -8,7 +8,7 @@ use File::chdir;
 use Path::Tiny ();
 
 # ABSTRACT: Plugin for fetching a local file
-our $VERSION = '2.46'; # VERSION
+our $VERSION = '2.84'; # VERSION
 
 
 has '+url' => '';
@@ -66,8 +66,9 @@ sub init
     if(-d $path)
     {
       return {
-        type => 'list',
-        list => [
+        type     => 'list',
+        protocol => 'file',
+        list     => [
           map { { filename => $_->basename, url => $_->stringify } }
           sort { $a->basename cmp $b->basename } $path->children,
         ],
@@ -80,6 +81,7 @@ sub init
         filename => $path->basename,
         path     => $path->stringify,
         tmp      => 0,
+        protocol => 'file',
       };
     }
     else
@@ -105,7 +107,7 @@ Alien::Build::Plugin::Fetch::Local - Plugin for fetching a local file
 
 =head1 VERSION
 
-version 2.46
+version 2.84
 
 =head1 SYNOPSIS
 
@@ -220,9 +222,11 @@ Håkon Hægland (hakonhagland, HAKONH)
 
 nick nauwelaerts (INPHOBIA)
 
+Florian Weimer
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2020 by Graham Ollis.
+This software is copyright (c) 2011-2022 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

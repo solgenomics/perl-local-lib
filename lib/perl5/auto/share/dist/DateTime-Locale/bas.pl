@@ -1,7 +1,7 @@
 {
   am_pm_abbreviated => [
-    "I bik\N{U+025b}\N{U+0302}gl\N{U+00e0}",
-    "I \N{U+0253}ugaj\N{U+0254}p",
+    "I\N{U+202f}bik\N{U+025b}\N{U+0302}gl\N{U+00e0}",
+    "I\N{U+202f}\N{U+0253}ugaj\N{U+0254}p",
   ],
   available_formats => {
     Bh => "h B",
@@ -34,9 +34,9 @@
     MMMd => "d MMM",
     Md => "d/M",
     d => "d",
-    h => "h a",
-    hm => "h:mm a",
-    hms => "h:mm:ss a",
+    h => "h\N{U+202f}a",
+    hm => "h:mm\N{U+202f}a",
+    hms => "h:mm:ss\N{U+202f}a",
     hmsv => "h:mm:ss a v",
     hmv => "h:mm a v",
     ms => "m:ss",
@@ -267,5 +267,5 @@
   time_format_medium => "HH:mm:ss",
   time_format_short => "HH:mm",
   variant => undef,
-  version => 40,
+  version => 47,
 }

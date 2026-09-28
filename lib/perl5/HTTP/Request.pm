@@ -3,7 +3,7 @@ package HTTP::Request;
 use strict;
 use warnings;
 
-our $VERSION = '7.00';
+our $VERSION = '7.02';
 
 use parent 'HTTP::Message';
 
@@ -118,20 +118,21 @@ sub as_string
     my($eol) = @_;
     $eol = "\n" unless defined $eol;
 
-    my $req_line = $self->method || "-";
+    # method must be at least one char, matching ^[a-zA-Z0-9!#$%&'*+.^_`|~-]+$
+    my $req_line = (defined $self->method && length $self->method) ? $self->method : "-";
     my $uri = $self->uri;
     $uri = (defined $uri) ? $uri->as_string : "-";
     $req_line .= " $uri";
     my $proto = $self->protocol;
     $req_line .= " $proto" if $proto;
 
-    return join($eol, $req_line, $self->SUPER::as_string(@_));
+    return join($eol, $req_line, $self->SUPER::as_string($eol));
 }
 
 sub dump
 {
     my $self = shift;
-    my @pre = ($self->method || "-", $self->uri || "-");
+    my @pre = ((defined $self->method && length $self->method) ? $self->method : "-", (defined $self->uri) ? $self->uri : "-");
     if (my $prot = $self->protocol) {
 	push(@pre, $prot);
     }
@@ -155,7 +156,7 @@ HTTP::Request - HTTP style request message
 
 =head1 VERSION
 
-version 7.00
+version 7.02
 
 =head1 SYNOPSIS
 

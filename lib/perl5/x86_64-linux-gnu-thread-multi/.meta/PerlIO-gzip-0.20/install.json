@@ -1,1 +1,1 @@
-{"name":"PerlIO::gzip","pathname":"N/NW/NWCLARK/PerlIO-gzip-0.20.tar.gz","dist":"PerlIO-gzip-0.20","target":"PerlIO::gzip","version":"0.20","provides":{"PerlIO::gzip":{"version":"0.20","file":"gzip.pm"}}}
+{"name":"PerlIO::gzip","dist":"PerlIO-gzip-0.20","provides":{"PerlIO::gzip":{"file":"gzip.pm","version":"0.20"}},"version":"0.20","pathname":"N/NW/NWCLARK/PerlIO-gzip-0.20.tar.gz","target":"PerlIO::gzip"}

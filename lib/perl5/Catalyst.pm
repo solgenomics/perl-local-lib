@@ -53,7 +53,7 @@ use Class::Load 'load_class';
 use Encode 2.21 'decode_utf8', 'encode_utf8';
 use Scalar::Util;
 
-our $VERSION = '5.90128';
+our $VERSION = '5.90132';
 $VERSION =~ tr/_//d;
 
 BEGIN { require 5.008003; }
@@ -345,7 +345,7 @@ settings override the application, with <MYAPP>_DEBUG having the highest
 priority.
 
 This sets the log level to 'debug' and enables full debug output on the
-error screen. If you only want the latter, see L<< $c->debug >>.
+error screen. If you only want the latter, see L<< /$c->debug >>.
 
 =head2 -Home
 
@@ -420,6 +420,9 @@ check if you are writing plugins that run before a request is finalized.
 
 =head2 $c->forward( $class, $method, [, \@arguments ] )
 
+=head2 $c->forward( $component_instance, $method, [, \@arguments ] )
+
+
 This is one way of calling another action (method) in the same or
 a different controller. You can also use C<< $self->my_method($c, @args) >>
 in the same controller or C<< $c->controller('MyController')->my_method($c, @args) >>
@@ -476,6 +479,10 @@ or stash it like so:
 and access it from the stash.
 
 Keep in mind that the C<end> method used is that of the caller action. So a C<< $c->detach >> inside a forwarded action would run the C<end> method from the original action requested.
+
+If you call C<forward> with the name of a component class or instance, rather than an action name
+or instance, we invoke the C<process> action on that class or instance, or whatever action you
+specify via the second argument C<$method>.
 
 =cut
 
@@ -3027,7 +3034,6 @@ sub setup_components {
     my $config  = $class->config->{ setup_components };
 
     my @comps = $class->locate_components($config);
-    my %comps = map { $_ => 1 } @comps;
 
     my $deprecatedcatalyst_component_names = grep { /::[CMV]::/ } @comps;
     $class->log->warn(qq{Your application is using the deprecated ::[MVC]:: type naming scheme.\n}.
@@ -4564,7 +4570,7 @@ headers.
 
 If you do not wish to use the proxy support at all, you may set:
 
-    MyApp->config(ignore_frontend_proxy => 0);
+    MyApp->config(ignore_frontend_proxy => 1);
 
 =head2 Note about psgi files
 

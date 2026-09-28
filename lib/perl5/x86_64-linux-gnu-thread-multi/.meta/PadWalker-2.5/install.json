@@ -1,1 +1,1 @@
-{"name":"PadWalker","dist":"PadWalker-2.5","pathname":"R/RO/ROBIN/PadWalker-2.5.tar.gz","target":"PadWalker","version":"2.5","provides":{"PadWalker":{"file":"PadWalker.pm","version":"2.5"}}}
+{"provides":{"PadWalker":{"file":"PadWalker.pm","version":"2.5"}},"name":"PadWalker","version":"2.5","pathname":"R/RO/ROBIN/PadWalker-2.5.tar.gz","dist":"PadWalker-2.5","target":"PadWalker"}

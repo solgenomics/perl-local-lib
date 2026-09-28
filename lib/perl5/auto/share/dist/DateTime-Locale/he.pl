@@ -1,7 +1,7 @@
 {
   am_pm_abbreviated => [
-    "\N{U+05dc}\N{U+05e4}\N{U+05e0}\N{U+05d4}\N{U+05f4}\N{U+05e6}",
-    "\N{U+05d0}\N{U+05d7}\N{U+05d4}\N{U+05f4}\N{U+05e6}",
+    "AM",
+    "PM",
   ],
   available_formats => {
     Bh => "h B",
@@ -19,7 +19,7 @@
     GyMMM => "MMM y G",
     GyMMMEd => "E, d \N{U+05d1}MMM y G",
     GyMMMd => "d \N{U+05d1}MMM y G",
-    GyMd => "d/M/y GGGGG",
+    GyMd => "d/M/y G",
     H => "H",
     Hm => "H:mm",
     Hms => "H:mm:ss",
@@ -29,7 +29,6 @@
     MEd => "E, d.M",
     MMM => "LLL",
     MMMEd => "E, d \N{U+05d1}MMM",
-    "MMMMW-count-many" => "\N{U+05e9}\N{U+05d1}\N{U+05d5}\N{U+05e2} W \N{U+05d1}MMMM",
     "MMMMW-count-one" => "\N{U+05e9}\N{U+05d1}\N{U+05d5}\N{U+05e2} W \N{U+05d1}MMMM",
     "MMMMW-count-other" => "\N{U+05e9}\N{U+05d1}\N{U+05d5}\N{U+05e2} W \N{U+05d1}MMMM",
     "MMMMW-count-two" => "\N{U+05e9}\N{U+05d1}\N{U+05d5}\N{U+05e2} W \N{U+05d1}MMMM",
@@ -54,7 +53,6 @@
     yMd => "d.M.y",
     yQQQ => "QQQ y",
     yQQQQ => "QQQQ y",
-    "yw-count-many" => "\N{U+05e9}\N{U+05d1}\N{U+05d5}\N{U+05e2} w \N{U+05d1}\N{U+05e9}\N{U+05e0}\N{U+05ea} Y",
     "yw-count-one" => "\N{U+05e9}\N{U+05d1}\N{U+05d5}\N{U+05e2} w \N{U+05d1}\N{U+05e9}\N{U+05e0}\N{U+05ea} Y",
     "yw-count-other" => "\N{U+05e9}\N{U+05d1}\N{U+05d5}\N{U+05e2} w \N{U+05d1}\N{U+05e9}\N{U+05e0}\N{U+05ea} Y",
     "yw-count-two" => "\N{U+05e9}\N{U+05d1}\N{U+05d5}\N{U+05e2} w \N{U+05d1}\N{U+05e9}\N{U+05e0}\N{U+05ea} Y",
@@ -64,8 +62,8 @@
   date_format_long => "d \N{U+05d1}MMMM y",
   date_format_medium => "d \N{U+05d1}MMM y",
   date_format_short => "d.M.y",
-  datetime_format_full => "{1} \N{U+05d1}\N{U+05e9}\N{U+05e2}\N{U+05d4} {0}",
-  datetime_format_long => "{1} \N{U+05d1}\N{U+05e9}\N{U+05e2}\N{U+05d4} {0}",
+  datetime_format_full => "{1}, {0}",
+  datetime_format_long => "{1}, {0}",
   datetime_format_medium => "{1}, {0}",
   datetime_format_short => "{1}, {0}",
   day_format_abbreviated => [
@@ -274,5 +272,5 @@
   time_format_medium => "H:mm:ss",
   time_format_short => "H:mm",
   variant => undef,
-  version => 40,
+  version => 47,
 }

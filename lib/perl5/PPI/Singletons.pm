@@ -5,12 +5,13 @@ package PPI::Singletons;
 use strict;
 use Exporter     ();
 
-our $VERSION = '1.272';
+our $VERSION = '1.291';
 
 our @ISA       = 'Exporter';
-our @EXPORT_OK = qw{ %_PARENT %OPERATOR %MAGIC %LAYER $CURLY_SYMBOL %QUOTELIKE %KEYWORDS };
+our @EXPORT_OK = qw{ %_PARENT %_POSITION_CACHE %OPERATOR %MAGIC %LAYER $CURLY_SYMBOL %QUOTELIKE %KEYWORDS };
 
 our %_PARENT; # Master Child -> Parent index
+our %_POSITION_CACHE; # cache for position in parent
 
 # operator index
 our %OPERATOR = map { $_ => 1 } (
@@ -20,8 +21,10 @@ our %OPERATOR = map { $_ => 1 } (
 	< > <= >= lt gt le ge
 	== != <=> eq ne cmp ~~
 	& | ^ && || // .. ...
+	&. |. ^. ~.
 	? :
 	= **= += -= .= *= /= %= x= &= |= ^= <<= >>= &&= ||= //=
+	&.= |.= ^.= ~.=
 	=> <> <<>>
 	and or xor not
 	}, ',' 	# Avoids "comma in qw{}" warning

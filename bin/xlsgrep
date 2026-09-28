@@ -2,90 +2,106 @@
 
 # xlscat:  show supported spreadsheet file as Text
 # xlsgrep: grep pattern
-#	   (m)'21 [2021-02-02] Copyright H.M.Brand 2005-2021
+#	   (m)'24 [2024-12-31] Copyright H.M.Brand 2005-2026
+
+require 5.008001;
 
 use strict;
 use warnings;
 
-our $VERSION = "3.20";
+our $VERSION = "3.32";
+(my $CMD = $0) =~ s{.*[\/]}{};
 
-my $is_grep = $0 =~ m/grep$/;
+my $is_grep = $0 =~ m/grep$/;	# xlsgrep
 
 sub usage {
     my $err = shift and select STDERR;
-    (my $scrpt = $0) =~ s{.*[\/]}{};
     my $p = $is_grep ? " pattern" : "";
-    print
-	"usage: $scrpt\t[-s <sep>] [-L] [-n] [-A] [-u] [Selection]$p file.xls\n",
-	"             \t[-c | -m]                 [-u] [Selection]$p file.xls\n",
-	"             \t -i                            [-S sheets]$p file.xls\n",
-	"    Generic options:\n",
-	"       -v[#]       Set verbose level (xlscat/xlsgrep)\n",
-	"       -d[#]       Set debug   level (Spreadsheet::Read)\n",
-	"       --list      Show supported spreadsheet formats and exit\n",
-	"       -u          Use unformatted values\n",
-	"       --strip[=#] Strip leading and/or traing spaces of all cells\n",
-	"       --noclip    Do not strip empty sheets and\n",
-	"                   trailing empty rows and columns\n",
-	"	--no-nl[=R] Replace all newlines in cells with R (default space)\n",
-	"       -e <enc>    Set encoding for input and output\n",
-	"       -b <enc>    Set encoding for input\n",
-	"       -a <enc>    Set encoding for output\n",
-	"       -U          Set encoding for output to utf-8 (short for -a utf-8)\n",
-	"    Input CSV:\n",
-	"       --in-sep=c  Set input sep_char for CSV (c can be 'TAB')\n",
-	"    Input XLS:\n",
-	"       --dtfmt=fmt Specify the default date format to replace 'm-d-yy'\n",
-	"                   the default replacement is 'yyyy-mm-dd'\n",
-	"       --passwd=pw Specify the password for workbook\n",
-	"                   if pw = -, read password from keyboard\n",
-	"       --formulas  Show the formula instead of the value\n",
-	"    Output Text (default):\n",
-	"       -s <sep>    Use separator <sep>. Default '|', \\n allowed\n",
-	"                   Overrules ',' when used with --csv\n",
-	"       -L          Line up the columns\n",
-	"       -n [skip]   Number lines (prefix with column number)\n",
-	"                   optionally skip <skip> (header) lines\n",
-	"       -A          Show field attributes in ANSI escapes\n",
-	"       -h[#]       Show # header lines\n",
-	"       -D          Dump each record with Data::Peek or Data::Dumper\n",
-	"        --hash     Like -D but as hash with first row as keys\n",
+    print join "\n" =>
+	"usage: $CMD\t[-s <sep>] [-L] [-n] [-A] [-u] [Selection]$p file.xls",
+	"             \t[-c | -m]                 [-u] [Selection]$p file.xls",
+	"             \t -i                            [-S sheets]$p file.xls",
+	"    Generic options:",
+	"       -v[#]       Set verbose level (xlscat/xlsgrep)",
+	"       -d[#]       Set debug   level (Spreadsheet::Read)",
+	"       --list      Show supported spreadsheet formats and exit",
+	"       -u          Use unformatted values",
+	"       --strip[=#] Strip leading and/or traing spaces of all cells",
+	"                   # & 01 = leading, # & 02 = trailing, 3 = default",
+	"       --clip=#    Clip cells to max length #",
+	"       --noclip    Do not strip empty sheets and",
+	"                   trailing empty rows and columns",
+	"       --no-empty  Skip empty rows",
+	"	--no-nl[=R] Replace all newlines in cells with R (default space)",
+	"       -e <enc>    Set encoding for input and output",
+	"       -b <enc>    Set encoding for input",
+	"       -a <enc>    Set encoding for output",
+	"       -U          Set encoding for output to utf-8 (short for -a utf-8)",
+	"    Input CSV:",
+	"       --in-sep=c  Set input sep_char for CSV (c can be 'TAB')",
+	"    Input XLS:",
+	"       --dtfmt=fmt Specify the default date format to replace 'm-d-yy'",
+	"                   the default replacement is 'yyyy-mm-dd'",
+	"       --passwd=pw Specify the password for workbook",
+	"                   if pw = -, read password from keyboard",
+	"       --formulas  Show the formula instead of the value",
+	"    Output Text (default):",
+	"       -s <sep>    Use separator <sep>. Default '|', \\n allowed",
+	"                   Overrules ',' when used with --csv",
+	"       -L          Line up the columns",
+	"       -B  --box   Like -L but also add outer frame",
+	"       -n [skip]   Number lines (prefix with column number)",
+	"                   optionally skip <skip> (header) lines",
+	"       -A          Show field attributes in ANSI escapes",
+	"       -h[#]       Show # header lines",
+	"       -D          Dump each record with Data::Peek or Data::Dumper",
+	"        --hash     Like -D but as hash with first row as keys",
+	"    Output CSV:",
+	"       -c          Output CSV, separator = ','",
+	"       -m          Output CSV, separator = ';'",
 	$is_grep ? (
-	"    Grep options:\n",
-	"       -i          Ignore case\n",
-	"       -w          Match whole words only\n") : (
-	"    Output Index only:\n",
-	"       -i          Show sheet names and size only\n"),
-	"    Output CSV:\n",
-	"       -c          Output CSV, separator = ','\n",
-	"       -m          Output CSV, separator = ';'\n",
-	"    Output HTML:\n",
-	"       -H          Output HTML\n",
-	"    Selection:\n",
-	"       -S <sheets> Only print sheets <sheets>. 'all' is a valid set\n",
-	"                   Default only prints the first sheet\n",
-	"       -R <rows>   Only print rows    <rows>. Default is 'all'\n",
-	"       -C <cols>   Only print columns <cols>. Default is 'all'\n",
-	"       -F <flds>   Only fields <flds> e.g. -FA3,B16\n",
-	"    Ordering (column numbers in result set *after* selection):\n",
-	"       --sort=spec Sort output (e.g. --sort=3,2r,5n,1rn+2)\n",
-	"                   +#   - first # lines do not sort (header)\n",
-	"                   #    - order on column # lexical ascending\n",
-	"                   #n   - order on column # numeric ascending\n",
-	"                   #r   - order on column # lexical descending\n",
-	"                   #rn  - order on column # numeric descending\n",
-	"\n",
-	"Examples:\n",
-	"    xlscat -i foo.xls\n",
-	"    xlscat --in-sep=: --sort=3n -L /etc/passwd\n";
+	"    Grep options:",
+	"       -i          Ignore case",
+	"       -w          Match whole words only") : (
+	"    Output Index only:",
+	"       -i          Show sheet names and size only"),
+	"    Output HTML:",
+	"       -H          Output HTML",
+	"    Selection:",
+	"       -S <sheets> Only print sheets <sheets>. 'all' is a valid set",
+	"                   Default only prints the first sheet",
+	"       -R <rows>   Only print rows    <rows>. Default is 'all'",
+	"                   Ranges and lists supported as 2,4-7,8-",
+	"                   Trailing - is to end of data",
+	"                   Negative rows count from tail -8--2 is allowed",
+	"        --head[=n] Alias for -R1..n   where n defaults to 10",
+	"        --tail[=n] Alias for -R-n-    where n defaults to 10",
+	"        --first=C  Only show rows where column C is a 'new' value",
+	"                   (suppress rows where value in column C is seen",
+	"                    before in column C). That includes empty fields",
+	"       -C <cols>   Only print columns <cols>. Default is 'all'",
+	"       -F <flds>   Only fields <flds> e.g. -FA3,B16",
+	"    Ordering (column numbers in result set *after* selection):",
+	"       --sort=spec Sort output (e.g. --sort=3,2r,5n,1rn+2)",
+	"                   +#   - first # lines do not sort (header)",
+	"                   #    - order on column # lexical ascending",
+	"                   #n   - order on column # numeric ascending",
+	"                   #r   - order on column # lexical descending",
+	"                   #rn  - order on column # numeric descending",
+	"",
+	"Examples:",
+	"    xlscat   -i foo.xls",
+	"    xlscat   --in-sep=: --sort=3n -L /etc/passwd",
+	"    xlsgrep  pattern file.ods",
+	"";
     @_ and print join "\n", @_, "";
     exit $err;
     } # usage
 
+use Encode     qw( encode decode );
+use List::Util qw( first );
 use Data::Dumper;
-use Encode qw( encode decode );
 use Spreadsheet::Read;
-
 use Getopt::Long qw(:config bundling noignorecase passthrough);
 my $opt_c;		# Generate CSV
 my $opt_F = "";		# Fields to print
@@ -94,10 +110,13 @@ my $opt_d = 0;		# Debug level for Spreadsheet::Read
 my $opt_h = 0;		# Number of header lines for grep or -L
 my $opt_D = 0;		# Dump: 0 = none, 1 = array, 2 = hash
 my $clip  = 1;
+my $enc_bom;		# CSV input encoding derived from BOM
 my $enc_i;		# Input  encoding
 my $enc_o;		# Output encoding
 GetOptions (
     "help|?"		=> sub { usage (0); },
+    "V|version"		=> sub { print "$CMD [$VERSION] Spreadsheet::Read [$Spreadsheet::Read::VERSION]\n"; exit 0; },
+      "list"		=> sub { list_parsers (); },
 
     # Input CSV
     "c|csv"		=> sub { $opt_c = "," },
@@ -114,16 +133,20 @@ GetOptions (
 
     # Output
     "i|index".
-     "|ignore-case!"	=> \my $opt_i,	# Index (cat) | ignore_case (grep) 
+     "|ignore-case!"	=> \my $opt_i,	# Index (cat) | ignore_case (grep)
     "s|separator|sep".
      "|outsepchar".
      "|out-sep".
      "|out-sep-char=s"	=> \my $opt_s,	# Text separator
     "S|sheets=s"	=> \my $opt_S,	# Sheets to print
     "R|rows=s"		=> \my $opt_R,	# Rows to print
+      "head:10"		=> \my $opt_head,
+      "tail:10"		=> \my $opt_tail,
+      "first=s"		=> \my $opt_first,
     "C|columns=s"	=> \my $opt_C,	# Columns to print
     "F|fields=s"	=> \   $opt_F,
     "L|fit|align!"	=> \my $opt_L,	# Auto-size/align columns
+    "B|box|frame!"	=> \my $opt_B,	# Align and add outer frame
     "P|pivot!"		=> \my $pivot,
     "n|number:0"	=> \my $opt_n,	# Prefix lines with column number
     "A|ansi|color!"	=> \my $opt_A,	# Show field colors in ANSI escapes
@@ -135,9 +158,10 @@ GetOptions (
     "H|html:1"		=> \my $opt_H,	# Output in HTML
       "noclip"		=> sub { $clip = 0 },
       "strip:3"		=> \my $strip,
+      "clip=i"		=> \my $clip_len,
       "sort=s"		=> \my $sort_order,
+      "no-empty"	=> \my $skip_empty,
     "N|no-nl:s"		=> \my $opt_N,
-      "list!"		=> \my $list,
 
     # Encoding
     "e|encoding=s"	=> sub { $enc_i = $enc_o = $_[1] },
@@ -150,16 +174,22 @@ GetOptions (
     "h|header:1"	=> \$opt_h,
     ) or usage 1, "GetOpt: $@";
 
-if ($list) {
-    print "Ext   Parser module             Req   Has Def\n";
-    print "----- ----------------------- ----- ----- ---\n";
+sub list_parsers {
+    my $err = shift || 0;
+    print "Ext      Parser module               Req   Has Def\n";
+    print "-------- ------------------------- ----- ----- ---\n";
     for (Spreadsheet::Read::parsers ()) {
-	printf "%-5s %-23s %5s %5s %s\n",
+	$_->{ext} =~ m/^zzz/ and next;
+	printf "%-8s %-25s %5s %5s %s\n",
 	    $_->{ext}, $_->{mod}, $_->{min}, $_->{vsn}, $_->{def} ? "<==" : "";
 	}
-    exit 0;
-    }
+    exit $err;
+    } # list_parsers
 
+$opt_head and $opt_R = "1-$opt_head";
+$opt_tail and $opt_R = "-$opt_tail-";
+
+$opt_B and $opt_L++;
 unless ($is_grep) {
 $opt_i && $opt_L and usage 1, "Options i and L are mutually exclusive";
 $opt_i && $opt_s and usage 1, "Options i and s are mutually exclusive";
@@ -196,13 +226,9 @@ if ($opt_c) {
     }
 
 # Debugging. Prefer Data::Peek over Data::Dumper if available
-{   my $dp = 0;
-    eval q{
-	use Data::Peek;
-	$dp = 1;
-	};
+{   my $dp = eval { require Data::Peek; 1 };
     sub ddumper {
-	$dp ? DDumper (@_)
+	$dp ? Data::Peek::DDumper (@_)
 	    : print STDERR Dumper (@_);
 	} # ddumper
     }
@@ -229,6 +255,28 @@ if (defined $file and $file ne "-") {
     $opt_v > 1 and warn "Using $file as input\n";
     -f $file or usage 1, "the file argument is not a regular file";
     -s $file or usage 1, "the file is empty";
+    if ($file =~ m/\.csv$/i and open my $fh, "<", $file) {	# Auto-BOM
+	my $l = <$fh>;
+	close $fh;
+	   if ($l =~ s/^\x00\x00\xfe\xff//) { $enc_bom = "utf-32be"   }
+	elsif ($l =~ s/^\xff\xfe\x00\x00//) { $enc_bom = "utf-32le"   }
+	elsif ($l =~ s/^\xfe\xff//)         { $enc_bom = "utf-16be"   }
+	elsif ($l =~ s/^\xff\xfe//)         { $enc_bom = "utf-16le"   }
+	elsif ($l =~ s/^\xef\xbb\xbf//)     { $enc_bom = "utf-8"      }
+	elsif ($l =~ s/^\xf7\x64\x4c//)     { $enc_bom = "utf-1"      }
+	elsif ($l =~ s/^\xdd\x73\x66\x73//) { $enc_bom = "utf-ebcdic" }
+	elsif ($l =~ s/^\x0e\xfe\xff//)     { $enc_bom = "scsu"       }
+	elsif ($l =~ s/^\xfb\xee\x28//)     { $enc_bom = "bocu-1"     }
+	elsif ($l =~ s/^\x84\x31\x95\x33//) { $enc_bom = "gb-18030"   }
+	elsif ($l =~ s/^\x{feff}//)         { $enc_bom = ""           }
+
+	if ($enc_bom and open $fh, "<:encoding($enc_bom)", $file) {
+	    $opt_v > 1 and warn "Opened $file with encoding $enc_bom after BOM detection\n";
+	    read $fh, (my $bom), 1;	# Skip BOM
+	    $file = $fh;
+	    push @RDarg, parser => "CSV";
+	    }
+	}
     }
 else {
     $opt_v > 1 and warn "Working as a pipe\n";
@@ -279,10 +327,39 @@ if ($passwd) {
     push @RDarg, passwd => $passwd;
     }
 $opt_v > 4 and warn "ReadData ($file, @RDarg);\n";
-my $xls = ReadData ($file, @RDarg) or die "cannot read $file\n";
+my $xls = eval { ReadData ($file, @RDarg) };
 $opt_v > 7 and ddumper ($xls);
+unless ($xls) {
+    warn "cannot read $file\n";
+    if ($@) {
+	my $e = $@;
+	$e =~ s{\s+at\s+\S+\s+line\s.*}{}s;
+	$e =~ s{\s+\(perhaps you forgot to load.*}{}s;
+	warn "$e\n";
+	}
+    if (my @e = sort grep m/^SPREADSHEET_READ_/ => keys %ENV) {
+	warn "\n";
+	warn " $_ is set to $ENV{$_}\n" for @e;
+	warn "\n";
+	}
+    if ($@ =~ m/cannot|can't/) {
+	print "Supported parsers per spreadsheet:\n";
+	list_parsers (-1);
+	}
+    exit -1;
+    }
+if ($xls->[0]{parser} =~ m/Spreadsheet::XLSX/) {
+    warn "You parse with Spreadsheet::XLSX, which is deprecated\n";
+    warn "Please use Spreadsheet::ParseXLSX for more reliable results\n";
+    }
 my $sc  = $xls->[0]{sheets}	or die "No sheets in $file\n";
-$opt_v > 1 and warn "Opened $file with $sc sheets\n";
+$opt_v and
+    warn $opt_v > 1
+	? join " " =>
+	  "Spreadsheet::Read-$Spreadsheet::Read::VERSION",
+	  "parsed $file with $sc sheets",
+	  "using $xls->[0]{parser}-$xls->[0]{version}\n"
+	: "Parsed $file with $sc sheets\n";
 
 $opt_S eq "all" and $opt_S = "1..$sc";	# all
 $opt_S =~ s/-$/-$sc/;			# 3,6-
@@ -336,11 +413,11 @@ sub css_color {
     @css ? qq{ style="@css"} : "";
     } # css_color
 
-	    binmode STDERR, ":utf8";
+	    binmode STDERR, ":encoding(utf-8)";
 $enc_o and  binmode STDOUT, ":encoding($enc_o)";
 
 if ($opt_H) {
-    print <<EOH;
+    print <<"EOH";
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
@@ -351,22 +428,30 @@ if ($opt_H) {
   <style type="text/css">
     body, h2,
     td, th { font-family:     "Nimbus Sans L", "DejaVu Sans",
-                              Helvetica, Arial, sans; }
+			      Helvetica, Arial, sans; }
     table  { border-spacing:  2px;
-             border-collapse: collapse;               }
+	     border-collapse: collapse;               }
     td, th { vertical-align:  top;
-             padding:         4px;                    }
+	     padding:         4px;                    }
     table  > tbody > tr > th,
     table  > tr > th {
-             background:      #e0e0e0;                }
+	     background:      #e0e0e0;                }
     table  > tbody > tr > td:not([class]),
     table  > tr > td:not([class]) {
-             background:      #f0f0f0;                }
+	     background:      #f0f0f0;                }
     .odd   { background:      #e0e0e0;                }
     </style>
   </head>
 <body>
 EOH
+    }
+
+my %first;
+if ($opt_first) {
+    $opt_first =~ m/^([a-zA-Z]+)[0-9]*$/ and
+	$opt_first = (cell2cr (uc $1 . "1"))[0];
+    $opt_first =~ m/^[0-9]+$/ && $opt_first > 0 or
+	die "--first=C requires a numeric column index or a column index letter\n";
     }
 
 my $name_len = 30;
@@ -392,8 +477,12 @@ foreach my $si (1 .. $sc) {
     defined $nc or next;
     defined $sn or $sn = "";
     my $active = $s->{active} ? " (Active)" : "";
-    $opt_v and printf STDERR "%s - %02d: [ %-*s ] %3d Cols, %5d Rows%s\n",
-	$file, $si, $name_len, $sn, $nc, $nr, $active;
+    my $hidden = $s->{hidden} ? " (Hidden)" : "";
+    my $eolt   = $s->{eolt}   ? ", EOL = $s->{eolt}" : "";
+    $eolt =~ s/\n/\\n/g; $eolt =~ s/\r/\\r/g; $eolt =~ s/\t/\\t/g;
+    $eolt =~ s/([\x00-\x1f])/sprintf "\\x{%02x}", ord $1/ge;
+    $opt_v and printf STDERR "%s - %02d: [ %-*s ] %3d Cols, %5d Rows%s%s%s\n",
+	$file, $si, $name_len, $sn, $nc, $nr, $active, $hidden, $eolt;
     $opt_i && !$is_grep and next;
 
     if (@opt_F) {
@@ -406,6 +495,8 @@ foreach my $si (1 .. $sc) {
 
     if (my $rows = $opt_R) {
 	$rows eq "all" and $rows = "1..$nr";	# all
+	$rows =~ s/--(\d+)/-($nr+1-$1)/ge;	# 3--2
+	$rows =~ s/-(\d+)(?=-)/($nr+1-$1)/ge;	# -3-
 	$rows =~ s/-$/-$nr/;			# 3,6-
 	$rows =~ s/-/../g;
 	eval "%{\$print{row}} = map { \$_ => 1 } $rows";
@@ -441,16 +532,24 @@ foreach my $si (1 .. $sc) {
 	    if (defined $opt_N) {
 		s/\n/$opt_N/go for grep { defined } $uval, $fval;
 		}
+	    if ($clip_len) {
+		$_ = substr $_, 0, $clip_len - 1 for grep { length > $clip_len } $uval, $fval;
+		}
 	    $opt_v > 2 and warn "$_:$r '$uval' / '$fval'\n";
-	    $opt_A and 
+	    $opt_A and
 		push @att, [ @{$s->{attr}[$_][$r]}{qw( fgcolor bgcolor bold uline halign )} ];
 	    $opt_f && $s->{attr}[$_][$r]{formula}
 		? "=".$s->{attr}[$_][$r]{formula}
 		: defined $s->{cell}[$_][$r] ? $opt_u ? $uval : $fval : "";
 	    } $c[0] .. $c[1];
+	$r == 1 && $row[0] && defined $enc_bom and $row[0] =~ s/^\N{BOM}//;
 	exists $print{col} and @row = @row[grep{$_<@row}@{$print{col}}];
 	$is_grep && $r > $opt_h &&
-	    ! grep { defined $_ && $_ =~ $pattern } @row and next;
+	    ! first { defined $_ && $_ =~ $pattern } @row and next;
+	$skip_empty && ! first { length } @row and next;
+	if ($opt_first) {
+	    @row >= $opt_first && $first{$row[$opt_first - 1]}++ and next;
+	    }
 	if ($opt_D) {
 	    ddumper ($opt_D == 1 ? \@row :
 		{ map { $s->{cell}[$_ + 1][1] => $row[$_] } 0 .. $#row });
@@ -493,12 +592,12 @@ foreach my $si (1 .. $sc) {
 		    "\e[0m";
 		}
 	    }
-	line ($opt_s => @row);
+	line (0, $opt_s => @row);
 	} continue {
-	    ++$h % 100 == 0 && $opt_v and printf STDERR $v_fmt, $nc, $h, "\r";
+	    ++$h % 100 == 0 && $opt_v && $v_fmt and printf STDERR $v_fmt, $nc, $h, "\r";
 	    }
     $opt_H and print "  </table>\n\n";
-    $v_fmt and printf STDERR $v_fmt, $nc, $h, "\n";
+    $v_fmt && $v_fmt and printf STDERR $v_fmt, $nc, $h, "\n";
     if ($sort_order) {
 	my @o;
 	my @h;
@@ -537,11 +636,24 @@ foreach my $si (1 .. $sc) {
 		my $d = $R->[$c];
 		my $l = length $d;
 		$l > $w[$c] and $w[$c] = $l;
+		# Number alignment won't be effective if first row is empty and
+		# second row has column headers
 		$r && $d =~ m/\S/ or next;
-		$d =~ m/^\s*(?:-\s*)?[0-9][0-9 .,]*$/ or $align[$c] = "-";
+		$d =~ m/^(?:-|\s*(?:-\s*)?[0-9][0-9 .,]*)$/ or $align[$c] = "-";
+		}
+	    }
+	if ($skip_empty) { # Skip empty columns. Rows have already been skipped
+	    foreach my $i ( reverse 0 .. $#w) {
+		$w[$i] and next;
+
+		splice @w,     $i, 1;
+		splice @align, $i, 1;
+		splice @$_,    $i, 1 for grep { $#$_ >= $i } map { @{$_} } @data;
 		}
 	    }
 	}
+
+    $opt_B and line (1, $opt_s => map { "-" x $w[$_] } 0..$#{$data[0][0]});
     for (@data) {
 	my ($row, $att) = @$_;
 	my @row = @$row;
@@ -549,7 +661,7 @@ foreach my $si (1 .. $sc) {
 	    my $l = length $row[$_];
 	    my $w = $l < $w[$_] ? " " x ($w[$_] - $l) : "";
 	    if ($align[$_]) {
-		$_ == $#row or $row[$_] .= $w;
+		$_ < $#row || $opt_B and $row[$_] .= $w;
 		}
 	    else {
 		substr $row[$_], 0, 0, $w;
@@ -559,18 +671,49 @@ foreach my $si (1 .. $sc) {
 		$row[$_] .= "\e[0m";
 		}
 	    }
-	line ($opt_s => @row);
-	++$opt_n == $opt_h and line ("+", map {"-"x$w[$_]} 0..$#row);
+	line (0, $opt_s => @row);
+	++$opt_n == $opt_h and
+	    line (2, $opt_s => map { "-" x $w[$_] } 0..$#row);
 	}
+    $opt_B and line (3, $opt_s => map { "-" x $w[$_] } 0..$#{$data[0][0]});
     }
 $opt_H and print "</body>\n</html>\n";
 
 sub line {
-    my $sep  = shift || " \x{2502} ";
-    my $line = join $sep => @_;
+    my $uh   = "\x{2500}";	# BOX DRAWINGS LIGHT HORIZONTAL
+    my $uv   = "\x{2502}";
+    my @tpl  = ($uv, "\x{250c}", "\x{251c}", "\x{2514}");
+    my @tpm  = ($uv, "\x{252c}", "\x{253c}", "\x{2534}");
+    my @tpr  = ($uv, "\x{2510}", "\x{2524}", "\x{2518}");
+
+    my $type = shift; # 0: data, 1: top, 2: middle, 3: bottom
+    my $sep  = shift || " $uv ";
+    my @dta  = @_;
+    if ($opt_L) {
+	$type > 0 and $sep =~ s/ /-/g;
+	if ($sep =~ m/$uv/) {
+	    $sep =~ s/-/$uh/g;
+	    $sep =~ s/$uv/$tpm[$type]/;
+	    if ($type > 0) {
+		s/-/$uh/g for grep { length } @dta;
+		}
+	    }
+	elsif ($type > 0) {
+	    $sep =~ s/\|/+/;
+	    }
+	}
+    my $line = join $sep => @dta;
+    if ($opt_B) {
+	# Cannot use s///r for 5.8.x
+	(my $s1 = $sep) =~ s/^(?:\s|$uh)[\x{2500}-\x{25ff}]/$tpl[$type]/;
+	substr $line, 0, 0, $s1;
+	(my $s2 = $sep) =~ s/[\x{2500}-\x{25ff}](?:\s|$uh)$/$tpr[$type]/;
+	$line .= $s2;
+	}
     !$enc_o && Encode::is_utf8 ($line) and $line = encode ("utf-8", $line);
-    print "$line\n";
-    } # show_line
+    print $line;
+    print "\n";
+    } # line
 
 END {
     if ($opt_v >= 7) {

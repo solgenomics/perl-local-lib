@@ -1,1 +1,1 @@
-{"target":"File::NFSLock","provides":{"File::NFSLock":{"version":"1.29","file":"lib/File/NFSLock.pm"}},"version":"1.29","pathname":"B/BB/BBB/File-NFSLock-1.29.tar.gz","dist":"File-NFSLock-1.29","name":"File::NFSLock"}
+{"dist":"File-NFSLock-1.29","target":"File::NFSLock","version":"1.29","name":"File::NFSLock","provides":{"File::NFSLock":{"file":"lib/File/NFSLock.pm","version":"1.29"}},"pathname":"B/BB/BBB/File-NFSLock-1.29.tar.gz"}

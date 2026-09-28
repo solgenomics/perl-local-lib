@@ -1,17 +1,17 @@
 {
-   "alien_build_version" : "2.46",
+   "alien_build_version" : "2.84",
    "cflags" : "-I/usr/include/libxml2",
    "cflags_static" : "-I/usr/include/libxml2",
    "install_type" : "system",
    "legacy" : {
       "finished_installing" : 1,
       "install_type" : "system",
-      "original_prefix" : "/home/production/cxgn/local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2",
-      "version" : "2.9.10"
+      "original_prefix" : "/home/production/cxgn/sgn/../newperl/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2",
+      "version" : "2.9.14"
    },
    "libs" : "-lxml2",
    "libs_static" : "-lxml2",
-   "perl_module_version" : "0.17",
-   "prefix" : "/home/production/cxgn/local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2",
-   "version" : "2.9.10"
+   "perl_module_version" : "0.20",
+   "prefix" : "/home/production/cxgn/sgn/../newperl/lib/perl5/x86_64-linux-gnu-thread-multi/auto/share/dist/Alien-Libxml2",
+   "version" : "2.9.14"
 }

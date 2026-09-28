@@ -1218,5 +1218,5 @@
       "Jesse Luehrs <doy@tozt.net>",
       "hurricup <hurricup@gmail.com>"
    ],
-   "x_serialization_backend" : "JSON::PP version 4.04"
+   "x_serialization_backend" : "JSON::PP version 4.16"
 }

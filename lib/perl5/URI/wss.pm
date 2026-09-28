@@ -3,68 +3,69 @@ package URI::wss;
 use strict;
 use warnings;
 
-# ABSTRACT: Secure WebSocket support for URI package
-our $VERSION = '0.03'; # VERSION
+our $VERSION = '5.35';
 
-
-use base qw( URI::ws );
-
-
-sub default_port { 443 }
-
-
-sub secure { 1 }
+use parent 'URI::https';
 
 1;
-
 __END__
-
-=pod
 
 =head1 NAME
 
-URI::wss - Secure WebSocket support for URI package
+URI::wss - URI scheme for WebSocket Identifiers
 
 =head1 VERSION
 
-version 0.03
+Version 5.33
 
 =head1 SYNOPSIS
 
- use URI;
- my $uri = URI->new('wss://localhost:3000/foo');
+    use URI::wss;
+
+    my $uri = URI->new('wss://example.com/');
 
 =head1 DESCRIPTION
 
-After this module is installed, the URI package provides the same set
-of methods for secure WebSocket URIs as it does for insecure WebSocket
-URIs.  For insecure (unencrypted) WebSockets, see L<URI::ws>.
+This module implements the C<wss:> URI scheme defined in L<RFC 6455|http://tools.ietf.org/html/rfc6455>.
 
-=head1 METHODS
+=head1 SUBROUTINES/METHODS
 
-=head2 URI::wss->default_port
+This module inherits the behaviour of L<URI::https|URI::https>.
 
-Returns the default port (443)
+=head1 DIAGNOSTICS
 
-=head2 $uri->secure
+See L<URI|URI>
 
-Returns true.
+=head1 CONFIGURATION AND ENVIRONMENT
+
+See L<URI|URI#CONFIGURATION-VARIABLES> and L<URI|URI#ENVIRONMENT-VARIABLES>
+
+=head1 DEPENDENCIES
+
+None
+
+=head1 INCOMPATIBILITIES
+
+None reported
+
+=head1 BUGS AND LIMITATIONS
+
+See L<URI|URI#BUGS>
 
 =head1 SEE ALSO
 
-L<URI>, L<URI::ws>
-
-=cut
+L<RFC 6455|http://tools.ietf.org/html/rfc6455>
 
 =head1 AUTHOR
 
-Graham Ollis <plicease@cpan.org>
+David Dick, C<< <ddick at cpan.org> >>
 
-=head1 COPYRIGHT AND LICENSE
+=head1 LICENSE AND COPYRIGHT
 
-This software is copyright (c) 2013 by Graham Ollis.
+Copyright 2016 David Dick.
 
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
 
-=cut
+See L<http://dev.perl.org/licenses/> for more information.

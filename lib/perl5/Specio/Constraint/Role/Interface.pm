@@ -3,14 +3,14 @@ package Specio::Constraint::Role::Interface;
 use strict;
 use warnings;
 
-our $VERSION = '0.47';
+our $VERSION = '0.53';
 
-use Carp qw( confess );
-use Eval::Closure qw( eval_closure );
+use Carp            qw( confess );
+use Eval::Closure   qw( eval_closure );
 use List::Util 1.33 qw( all any first );
 use Specio::Exception;
 use Specio::PartialDump qw( partial_dump );
-use Specio::TypeChecks qw( is_CodeRef );
+use Specio::TypeChecks  qw( is_CodeRef );
 
 use Role::Tiny 1.003003;
 
@@ -166,8 +166,9 @@ sub is_a_type_of {
     my $self = shift;
     my $type = shift;
 
-    return any { $_->_signature eq $type->_signature }
-    $self->_ancestors_and_self;
+    return
+        any { $_->_signature eq $type->_signature }
+        $self->_ancestors_and_self;
 }
 
 sub is_same_type_as {
@@ -222,7 +223,7 @@ sub _self_or_first_inlinable_ancestor {
     my $self = shift;
 
     my $type = first { $_->_has_inline_generator }
-    reverse $self->_ancestors_and_self;
+        reverse $self->_ancestors_and_self;
 
     # This should never happen because ->can_be_inlined should always be
     # checked before this builder is called.
@@ -548,6 +549,7 @@ sub _build_signature {
     # address and stringifies to the same value. XXX - will this break under
     # threads?
     return join "\n",
+        ## no critic (Subroutines::ProtectPrivateSubs)
         ( $self->_has_parent ? $self->parent->_signature : () ),
         (
         defined $self->_constraint
@@ -627,7 +629,7 @@ Specio::Constraint::Role::Interface - The interface all type constraints should 
 
 =head1 VERSION
 
-version 0.47
+version 0.53
 
 =head1 DESCRIPTION
 
@@ -652,8 +654,6 @@ This role does the L<Specio::Role::Inlinable> role.
 
 Bugs may be submitted at L<https://github.com/houseabsolute/Specio/issues>.
 
-I am also usually active on IRC as 'autarch' on C<irc://irc.perl.org>.
-
 =head1 SOURCE
 
 The source code repository for Specio can be found at L<https://github.com/houseabsolute/Specio>.
@@ -664,7 +664,7 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2012 - 2021 by Dave Rolsky.
+This software is Copyright (c) 2012 - 2025 by Dave Rolsky.
 
 This is free software, licensed under:
 

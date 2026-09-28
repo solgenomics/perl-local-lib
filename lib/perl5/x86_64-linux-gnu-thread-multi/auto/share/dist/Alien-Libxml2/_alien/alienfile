@@ -62,6 +62,10 @@ my %bad_versions = map { $_ => 1 } (
   '2.6.0','2.6.1','2.6.2','2.6.3','2.6.4','2.6.5','2.6.6','2.6.7','2.6.8','2.6.9','2.6.10','2.6.11','2.6.12','2.6.13','2.6.14','2.6.15','2.6.19','2.6.20','2.6.25',
   '2.7.0','2.7.1',
   '2.9.4',
+  #  The next set have reported CVEs
+  (map {'2.11.' . $_} (0 .. 9)),
+  (map {'2.12.' . $_} (0 .. 9)),
+  (map {'2.13.' . $_} (0 .. 6)),
 );
 
 meta->around_hook(
@@ -131,12 +135,19 @@ share {
   # off there.  Turn it on elsewhere as it saves a copy.
   meta->prop->{out_of_source} = $^O eq 'MSWin32' ? 0 : 1;
 
-  plugin Download => (
-    url     => 'http://xmlsoft.org/sources/',
-    version => qr/^libxml2-sources-([\d\.]+)\.tar\.gz$/,
+  plugin 'Download::GitLab' => (
+    gitlab_host     => 'https://gitlab.gnome.org',
+    gitlab_user     => 'GNOME',
+    gitlab_project  => 'libxml2',
+    type            => 'link',
+    format          => 'tar.xz',
+    version_from    => 'tag_name',
+    convert_version => sub {
+      my $version = shift;
+      $version =~ s/^v//;
+      $version;
+    },
   );
-
-  plugin Extract => 'tar.gz';
 
   if($^O eq 'MSWin32' && $Config{ccname} eq 'cl')
   {

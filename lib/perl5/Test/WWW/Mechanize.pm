@@ -2,6 +2,7 @@ package Test::WWW::Mechanize;
 
 use strict;
 use warnings;
+use 5.010;
 
 =head1 NAME
 
@@ -9,11 +10,11 @@ Test::WWW::Mechanize - Testing-specific WWW::Mechanize subclass
 
 =head1 VERSION
 
-Version 1.54
+Version 1.60
 
 =cut
 
-our $VERSION = '1.54';
+our $VERSION = '1.60';
 
 =head1 SYNOPSIS
 
@@ -69,7 +70,13 @@ use WWW::Mechanize ();
 use Test::LongString;
 use Test::Builder ();
 use Carp ();
-use Carp::Assert::More;
+use Carp::Assert::More qw(
+    assert_arrayref
+    assert_in
+    assert_is
+    assert_isa
+    assert_nonblank
+);
 
 use parent 'WWW::Mechanize';
 
@@ -176,6 +183,12 @@ sub get_ok {
 
     my ($url,$desc,%opts) = $self->_unpack_args( 'GET', @_ );
 
+    if ( !defined($url) ) {
+        my $ok = $TB->ok( 0, $desc );
+        $TB->diag( 'URL cannot be undef.' );
+        return $ok;
+    }
+
     $self->get( $url, %opts );
     my $ok = $self->success;
 
@@ -220,16 +233,25 @@ sub _post_load_validation {
 
         if ( !$emitted_ok ) {
             $TB->ok( $ok, $desc );
+            if ( !$ok ) {
+                # Only show the URL and not the response message, because the
+                # problem is with the lint/tidy, not the fetching of the URL.
+                my $url = $self->_diag_url();
+                $TB->diag( $url ) if $url;
+            }
         }
     }
     else {
         $TB->ok( $ok, $desc );
+        my $url = $self->_diag_url();
+        $TB->diag( $url ) if $url;
         $TB->diag( $self->status );
         $TB->diag( $self->response->message ) if $self->response;
     }
 
     return $ok;
 }
+
 
 =head2 $mech->head_ok($url, [ \%LWP_options ,] $desc)
 
@@ -247,11 +269,19 @@ sub head_ok {
 
     my ($url,$desc,%opts) = $self->_unpack_args( 'HEAD', @_ );
 
+    if ( !defined($url) ) {
+        my $ok = $TB->ok( 0, $desc );
+        $TB->diag( 'URL cannot be undef.' );
+        return $ok;
+    }
+
     $self->head( $url, %opts );
     my $ok = $self->success;
 
     $TB->ok( $ok, $desc );
     if ( !$ok ) {
+        my $url = $self->_diag_url();
+        $TB->diag( $url ) if $url;
         $TB->diag( $self->status );
         $TB->diag( $self->response->message ) if $self->response;
     }
@@ -282,6 +312,12 @@ sub post_ok {
 
     my ($url,$desc,%opts) = $self->_unpack_args( 'POST', @_ );
 
+    if ( !defined($url) ) {
+        my $ok = $TB->ok( 0, $desc );
+        $TB->diag( 'URL cannot be undef.' );
+        return $ok;
+    }
+
     $self->post( $url, \%opts );
     my $ok = $self->success;
     $ok = $self->_post_load_validation( $ok, $desc );
@@ -304,12 +340,21 @@ sub put_ok {
     my $self = shift;
 
     my ($url,$desc,%opts) = $self->_unpack_args( 'PUT', @_ );
+
+    if ( !defined($url) ) {
+        my $ok = $TB->ok( 0, $desc );
+        $TB->diag( 'URL cannot be undef.' );
+        return $ok;
+    }
+
     $opts{content} = '' if !exists $opts{content};
     $self->put( $url, %opts );
 
     my $ok = $self->success;
     $TB->ok( $ok, $desc );
     if ( !$ok ) {
+        my $url = $self->_diag_url();
+        $TB->diag( $url ) if $url;
         $TB->diag( $self->status );
         $TB->diag( $self->response->message ) if $self->response;
     }
@@ -332,6 +377,12 @@ sub delete_ok {
     my $self = shift;
 
     my ($url,$desc,%opts) = $self->_unpack_args( 'DELETE', @_ );
+
+    if ( !defined($url) ) {
+        my $ok = $TB->ok( 0, $desc );
+        $TB->diag( 'URL cannot be undef.' );
+        return $ok;
+    }
 
     if ($self->can('delete')) {
         $self->delete( $url, %opts );
@@ -444,7 +495,7 @@ sub follow_link_ok {
        Carp::croak 'FATAL: parameters must be given as a hashref';
     }
 
-    # return from follow_link() is an HTTP::Response or undef
+    # The return from follow_link() is an HTTP::Response or undef.
     my $response = $self->follow_link( %{$parms} );
 
     my $ok = $response && $response->is_success;
@@ -1440,7 +1491,7 @@ sub _check_links_content {
     return @failures;
 }
 
-# Create an array of urls to match for mech to follow.
+# Return a list of URLs to match for Mech to follow.
 sub _format_links {
     my $links = shift;
 
@@ -1468,7 +1519,7 @@ sub _format_links {
 
 =head2 $mech->scrape_text_by_attr( $attr, $attr_regex [, $html ] )
 
-Returns an array of strings, each string the text surrounded by an
+Returns a list of strings, each string the text surrounded by an
 element with attribute I<$attr> of value I<$value>.  You can also pass in
 a regular expression.  If nothing is found the return is an empty list.
 In scalar context the return is the first string found.
@@ -1628,7 +1679,7 @@ sub scraped_id_like {
 }
 
 
-=head2 id_exists( $id )
+=head2 $mech->id_exists( $id )
 
 Returns TRUE/FALSE if the given ID exists in the given HTML, or if none
 is provided, then the current page.
@@ -1764,7 +1815,8 @@ sub lacks_ids_ok {
             $TB->plan( tests => scalar @{$ids} );
 
             foreach my $id ( @$ids ) {
-                $self->lacks_id_ok( $id, "ID '" . ($id // '') . "' should not exist" );
+                my $id_disp = defined($id) ? $id : '<undef>';
+                $self->lacks_id_ok( $id, "ID '$id_disp' should not exist" );
             }
         }
     );
@@ -1773,7 +1825,7 @@ sub lacks_ids_ok {
 
 =head2 $mech->button_exists( $button )
 
-Returns a boolean saying whether the submit C<$button> exists. Does not
+Returns a boolean saying whether a submit button with the name C<$button> exists. Does not
 do a test. For that you want C<button_exists_ok> or C<lacks_button_ok>.
 
 =cut
@@ -1802,7 +1854,7 @@ sub button_exists_ok {
 
     my $self   = shift;
     my $button = shift;
-    my $msg    = shift;
+    my $msg    = shift || qq{Button named "$button" exists};
 
     return $TB->ok( $self->button_exists( $button ), $msg );
 }
@@ -1810,7 +1862,7 @@ sub button_exists_ok {
 
 =head2 $mech->lacks_button_ok( $button [, $msg] )
 
-Asserts that the button exists on the page.
+Asserts that no button named C<$button> exists on the page.
 
 =cut
 
@@ -1819,7 +1871,7 @@ sub lacks_button_ok {
 
     my $self   = shift;
     my $button = shift;
-    my $msg    = shift;
+    my $msg    = shift || qq{No button named "$button" exists};
 
     return $TB->ok( !$self->button_exists( $button ), $msg );
 }
@@ -1893,18 +1945,18 @@ sub autotidy {
 
 =head2 $mech->grep_inputs( \%properties )
 
-grep_inputs() returns an array of all the input controls in the
-current form whose properties match all of the regexes in $properties.
+Returns a list of all the input controls in the
+current form whose properties match all of the regexes in C<$properties>.
 The controls returned are all descended from HTML::Form::Input.
 
-If $properties is undef or empty then all inputs will be
+If C<$properties> is undef or empty then all inputs will be
 returned.
 
 If there is no current page, there is no form on the current
 page, or there are no submit controls in the current form
-then the return will be an empty array.
+then the return will be an empty list.
 
-    # get all text controls whose names begin with "customer"
+    # Get all text controls whose names begin with "customer".
     my @customer_text_inputs =
         $mech->grep_inputs( {
             type => qr/^(text|textarea)$/,
@@ -1948,7 +2000,7 @@ sub grep_submits {
     return @found;
 }
 
-# search an array of hashrefs, returning an array of the incoming
+# Search an array of hashrefs, returning a list of the incoming
 # hashrefs that match *all* the pattern in $patterns.
 sub _grep_hashes {
     my $hashes = shift;
@@ -1957,13 +2009,13 @@ sub _grep_hashes {
     my @found;
 
     if ( ! %{$patterns} ) {
-        # nothing to match on, so return them all
+        # Nothing to match on, so return them all.
         @found = @{$hashes};
     }
     else {
         foreach my $hash ( @{$hashes} ) {
 
-            # check every pattern for a match on the current hash
+            # Check every pattern for a match on the current hash.
             my $matches_everything = 1;
             foreach my $pattern_key ( keys %{$patterns} ) {
                 $matches_everything = 0 unless exists $hash->{$pattern_key} && $hash->{$pattern_key} =~ $patterns->{$pattern_key};
@@ -2040,13 +2092,13 @@ sub stuff_inputs {
     assert_isa( $options, 'HASH' );
     assert_in( $_, ['ignore', 'fill', 'specs'] ) foreach ( keys %{$options} );
 
-    # set up the fill we'll use unless a field overrides it
+    # Set up the fill we'll use unless a field overrides it.
     my $default_fill = '@';
-    if ( exists $options->{fill} && defined $options->{fill} && length($options->{fill}) > 0 ) {
+    if ( defined $options->{fill} && length($options->{fill}) > 0 ) {
         $default_fill = $options->{fill};
     }
 
-    # fields in the form to not stuff
+    # Fields in the form to not stuff
     my $ignore = {};
     if ( exists $options->{ignore} ) {
         assert_isa( $options->{ignore}, 'ARRAY' );
@@ -2071,10 +2123,10 @@ sub stuff_inputs {
 
         my $name = $field->name();
 
-        # skip if it's one of the fields to ignore
+        # Skip if it's one of the fields to ignore.
         next if exists $ignore->{ $name };
 
-        # fields with no maxlength will get this many characters
+        # Fields with no maxlength will get this many characters.
         my $maxlength = 66000;
 
         # maxlength from the HTML
@@ -2088,7 +2140,7 @@ sub stuff_inputs {
         my $fill = $default_fill;
 
         if ( exists $specs->{$name} ) {
-            # process the per-field info
+            # Process the per-field info.
 
             if ( exists $specs->{$name}->{fill} && defined $specs->{$name}->{fill} && length($specs->{$name}->{fill}) > 0 ) {
                 $fill = $specs->{$name}->{fill};
@@ -2103,11 +2155,9 @@ sub stuff_inputs {
 
         # stuff it
         if ( ($maxlength % length($fill)) == 0 ) {
-            # the simple case
             $field->value( $fill x ($maxlength/length($fill)) );
         }
         else {
-            # can be improved later
             $field->value( substr( $fill x int(($maxlength + length($fill) - 1)/length($fill)), 0, $maxlength ) );
         }
     } # for @inputs
@@ -2141,8 +2191,6 @@ Checks that all text input fields in the current form specify a maximum
 input length.  Fields for which the concept of input length is irrelevant,
 and controls that HTML does not allow to be capped (e.g. textarea)
 are ignored.
-
-The inputs in the returned array are descended from HTML::Form::Input.
 
 The return is true if the test succeeded, false otherwise.
 
@@ -2180,9 +2228,76 @@ sub lacks_uncapped_inputs {
     return $ok;
 }
 
-=head1 TODO
+=head2 $mech->check_all_images_ok( [%criterium ], [$comment] )
 
-Add HTML::Tidy capabilities.
+Executes a test to make sure all images in the page can be downloaded. It
+does this by running C<HEAD> requests on them. The current page content stays the same.
+
+The test fails if any image cannot be found, but reports all of the ones that were not found.
+
+For a definition of I<all images>, see L<< C<images>in WWW::Mechanize|WWW::Mechanize/$mech->images >>.
+
+The optional C<%criterium> argument can be passed in before the C<$comment> and will be used to define
+which images should be considered. This is useful to filter out specific paths.
+
+    $mech->check_all_images_ok( url_regex => qr{^/}, 'All absolute images should exist');
+    $mech->check_all_images_ok( url_regex => qr{\.(?:gif|jpg)$}, 'All gif and jpg images should exist');
+    $mech->check_all_images_ok(
+        url_regex => qr{^((?!\Qhttps://googleads.g.doubleclick.net/\E).)*$},
+        'All images should exist, but Ignore the ones from Doubleclick'
+    );
+
+For a full list of possible arguments see L<< C<find_all_images>in WWW::Mechanize|WWW::Mechanize/$mech->find_all_images >>.
+
+The return is true if the test succeeded, false otherwise.
+
+=cut
+
+sub check_all_images_ok {
+    my $self = shift;
+    my @args = @_;
+
+    my $comment;
+    if ( @args % 2 ) {
+        $comment = pop @args;
+    }
+
+    $comment = 'All images in the page should exist' unless defined($comment);
+
+    require HTTP::Request::Common;
+
+    my @not_ok;
+    foreach my $img ( map { $_->URI } $self->find_all_images(@args) ) {
+        my $abs = $img->abs;
+
+        state $head_cache; # Cache images we've already checked between calls.
+        if ( !$head_cache->{$abs}++ ) {
+            # WWW::Mechanize->_make_request makes a raw LWP::UserAgent request that does
+            # not show up in our history and does not mess with our current content.
+            my $res = $self->_make_request( HTTP::Request::Common::HEAD($abs) );
+            if ( not $res->is_success ) {
+                push( @not_ok, $img . ' returned code ' . $res->code );
+            }
+        }
+    }
+
+    my $ok = $TB->ok( @not_ok == 0, $comment );
+    $TB->diag($_) for @not_ok;
+
+    return $ok;
+}
+
+
+sub _diag_url {
+    my $self = shift;
+
+    my $uri = $self->uri;
+
+    return $uri ? $uri->as_string : 'Unable to determine URL';
+}
+
+
+=head1 TODO
 
 Other ideas for features are at https://github.com/petdance/test-www-mechanize
 
@@ -2222,6 +2337,7 @@ L<http://search.cpan.org/dist/Test-WWW-Mechanize>
 =head1 ACKNOWLEDGEMENTS
 
 Thanks to
+Julien Fiegehenn,
 @marderh,
 Eric A. Zarko,
 @moznion,
@@ -2243,7 +2359,7 @@ and Pete Krawczyk for patches.
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2004-2020 Andy Lester.
+Copyright 2004-2022 Andy Lester.
 
 This library is free software; you can redistribute it and/or modify it
 under the terms of the Artistic License version 2.0.

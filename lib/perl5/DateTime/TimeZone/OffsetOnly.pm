@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use namespace::autoclean;
 
-our $VERSION = '2.51';
+our $VERSION = '2.68';
 
 use parent 'DateTime::TimeZone';
 
@@ -95,7 +95,7 @@ DateTime::TimeZone::OffsetOnly - A DateTime::TimeZone object that just contains 
 
 =head1 VERSION
 
-version 2.51
+version 2.68
 
 =head1 SYNOPSIS
 
@@ -103,10 +103,9 @@ version 2.51
 
 =head1 DESCRIPTION
 
-This class is used to provide the DateTime::TimeZone API needed by
-DateTime.pm, but with a fixed offset.  An object in this class always
-returns the same offset as was given in its constructor, regardless of
-the date.
+This class is used to provide the DateTime::TimeZone API needed by DateTime.pm,
+but with a fixed offset.  An object in this class always returns the same
+offset as was given in its constructor, regardless of the date.
 
 =head1 USAGE
 
@@ -115,20 +114,22 @@ C<category()> method returns undef.
 
 =head2 DateTime::TimeZone::OffsetOnly->new ( offset => $offset )
 
-The value given to the offset parameter must be a string such as
-"+0300".  Strings will be converted into numbers by the
+The value given to the offset parameter must be a string such as "+0300".
+Strings will be converted into numbers by the
 C<DateTime::TimeZone::offset_as_seconds()> function.
 
 =head2 $tz->offset_for_datetime( $datetime )
 
-No matter what date is given, the offset provided to the constructor
-is always used.
+No matter what date is given, the offset provided to the constructor is always
+used.
 
 =head2 $tz->name()
 
+This returns the offset string form.
+
 =head2 $tz->short_name_for_datetime()
 
-Both of these methods return the offset in string form.
+This returns the offset string form.
 
 =head1 SUPPORT
 
@@ -144,7 +145,7 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2021 by Dave Rolsky.
+This software is copyright (c) 2026 by Dave Rolsky.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -1,7 +1,7 @@
 {
   am_pm_abbreviated => [
     "mba\N{U+a78c}mba\N{U+a78c}",
-    "\N{U+014b}ka mb\N{U+0254}\N{U+0301}t nji",
+    "\N{U+014b}ka\N{U+202f}mb\N{U+0254}\N{U+0301}t\N{U+202f}nji",
   ],
   available_formats => {
     Bh => "h B",
@@ -34,7 +34,7 @@
     MMMd => "MMM d",
     Md => "d.M",
     d => "d",
-    h => "h a",
+    h => "h\N{U+202f}a",
     hm => "h:mm a",
     hms => "h:mm:ss a",
     hmsv => "h:mm:ss a v",
@@ -267,5 +267,5 @@
   time_format_medium => "HH:mm:ss",
   time_format_short => "HH:mm",
   variant => undef,
-  version => 40,
+  version => 47,
 }

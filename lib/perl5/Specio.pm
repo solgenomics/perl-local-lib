@@ -5,7 +5,34 @@ use warnings;
 
 use 5.008;
 
-our $VERSION = '0.47';
+our $VERSION = '0.53';
+
+use Module::Implementation;
+
+use Exporter qw( import );
+
+BEGIN {
+    # This env var exists for the benefit of the PurePerlTests dzil plugin, which only knows how to
+    # set an env var to a true value.
+    if ( $ENV{SPECIO_TEST_PP} ) {
+        ## no critic (Variables::RequireLocalizedPunctuationVars)
+        $ENV{SPECIO_IMPLEMENTATION} = 'PP';
+    }
+
+    my $loader = Module::Implementation::build_loader_sub(
+        implementations => [ 'XS', 'PP' ],
+        symbols         => ['_clone'],
+    );
+    $loader->();
+}
+
+# It's a bit weird to put this in the root module, but this way the env var that
+# Module::Implementation::build_loader_sub uses will be named "SPECIO_IMPLEMENTATION". That way, if
+# in the future there are other optional XS components besides the Clone implementation, we don't
+# end up with a bunch of different env vars.
+#
+## no critic (Modules::ProhibitAutomaticExportation)
+our @EXPORT = qw( _clone );
 
 1;
 
@@ -23,7 +50,7 @@ Specio - Type constraints and coercions for Perl
 
 =head1 VERSION
 
-version 0.47
+version 0.53
 
 =head1 SYNOPSIS
 
@@ -84,9 +111,6 @@ type to a variable at all.
 
 Instead, you can explicitly check a value against a type, and optionally coerce
 values to that type.
-
-My long-term goal is to replace Moose's built-in types and L<MooseX::Types>
-with this module.
 
 =head1 WHAT IS A TYPE?
 
@@ -421,6 +445,12 @@ have much better subroutine names for any frames.
 
 =back
 
+=head1 FORCING PURE PERL MODE
+
+For some use cases (notably fatpacking a program), you may want to force Specio
+to use pure Perl code instead of XS code. This can be done by setting the
+environment variable C<SPECIO_IMPLEMENTATION> to C<PP>.
+
 =head1 WHY THE NAME?
 
 This distro was originally called "Type", but that's an awfully generic top
@@ -428,16 +458,9 @@ level namespace. Specio is Latin for for "look at" and "spec" is the root for
 the word "species". It's short, relatively easy to type, and not used by any
 other distro.
 
-=head1 LONG-TERM PLANS
-
-Eventually I'd like to see this distro replace Moose's internal type system,
-which would also make MooseX::Types obsolete.
-
 =head1 SUPPORT
 
 Bugs may be submitted at L<https://github.com/houseabsolute/Specio/issues>.
-
-I am also usually active on IRC as 'autarch' on C<irc://irc.perl.org>.
 
 =head1 SOURCE
 
@@ -458,7 +481,7 @@ software much more, unless I get so many donations that I can consider working
 on free software full time (let's all have a chuckle at that together).
 
 To donate, log into PayPal and send money to autarch@urth.org, or use the
-button at L<https://www.urth.org/fs-donation.html>.
+button at L<https://houseabsolute.com/foss-donations/>.
 
 =head1 AUTHOR
 
@@ -466,9 +489,13 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 CONTRIBUTORS
 
-=for stopwords Chris White cpansprout Graham Knop Karen Etheridge
+=for stopwords Andrew Rodland Chris White cpansprout Graham Knop Karen Etheridge Vitaly Lipatov
 
 =over 4
+
+=item *
+
+Andrew Rodland <andrewr@vimeo.com>
 
 =item *
 
@@ -486,11 +513,15 @@ Graham Knop <haarg@haarg.org>
 
 Karen Etheridge <ether@cpan.org>
 
+=item *
+
+Vitaly Lipatov <lav@altlinux.ru>
+
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2012 - 2021 by Dave Rolsky.
+This software is Copyright (c) 2012 - 2025 by Dave Rolsky.
 
 This is free software, licensed under:
 

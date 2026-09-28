@@ -60,7 +60,7 @@ use PPI             ();
 use PPI::Exception  ();
 use PPI::Singletons '%_PARENT';
 
-our $VERSION = '1.272';
+our $VERSION = '1.291';
 
 our $errstr = "";
 
@@ -111,9 +111,10 @@ Returns a new C<PPI::Lexer> object
 sub new {
 	my $class = shift->_clear;
 	bless {
-		Tokenizer => undef, # Where we store the tokenizer for a run
-		buffer    => [],    # The input token buffer
-		delayed   => [],    # The "delayed insignificant tokens" buffer
+		Tokenizer      => undef,    # Where we store the tokenizer for a run
+		buffer         => [],       # The input token buffer
+		delayed        => [],       # The "delayed insignificant tokens" buffer
+		features_stack => [],       # Stack of features in scope
 	}, $class;
 }
 
@@ -133,29 +134,13 @@ creates a L<PPI::Tokenizer> for the content and lexes the token stream
 produced by the tokenizer. Basically, a sort of all-in-one method for
 getting a L<PPI::Document> object from a file name.
 
+Additional arguments are passed to the tokenizer as a hash.
+
 Returns a L<PPI::Document> object, or C<undef> on error.
 
 =cut
 
-sub lex_file {
-	my $self = ref $_[0] ? shift : shift->new;
-	my $file = _STRING(shift);
-	unless ( defined $file ) {
-		return $self->_error("Did not pass a filename to PPI::Lexer::lex_file");
-	}
-
-	# Create the Tokenizer
-	my $Tokenizer = eval {
-		X_TOKENIZER->new($file);
-	};
-	if ( _INSTANCE($@, 'PPI::Exception') ) {
-		return $self->_error( $@->message );
-	} elsif ( $@ ) {
-		return $self->_error( $errstr );
-	}
-
-	$self->lex_tokenizer( $Tokenizer );
-}
+sub lex_file { shift->_lex_input(@_) }
 
 =pod
 
@@ -165,28 +150,26 @@ The C<lex_source> method takes a normal scalar string as argument. It
 creates a L<PPI::Tokenizer> object for the string, and then lexes the
 resulting token stream.
 
+Additional arguments are passed to the tokenizer as a hash.
+
 Returns a L<PPI::Document> object, or C<undef> on error.
 
 =cut
 
-sub lex_source {
-	my $self   = ref $_[0] ? shift : shift->new;
-	my $source = shift;
-	unless ( defined $source and not ref $source ) {
-		return $self->_error("Did not pass a string to PPI::Lexer::lex_source");
-	}
+sub lex_source { shift->_lex_input( \shift, @_ ) }
 
-	# Create the Tokenizer and hand off to the next method
-	my $Tokenizer = eval {
-		X_TOKENIZER->new(\$source);
-	};
-	if ( _INSTANCE($@, 'PPI::Exception') ) {
-		return $self->_error( $@->message );
-	} elsif ( $@ ) {
-		return $self->_error( $errstr );
-	}
+sub _lex_input {
+	my ( $self, $input, %args ) = @_;
+	$self = ref $self ? $self : $self->new;
 
-	$self->lex_tokenizer( $Tokenizer );
+	# Create the Tokenizer
+	my $Tokenizer = eval { X_TOKENIZER->new($input) };
+	return    #
+	  $@
+	  ? $self->_error( _INSTANCE( $@, 'PPI::Exception' ) ? $@->message : $@ )
+	  : !_INSTANCE( $Tokenizer, 'PPI::Tokenizer' )
+	  ? $self->_error($Tokenizer)
+	  : $self->lex_tokenizer( $Tokenizer, %args );
 }
 
 =pod
@@ -195,6 +178,8 @@ sub lex_source {
 
 The C<lex_tokenizer> takes as argument a L<PPI::Tokenizer> object. It
 lexes the token stream from the tokenizer into a L<PPI::Document> object.
+
+Additional arguments are set on the L<PPI::Document> produced.
 
 Returns a L<PPI::Document> object, or C<undef> on error.
 
@@ -206,14 +191,22 @@ sub lex_tokenizer {
 	return $self->_error(
 		"Did not pass a PPI::Tokenizer object to PPI::Lexer::lex_tokenizer"
 	) unless $Tokenizer;
+	my %args = @_;
 
 	# Create the empty document
 	my $Document = PPI::Document->new;
+	ref($Document)->_setattr( $Document, %args );
+	$Tokenizer->_document($Document);
+	if (my $feat = $Document->feature_mods) {
+		push @{$self->{features_stack}}, $feat;
+		$Tokenizer->_features($feat);
+	}
 
 	# Lex the token stream into the document
 	$self->{Tokenizer} = $Tokenizer;
 	if ( !eval { $self->_lex_document($Document); 1 } ) {
 		# If an error occurs DESTROY the partially built document.
+		$Tokenizer->_document(undef);
 		undef $Document;
 		if ( _INSTANCE($@, 'PPI::Exception') ) {
 			return $self->_error( $@->message );
@@ -428,7 +421,12 @@ sub _statement {
 	my $is_lexsub = 0;
 
 	# Is it a token in our known classes list
-	my $class = $STATEMENT_CLASSES{$Token->content};
+	my $content = $Token->content;
+	my $class =
+	  ( $content eq 'try' and ( $self->{features_stack}[-1] || {} )->{try} )
+	  ? 'PPI::Statement::Compound'
+	  : $STATEMENT_CLASSES{$content};
+
 	if ( $class ) {
 		# Is the next significant token a =>
 		# Read ahead to the next significant token
@@ -439,9 +437,21 @@ sub _statement {
 				next;
 			}
 
+			# Scheduled block must be followed by left curly or
+			# semicolon.  Otherwise we have something else (e.g.
+			# open( CHECK, ... );
+			if (
+				'PPI::Statement::Scheduled' eq $class
+				and not ( $Next->isa( 'PPI::Token::Structure' )
+					and $Next->content =~ m/\A[{;]\z/ ) # }
+			) {
+				$class = undef;
+				last;
+			}
+
 			# Lexical subroutine
 			if (
-				$Token->content =~ /^(?:my|our|state)$/
+				$content =~ /^(?:my|our|state)\z/
 				and $Next->isa( 'PPI::Token::Word' ) and $Next->content eq 'sub'
 			) {
 				# This should be PPI::Statement::Sub rather than PPI::Statement::Variable
@@ -502,7 +512,7 @@ sub _statement {
 	return $class if $class;
 
 	# Handle the more in-depth sub detection
-	if ( $is_lexsub || $Token->content eq 'sub' ) {
+	if ( $is_lexsub || $content eq 'sub' ) {
 		# Read ahead to the next significant token
 		my $Next;
 		while ( $Next = $self->_get_token ) {
@@ -544,7 +554,7 @@ sub _statement {
 		return 'PPI::Statement::Sub';
 	}
 
-	if ( $Token->content eq 'use' ) {
+	if ( $content eq 'use' ) {
 		# Add a special case for "use v6" lines.
 		my $Next;
 		while ( $Next = $self->_get_token ) {
@@ -607,6 +617,20 @@ sub _statement {
 	return 'PPI::Statement';
 }
 
+sub _update_features {
+	my ( $self, $statement ) = @_;
+
+	return if ref $statement ne 'PPI::Statement::Include';
+	return unless    #
+	  my $new_features = $statement->feature_mods;
+	push @{ $self->{features_stack} }, {}
+	  if not @{ $self->{features_stack} };
+	my $current_features = $self->{features_stack}[-1];
+	$self->{Tokenizer}->_features    #
+	  ( $self->{features_stack}[-1] =
+		  { %{$current_features}, %{$new_features} } );
+}
+
 sub _lex_statement {
 	my ($self, $Statement) = @_;
 	# my $self      = shift;
@@ -635,6 +659,7 @@ sub _lex_statement {
 			$Token->isa('PPI::Token::Separator')
 		) {
 			# Rollback and end the statement
+			$self->_update_features( $Statement );
 			return $self->_rollback( $Token );
 		}
 
@@ -643,6 +668,7 @@ sub _lex_statement {
 			# Have we hit an implicit end to the statement
 			unless ( $self->_continues( $Statement, $Token ) ) {
 				# Rollback and finish the statement
+				$self->_update_features( $Statement );
 				return $self->_rollback( $Token );
 			}
 		}
@@ -656,6 +682,7 @@ sub _lex_statement {
 		# Handle normal statement terminators
 		if ( $Token->content eq ';' ) {
 			$self->_add_element( $Statement, $Token );
+			$self->_update_features( $Statement );
 			return 1;
 		}
 
@@ -678,6 +705,7 @@ sub _lex_statement {
 
 	# No, it's just the end of the file...
 	# Roll back any insignificant tokens, they'll get added at the Document level
+	$self->_update_features( $Statement );
 	$self->_rollback;
 }
 
@@ -881,6 +909,22 @@ sub _continues {
 		return $Token->isa('PPI::Token::Structure') && $Token->content eq '{';
 	}
 
+	if ( $type eq 'try' and $LastChild->presumed_features->{try} ) {
+		return 1 if not $LastChild->isa('PPI::Structure::Block');
+
+		my $NextLast = $Statement->schild(-2);
+		return ''
+		  if $NextLast
+		  and $NextLast->isa('PPI::Token')
+		  and $NextLast->isa('PPI::Token::Word')
+		  and $NextLast->content eq 'catch';
+
+		return 1    #
+		  if $Token->isa('PPI::Token::Word') and $Token->content eq 'catch';
+
+		return '';
+	}
+
 	# Handle the common continuable block case
 	if ( $LastChild->isa('PPI::Structure::Block') ) {
 		# LABEL while (EXPR) BLOCK
@@ -1020,6 +1064,8 @@ sub _round {
 		return 'PPI::Structure::Given';
 	} elsif ( $Parent->isa('PPI::Statement::When') ) {
 		return 'PPI::Structure::When';
+	} elsif ( $Parent->isa('PPI::Statement::Sub') ) {
+		return 'PPI::Structure::Signature';
 	}
 
 	# Otherwise, it must be a list
@@ -1255,6 +1301,8 @@ sub _lex_structure {
 	# my $self      = shift;
 	# my $Structure = _INSTANCE(shift, 'PPI::Structure') or die "Bad param 1";
 
+	push @{$self->{features_stack}}, $self->{features_stack}[-1] || {};
+
 	# Start the processing loop
 	my $Token;
 	while ( ref($Token = $self->_get_token) ) {
@@ -1293,6 +1341,8 @@ sub _lex_structure {
 
 		# Is this the close of a structure ( which would be an error )
 		if ( $Token->__LEXER__closes ) {
+			pop @{$self->{features_stack}};
+
 			# Is this OUR closing structure
 			if ( $Token->content eq $Structure->start->__LEXER__opposite ) {
 				# Add any delayed tokens, and the finishing token (the ugly way)
@@ -1336,6 +1386,8 @@ sub _lex_structure {
 	unless ( defined $Token ) {
 		PPI::Exception->throw;
 	}
+
+	pop @{$self->{features_stack}};
 
 	# No, it's just the end of file.
 	# Add any insignificant trailing tokens.
@@ -1466,7 +1518,7 @@ sub _buffer {
 
 # Set the error message
 sub _error {
-	$errstr = $_[1];
+	$errstr = "Lexer failed: $_[1]";
 	undef;
 }
 

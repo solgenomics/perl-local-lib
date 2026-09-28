@@ -29,7 +29,7 @@ our @EXPORT = qw(
 );
 
 # ABSTRACT: Tools for testing Alien::Build + alienfile
-our $VERSION = '2.46'; # VERSION
+our $VERSION = '2.84'; # VERSION
 
 
 my $build;
@@ -297,6 +297,7 @@ sub alien_extract_ok
   my $ok;
   my $dir;
   my @diag;
+  my @note;
 
   if($build)
   {
@@ -321,10 +322,12 @@ sub alien_extract_ok
       if(-d $dir)
       {
         $ok = 1;
+        push @note, $out if defined $out;
       }
       else
       {
         $ok = 0;
+        push @diag, $out if defined $out;
         push @diag, 'no directory';
       }
     }
@@ -337,6 +340,7 @@ sub alien_extract_ok
 
   my $ctx = context();
   $ctx->ok($ok, $name);
+  $ctx->note($_) for @note;
   $ctx->diag($_) for @diag;
   $ctx->release;
 
@@ -623,7 +627,7 @@ Test::Alien::Build - Tools for testing Alien::Build + alienfile
 
 =head1 VERSION
 
-version 2.46
+version 2.84
 
 =head1 SYNOPSIS
 
@@ -899,9 +903,11 @@ Håkon Hægland (hakonhagland, HAKONH)
 
 nick nauwelaerts (INPHOBIA)
 
+Florian Weimer
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2020 by Graham Ollis.
+This software is copyright (c) 2011-2022 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

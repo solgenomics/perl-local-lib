@@ -1,1 +1,9 @@
-/home/production/cxgn/local-lib/lib/perl5/HTML/Form.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/HTML/Form.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/HTML/Form/FileInput.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/HTML/Form/IgnoreInput.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/HTML/Form/ImageInput.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/HTML/Form/Input.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/HTML/Form/KeygenInput.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/HTML/Form/ListInput.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/HTML/Form/SubmitInput.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/HTML/Form/TextInput.pm

@@ -86,8 +86,9 @@ use PPI::Element    ();
 use PPI::Token      ();
 use PPI::Exception  ();
 use PPI::Exception::ParserRejection ();
+use PPI::Document ();
 
-our $VERSION = '1.272';
+our $VERSION = '1.291';
 
 # The x operator cannot follow most Perl operators, implying that
 # anything beginning with x following an operator is a word.
@@ -159,6 +160,7 @@ sub new {
 		# Source code
 		source       => undef,
 		source_bytes => undef,
+		document     => undef,
 
 		# Line buffer
 		line         => undef,
@@ -170,6 +172,7 @@ sub new {
 		token        => undef,
 		class        => 'PPI::Token::BOM',
 		zone         => 'PPI::Token::Whitespace',
+		feature_set  => undef,
 
 		# Output token buffer
 		tokens       => [],
@@ -180,25 +183,18 @@ sub new {
 		perl6        => [],
 	}, $class;
 
-	if ( ! defined $_[1] ) {
-		# We weren't given anything
-		PPI::Exception->throw("No source provided to Tokenizer");
-
-	} elsif ( ! ref $_[1] ) {
+	if ( ! ref $_[1] ) {
 		my $source = PPI::Util::_slurp($_[1]);
-		if ( ref $source ) {
-			# Content returned by reference
-			$self->{source} = $$source;
-		} else {
-			# Errors returned as a string
-			return( $source );
-		}
+		PPI::Exception->throw("Tokenizer failed to open file: $source")
+		  if not ref $source;
+		$self->{source} = $$source;
 
 	} elsif ( _SCALAR0($_[1]) ) {
-		$self->{source} = ${$_[1]};
+		PPI::Exception->throw("Did not pass a string: ${$_[1]}")
+			if _SCALAR0( $self->{source} = ${$_[1]} );
 
 	} elsif ( _ARRAY0($_[1]) ) {
-		$self->{source} = join '', map { "\n" } @{$_[1]};
+		$self->{source} = join '', map "$_\n", @{$_[1]};
 
 	} else {
 		# We don't support whatever this is
@@ -246,6 +242,11 @@ sub new {
 	}
 
 	$self;
+}
+
+sub _document {
+	my $self = shift;
+	return @_ ? $self->{document} = shift : $self->{document};
 }
 
 
@@ -573,8 +574,8 @@ sub _process_next_char {
 		return undef;
 	}
 
-	# Increment the counter and check for end of line
-	return 0 if ++$self->{line_cursor} >= $self->{line_length};
+    $self->{line_cursor}++;
+    return 0 if $self->_at_line_end;
 
 	# Pass control to the token class
 	my $result;
@@ -612,6 +613,11 @@ sub _process_next_char {
 	}
 
 	1;
+}
+
+sub _at_line_end {
+    my ($self) = @_;
+    return $self->{line_cursor} >= $self->{line_length};
 }
 
 
@@ -846,6 +852,13 @@ sub __current_token_is_forced_word {
 	# Otherwise we probably aren't forced
 	return '';
 }
+
+sub _features {
+	my ( $self, $arg ) = @_;
+	return $arg ? $self->{feature_set} = $arg : $self->{feature_set} || {};
+}
+
+sub _current_token_has_signatures_active { shift->{feature_set}{signatures} }
 
 1;
 

@@ -1,0 +1,68 @@
+{
+   "abstract" : "Lucy search engine library.",
+   "author" : [
+      "Lucy search project"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Build version 0.4234",
+   "keywords" : [
+      "search",
+      "lucy",
+      "lucene"
+   ],
+   "license" : [
+      "apache_2_0"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "Lucy",
+   "no_index" : {
+      "directory" : [
+         "buildlib",
+         "devel",
+         "sample"
+      ],
+      "package" : [
+         "Lucy::Test"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Clownfish" : 0.008,
+            "Clownfish::CFC" : 0.008,
+            "Devel::PPPort" : 3.14,
+            "ExtUtils::CBuilder" : 0.21,
+            "ExtUtils::ParseXS" : 3,
+            "Module::Build" : 0.280801
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Clownfish" : 0.008,
+            "Clownfish::CFC::Perl::Build" : 0.008,
+            "Module::Build" : 0.280801
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Clownfish" : 0.008,
+            "perl" : "v5.8.3"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/lucysearch/lucy/issues"
+      },
+      "homepage" : "https://github.com/lucysearch/lucy",
+      "repository" : {
+         "url" : "https://github.com/lucysearch/lucy.git"
+      }
+   },
+   "version" : "v0.8.0",
+   "x_serialization_backend" : "JSON::PP version 4.16"
+}

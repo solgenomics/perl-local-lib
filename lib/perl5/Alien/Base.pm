@@ -8,9 +8,10 @@ use Path::Tiny ();
 use Scalar::Util qw/blessed/;
 use Capture::Tiny 0.17 qw/capture_stdout/;
 use Text::ParseWords qw/shellwords/;
+use Alien::Util;
 
 # ABSTRACT: Base classes for Alien:: modules
-our $VERSION = '2.46'; # VERSION
+our $VERSION = '2.84'; # VERSION
 
 
 sub import {
@@ -121,7 +122,7 @@ sub _flags
   my $distdir = $config->{distdir};
   $distdir =~ s{\\}{/}g if $^O =~ /^(MSWin32|msys)$/;
 
-  if($prefix ne $distdir)
+  if(defined $flags && $prefix ne $distdir)
   {
     $flags = join ' ', map {
       my $flag = $_;
@@ -202,34 +203,9 @@ sub max_version {
 }
 
 
-# Sort::Versions isn't quite the same algorithm because it differs in
-# behaviour with leading zeroes.
-#   See also  https://dev.gentoo.org/~mgorny/pkg-config-spec.html#version-comparison
 sub version_cmp {
   shift;
-  my @x = (shift =~ m/([0-9]+|[a-z]+)/ig);
-  my @y = (shift =~ m/([0-9]+|[a-z]+)/ig);
-
-  while(@x and @y) {
-    my $x = shift @x; my $x_isnum = $x =~ m/[0-9]/;
-    my $y = shift @y; my $y_isnum = $y =~ m/[0-9]/;
-
-    if($x_isnum and $y_isnum) {
-      # Numerical comparison
-      return $x <=> $y if $x != $y;
-    }
-    elsif(!$x_isnum && !$y_isnum) {
-      # Alphabetic comparison
-      return $x cmp $y if $x ne $y;
-    }
-    else {
-      # Of differing types, the numeric one is newer
-      return $x_isnum - $y_isnum;
-    }
-  }
-
-  # Equal so far; the longer is newer
-  return @x <=> @y;
+  goto &Alien::Util::version_cmp;
 }
 
 
@@ -238,6 +214,22 @@ sub install_type {
   my $type = $self->config('install_type');
   return @_ ? $type eq $_[0] : $type;
 }
+
+
+
+sub is_system_install
+{
+  my($self) = @_;
+  $self->install_type('system');
+}
+
+
+sub is_share_install
+{
+  my($self) = @_;
+  $self->install_type('share');
+}
+
 
 sub _pkgconfig_keyword {
   my $self = shift;
@@ -419,11 +411,14 @@ sub dynamic_libs {
     }
 
     my @libpath;
-    foreach my $flag ($class->split_flags($class->libs))
+    if(defined $class->libs)
     {
-      if($flag =~ /^-L(.*)$/)
+      foreach my $flag ($class->split_flags($class->libs))
       {
-        push @libpath, $1;
+        if($flag =~ /^-L(.*)$/)
+        {
+          push @libpath, $1;
+        }
       }
     }
 
@@ -500,8 +495,7 @@ sub alien_helper {
 
 sub inline_auto_include {
   my ($class) = @_;
-  return [] unless $class->config('inline_auto_include');
-  $class->config('inline_auto_include')
+  $class->runtime_prop->{inline_auto_include} || $class->config('inline_auto_include') || []
 }
 
 sub Inline {
@@ -626,7 +620,7 @@ Alien::Base - Base classes for Alien:: modules
 
 =head1 VERSION
 
-version 2.46
+version 2.84
 
 =head1 SYNOPSIS
 
@@ -715,7 +709,7 @@ You can even use it with L<Inline> (C and C++ languages are supported):
 =head1 DESCRIPTION
 
 B<NOTE>: L<Alien::Base::ModuleBuild> is no longer bundled with L<Alien::Base> and has been spun off into a separate distribution.
-L<Alien::Build::ModuleBuild> will be a prerequisite for L<Alien::Base> until October 1, 2017.  If you are using L<Alien::Base::ModuleBuild>
+L<Alien::Base::ModuleBuild> will be a prerequisite for L<Alien::Base> until October 1, 2017.  If you are using L<Alien::Base::ModuleBuild>
 you need to make sure it is declared as a C<configure_requires> in your C<Build.PL>.  You may want to also consider using L<Alien::Base> and
 L<alienfile> as a more modern alternative.
 
@@ -752,7 +746,7 @@ Before using an L<Alien::Base> based L<Alien> directly, please consider the foll
 
 If you are wanting to use an L<Alien::Base> based L<Alien> with an XS module using L<ExtUtils::MakeMaker> or L<Module::Build>, it is highly
 recommended that you use L<Alien::Base::Wrapper>, rather than using the L<Alien> directly, because it handles a number of sharp edges and avoids
-pitfalls common when trying to use an L<Alien> directly with L<ExtUtils::MakMaker>.
+pitfalls common when trying to use an L<Alien> directly with L<ExtUtils::MakeMaker>.
 
 In the same vein, if you are wanting to use an L<Alien::Base> based L<Alien> with an XS module using L<Dist::Zilla> it is highly recommended
 that you use L<Dist::Zilla::Plugin::AlienBase::Wrapper> for the same reasons.
@@ -850,8 +844,8 @@ exactly, or at most the version specified, respectively.
 
   $cmp = Alien::MyLibrary->version_cmp($x, $y)
 
-Comparison method used by L<atleast_version>, L<exact_version> and
-L<max_version>. May be useful to implement custom comparisons, or for
+Comparison method used by L</atleast_version>, L</exact_version> and
+L</max_version>. May be useful to implement custom comparisons, or for
 subclasses to overload to get different version comparison semantics than the
 default rules, for packages that have some other rules than the F<pkg-config>
 behaviour.
@@ -865,8 +859,15 @@ behaviour to the C<< <=> >> and C<cmp> operators.
  my $bool = Alien::MyLibrary->install_type($install_type);
 
 Returns the install type that was used when C<Alien::MyLibrary> was
-installed.  If a type is provided (the second form in the synopsis)
-returns true if the actual install type matches.  Types include:
+installed.  
+
+If a type is provided (the second form in the synopsis)
+returns true if the actual install type matches.  
+For this use case it is recommended to use C<is_system_install> 
+or C<is_share_install> instead as these are less prone to 
+typographical errors.
+
+Types include:
 
 =over 4
 
@@ -882,13 +883,25 @@ or bundled with C<Alien::MyLibrary>.
 
 =back
 
+=head2 is_system_install
+
+ my $type = $build->is_system_install;
+
+Returns true if the alien is a system install type.  
+
+=head2 is_share_install
+
+ my $type = $build->is_share_install;
+
+Returns true if the alien is a share install type.  
+
 =head2 config
 
  my $value = Alien::MyLibrary->config($key);
 
 Returns the configuration data as determined during the install
-of L<Alien::MyLibrary>.  For the appropriate config keys, see
-L<Alien::Base::ModuleBuild::API#CONFIG-DATA>.
+of C<Alien::MyLibrary>.  For the appropriate config keys, see
+L<Alien::Base::ModuleBuild::API/"CONFIG DATA">.
 
 This is not typically used by L<Alien::Base> and L<alienfile>,
 but a compatible interface will be provided.
@@ -1075,7 +1088,7 @@ If you find a bug, please report it on the projects issue tracker on GitHub:
 
 =over 4
 
-=item L<https://github.com/PerlAlien/Alien-Base/issues>
+=item L<https://github.com/PerlAlien/Alien-Build/issues>
 
 =back
 
@@ -1094,7 +1107,7 @@ request.
 
 =over 4
 
-=item L<https://github.com/PerlAlien/Alien-Base/pulls>
+=item L<https://github.com/PerlAlien/Alien-Build/pulls>
 
 =back
 
@@ -1210,9 +1223,11 @@ Håkon Hægland (hakonhagland, HAKONH)
 
 nick nauwelaerts (INPHOBIA)
 
+Florian Weimer
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2020 by Graham Ollis.
+This software is copyright (c) 2011-2022 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
@@ -1221,5 +1236,4 @@ the same terms as the Perl 5 programming language system itself.
 
 __END__
 __POD__
-
 

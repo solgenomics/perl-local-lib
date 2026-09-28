@@ -12,7 +12,14 @@ use constant MORNING   => '08';
 use constant AFTERNOON => '14';
 use constant EVENING   => '20';
 
-our $VERSION = '1.44';
+our $VERSION = '1.50';
+
+my $multiply_by = sub
+{
+    my ($value, $opts) = @_;
+    return $value * $opts->{multiply_by} if exists $opts->{multiply_by};
+    return $value;
+};
 
 sub _no_op
 {
@@ -26,7 +33,7 @@ sub _ago_variant
     my $self = shift;
     $self->_register_trace;
     my $opts = pop;
-    $self->_subtract($opts->{unit} => shift);
+    $self->_subtract($opts->{unit} => $multiply_by->(shift, $opts));
 }
 
 sub _now_variant
@@ -38,7 +45,7 @@ sub _now_variant
     $self->_add_or_subtract({
         when  => $when,
         unit  => $opts->{unit},
-        value => $value,
+        value => $multiply_by->($value, $opts),
     });
 }
 
@@ -87,11 +94,12 @@ sub _hourtime_variant
     my ($value, $when) = @_;
     my $hours = $opts->{hours} || 0;
     if ($self->_valid_time(hour => $hours)) {
-        $self->_set(hour => $hours, minute => 0, second => 0);
+        $self->_set(hour => $hours);
+        $self->{datetime}->set(minute => 0, second => 0, nanosecond => 0);
         $self->_add_or_subtract({
             when  => $when,
             unit  => $opts->{unit},
-            value => $value,
+            value => $multiply_by->($value, $opts),
         });
     }
 }
@@ -175,7 +183,7 @@ sub _unit_variant
     $self->_add_or_subtract({
         when  => $when,
         unit  => $opts->{unit},
-        value => 1,
+        value => $multiply_by->(1, $opts),
     });
 }
 
@@ -196,7 +204,7 @@ sub _in_count_variant
     my $self = shift;
     $self->_register_trace;
     my $opts = pop;
-    $self->_add_or_subtract($opts->{unit} => shift);
+    $self->_add_or_subtract($opts->{unit} => $multiply_by->(shift, $opts));
 }
 
 sub _month_variant
@@ -253,11 +261,11 @@ sub _daytime_unit_variant
     my $opts = pop;
     my ($value, $when, $days) = @_;
     $self->_add(day => $days);
-    $self->_set(hour => 0, minute => 0, second => 0);
+    $self->{datetime}->set(hour => 0, minute => 0, second => 0, nanosecond => 0);
     $self->_add_or_subtract({
         when  => $when,
         unit  => $opts->{unit},
-        value => $value,
+        value => $multiply_by->($value, $opts),
     });
 }
 
@@ -282,8 +290,9 @@ sub _at_time
     my $self = shift;
     my $opts = pop;
     my ($time) = @_;
-    my @units = qw(hour minute second);
-    my %values = map { shift @units => $_ } split /:/, $time;
+    my @units = qw(hour minute second nanosecond);
+    my %values = map { shift @units => $_ } split /[:\.]/, $time;
+    $values{nanosecond} *= 1_000_000 if exists $values{nanosecond}; # milli to nano
     if ($self->_valid_time(%values)) {
         $self->_set(%values);
     }
@@ -406,6 +415,52 @@ sub _variant_quarter
         when  => $when,
         unit  => $opts->{unit},
         value => 3,
+    });
+}
+
+sub _begin_end_month
+{
+    my $self = shift;
+    $self->_register_trace;
+    my $opts = pop;
+    my ($day) = @_;
+    unless (defined $day) {
+        $day = $self->_Days_in_Month($self->{datetime}->year, $self->{datetime}->month);
+    }
+    $self->_set(day => $day);
+}
+
+sub _christmas_new_year
+{
+    my $self = shift;
+    $self->_register_trace;
+    my $opts = pop;
+    my ($when) = @_;
+    my %holidays = %{$self->{data}->{holidays}};
+    my $calendar = DateTime::Format::Natural::Calendar::_init($self->{Calendar_class});
+    my $year = $self->{datetime}->year;
+    my ($month, $day) = @{$holidays{$calendar->{type}}{$opts->{type}}}{qw(month day)};
+    $self->{datetime}->set(hour => 0, minute => 0, second => 0, nanosecond => 0);
+    my $code = sub
+    {
+        my ($year, $month, $day, $opts) = @_;
+        $$year++ if $opts->{type} eq 'new_year';
+    };
+    if ($calendar->_can_convert) {
+        ($year, $month, $day) = $calendar->_to_gregorian($year, $month, $day, $opts, $code);
+    }
+    else {
+        $code->(\$year, \$month, \$day, $opts);
+    }
+    $self->_set(
+        year  => $year,
+        month => $month,
+        day   => $day,
+    );
+    $self->_add_or_subtract({
+        when  => $when,
+        unit  => 'hour',
+        value => 4,
     });
 }
 

@@ -104,7 +104,7 @@ sub to_number { return $XPATH_NUMBER->new( $_[0]->text); }
 
 sub getAttributes
   { my $elt= shift;
-    my $atts= $elt->atts;
+    my $atts= $elt->{att};
     # alternate, faster but less clean, way
     my @atts= map { bless( { name => $_, value => $atts->{$_}, elt => $elt },
                            'XML::Twig::XPath::Attribute')
@@ -130,7 +130,7 @@ sub getNamespaces #_get_namespaces
     foreach my $att ($elt->att_names)
           { if( $att=~ m{^xmlns(?::(\w+))?$})
               { my $prefix= $1 || '';
-                my $expanded= $elt->att( $att); 
+                my $expanded= $elt->{'att'}->{$att}; 
                 push @namespaces, XML::Twig::XPath::Namespace->new( $prefix, $expanded);
               }
           }
@@ -157,7 +157,7 @@ sub node_cmp($$)
   }
 
 sub getParentNode
-  { return $_[0]->_parent
+  { return $_[0]->{parent}
         || $_[0]->twig;
   }
 
@@ -178,7 +178,7 @@ package XML::Twig::XPath::Attribute;
 
 sub new
   { my( $class, $elt, $att)= @_;
-    return bless { name => $att, value => $elt->att( $att), elt => $elt }, $class;
+    return bless { name => $att, value => $elt->{'att'}->{$att}, elt => $elt }, $class;
   }
 
 sub getValue     { return $_[0]->{value}; }

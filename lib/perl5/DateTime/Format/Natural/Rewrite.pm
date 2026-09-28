@@ -3,7 +3,7 @@ package DateTime::Format::Natural::Rewrite;
 use strict;
 use warnings;
 
-our $VERSION = '0.07';
+our $VERSION = '0.10';
 
 sub _rewrite
 {
@@ -21,8 +21,8 @@ sub _rewrite_regular
     my $self = shift;
     my ($date_string) = @_;
 
-    $$date_string =~ tr/,//d;
-    $$date_string =~ s/\s+?(am|pm)\b/$1/gi;
+    $$date_string =~ s/,(?!\d)//g;
+    $$date_string =~ s/\s+?(a\.?m\.?|p\.?m\.?)\b/$1/gi;
 }
 
 sub _rewrite_conditional
@@ -76,6 +76,27 @@ sub _rewrite_aliases
         foreach my $alias (keys %{$aliases->{short}}) {
             $$date_string =~ s/(?<=\d) $alias $/$aliases->{short}{$alias}/ix;
         }
+    }
+}
+
+sub _rewrite_duration
+{
+    my $self = shift;
+    my ($date_strings) = @_;
+
+    my ($formatted) = $date_strings->[0] =~ $self->{data}->__regexes('format');
+    my %count = $self->_count_separators($formatted);
+
+    return unless ($self->_check_formatted('ymd', \%count)
+                || $self->_check_formatted('md',  \%count));
+
+    if ($date_strings->[0] =~ /^ \Q$formatted\E \s+ \d{1,2} $/x) {
+        $date_strings->[0] .= ':00';
+    }
+    if (@$date_strings == 2
+      && $date_strings->[1] =~ /^ \d{1,2} $/x)
+    {
+        $date_strings->[1] .= ':00';
     }
 }
 

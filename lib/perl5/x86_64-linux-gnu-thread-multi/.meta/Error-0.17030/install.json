@@ -1,0 +1,1 @@
+{"target":"Error","dist":"Error-0.17030","pathname":"S/SH/SHLOMIF/Error-0.17030.tar.gz","version":"0.17030","provides":{"Error":{"file":"lib/Error.pm","version":"0.17030"},"Error::subs":{"version":"0.17030","file":"lib/Error.pm"},"Error::Simple":{"file":"lib/Error.pm","version":"0.17030"},"Error::WarnDie":{"version":"0.17030","file":"lib/Error.pm"}},"name":"Error"}

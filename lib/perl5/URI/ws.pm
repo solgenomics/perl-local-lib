@@ -3,61 +3,65 @@ package URI::ws;
 use strict;
 use warnings;
 
-# ABSTRACT: WebSocket support for URI package
-our $VERSION = '0.03'; # VERSION
+our $VERSION = '5.35';
 
-
-use base qw( URI::_server );
-
-
-sub default_port { 80 }
+use parent 'URI::http';
 
 1;
-
 __END__
-
-=pod
 
 =head1 NAME
 
-URI::ws - WebSocket support for URI package
-
-=head1 VERSION
-
-version 0.03
+URI::ws - URI scheme for WebSocket Identifiers
 
 =head1 SYNOPSIS
 
- use URI;
- my $uri = URI->new('ws://localhost:3000/foo');
+    use URI::ws;
+
+    my $uri = URI->new('ws://example.com/');
 
 =head1 DESCRIPTION
 
-After this module is installed, the URI package provides the same set
-of methods for WebSocket URIs as it does for HTTP ones.  For secure
-WebSockets, see L<URI::wss>.
+This module implements the C<ws:> URI scheme defined in L<RFC 6455|http://tools.ietf.org/html/rfc6455>.
 
-=head1 METHODS
+=head1 SUBROUTINES/METHODS
 
-=head2 URI::ws-E<gt>default_port
+This module inherits the behaviour of L<URI::http|URI::http>.
 
-Returns the default port (80)
+=head1 DIAGNOSTICS
+
+See L<URI|URI>
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+See L<URI|URI#CONFIGURATION-VARIABLES> and L<URI|URI#ENVIRONMENT-VARIABLES>
+
+=head1 DEPENDENCIES
+
+None
+
+=head1 INCOMPATIBILITIES
+
+None reported
+
+=head1 BUGS AND LIMITATIONS
+
+See L<URI|URI#BUGS>
 
 =head1 SEE ALSO
 
-L<URI>, L<URI::wss>
-
-=cut
+L<RFC 6455|http://tools.ietf.org/html/rfc6455>
 
 =head1 AUTHOR
 
-Graham Ollis <plicease@cpan.org>
+David Dick, C<< <ddick at cpan.org> >>
 
-=head1 COPYRIGHT AND LICENSE
+=head1 LICENSE AND COPYRIGHT
 
-This software is copyright (c) 2013 by Graham Ollis.
+Copyright 2016 David Dick.
 
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
 
-=cut
+See L<http://dev.perl.org/licenses/> for more information.

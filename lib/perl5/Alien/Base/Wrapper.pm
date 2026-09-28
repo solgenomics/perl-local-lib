@@ -14,7 +14,7 @@ use Text::ParseWords qw( shellwords );
 # for this [AlienBase::Wrapper::Bundle]
 
 # ABSTRACT: Compiler and linker wrapper for Alien
-our $VERSION = '2.46'; # VERSION
+our $VERSION = '2.84'; # VERSION
 
 
 sub _join
@@ -78,6 +78,9 @@ sub new
       $cflags = $alien->cflags;
       $libs   = $alien->libs;
     }
+
+    $cflags = '' unless defined $cflags;
+    $libs = '' unless defined $libs;
 
     push @cflags_I,     grep  /^-I/, shellwords $cflags;
     push @cflags_other, grep !/^-I/, shellwords $cflags;
@@ -322,7 +325,7 @@ Alien::Base::Wrapper - Compiler and linker wrapper for Alien
 
 =head1 VERSION
 
-version 2.46
+version 2.84
 
 =head1 SYNOPSIS
 
@@ -470,8 +473,8 @@ Returns arguments that you can pass into the constructor to L<Module::Build>.
 =head2 WriteMakefile
 
  use Alien::Base::Wrapper qw( WriteMakefile );
- WriteMakefile(%args, alien_requires => %aliens);
- WriteMakefile(%args, alien_requires => @aliens);
+ WriteMakefile(%args, alien_requires => \%aliens);
+ WriteMakefile(%args, alien_requires => \@aliens);
 
 This is a thin wrapper around C<WriteMakefile> from L<ExtUtils::MakeMaker>, which adds the
 given aliens to the configure requirements and sets the appropriate compiler and linker
@@ -568,9 +571,11 @@ Håkon Hægland (hakonhagland, HAKONH)
 
 nick nauwelaerts (INPHOBIA)
 
+Florian Weimer
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2020 by Graham Ollis.
+This software is copyright (c) 2011-2022 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

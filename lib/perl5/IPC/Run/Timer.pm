@@ -14,17 +14,17 @@ IPC::Run::Timer -- Timer channels for IPC::Run.
 
    ## A non-fatal timer:
    $t = timer( 5 ); # or...
-   $t = IO::Run::Timer->new( 5 );
+   $t = IPC::Run::Timer->new( 5 );
    run $t, ...;
 
    ## A timeout (which is a timer that dies on expiry):
    $t = timeout( 5 ); # or...
-   $t = IO::Run::Timer->new( 5, exception => "harness timed out" );
+   $t = IPC::Run::Timer->new( 5, exception => "harness timed out" );
 
 =head1 DESCRIPTION
 
 This class and module allows timers and timeouts to be created for use
-by IPC::Run.  A timer simply expires when it's time is up.  A timeout
+by IPC::Run.  A timer simply expires when its time is up.  A timeout
 is a timer that throws an exception when it expires.
 
 Timeouts are usually a bit simpler to use  than timers: they throw an
@@ -158,6 +158,7 @@ pragma.
 =cut
 
 use strict;
+use warnings;
 use Carp;
 use Fcntl;
 use Symbol;
@@ -166,7 +167,7 @@ use Scalar::Util ();
 use vars qw( $VERSION @ISA @EXPORT_OK %EXPORT_TAGS );
 
 BEGIN {
-    $VERSION   = '20200505.0';
+    $VERSION   = '20260402.0';
     @ISA       = qw( Exporter );
     @EXPORT_OK = qw(
       check
@@ -202,13 +203,14 @@ sub _parse_time {
             $val = $_;
         }
         else {
-            my @f = split( /:/, $_, -1 );
+            my $str = $_;
+            my @f = split( /:/, $str, -1 );
             if ( scalar @f > 4 ) {
-                croak "IPC::Run: expected <= 4 elements in time string '$_'";
+                croak "IPC::Run: expected <= 4 elements in time string '$str'";
             }
             for (@f) {
                 if ( not Scalar::Util::looks_like_number($_) ) {
-                    croak "IPC::Run: non-numeric element '$_' in time string '$_'";
+                    croak "IPC::Run: non-numeric element '$_' in time string '$str'";
                 }
             }
             my ( $s, $m, $h, $d ) = reverse @f;
@@ -582,7 +584,6 @@ sub start {
     my IPC::Run::Timer $self = shift;
 
     my ( $interval, $now ) = map { _parse_time($_) } @_;
-    $now = _parse_time($now);
     $now = time unless defined $now;
 
     $self->interval($interval) if defined $interval;

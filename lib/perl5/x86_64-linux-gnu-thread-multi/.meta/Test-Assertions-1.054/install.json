@@ -1,0 +1,1 @@
+{"target":"Test::Assertions","dist":"Test-Assertions-1.054","pathname":"B/BB/BBC/Test-Assertions-1.054.tar.gz","provides":{"Test::Assertions::TestScript":{"version":"1.018","file":"lib/Test/Assertions/TestScript.pm"},"Test::Assertions":{"version":"1.054","file":"lib/Test/Assertions.pm"}},"name":"Test::Assertions","version":"1.054"}

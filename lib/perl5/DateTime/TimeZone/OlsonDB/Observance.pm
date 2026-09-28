@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use namespace::autoclean;
 
-our $VERSION = '2.51';
+our $VERSION = '2.68';
 
 use DateTime::Duration;
 use DateTime::TimeZone::OlsonDB;
@@ -59,6 +59,20 @@ sub offset_from_utc { $_[0]->{offset_from_utc} || 0 }
 sub offset_from_std { $_[0]->{offset_from_std} || 0 }
 sub total_offset    { $_[0]->offset_from_utc + $_[0]->offset_from_std }
 
+sub offset_from_utc_as_hm {
+    my $offset = $_[0]->offset_from_utc;
+    my $h      = int( $offset / 3600 );
+    my $m      = ( $offset % 3600 ) / 60;
+    return sprintf( '%02d:%02d', $h, $m );
+}
+
+sub offset_from_std_as_hm {
+    my $offset = $_[0]->offset_from_std;
+    my $h      = int( $offset / 3600 );
+    my $m      = ( $offset % 3600 ) / 60;
+    return sprintf( '%02d:%02d', $h, $m );
+}
+
 sub rules      { @{ $_[0]->{rules} } }
 sub first_rule { $_[0]->{first_rule} }
 
@@ -72,11 +86,32 @@ sub local_start_datetime { $_[0]->{local_start_datetime} }
 sub formatted_short_name {
     my $self   = shift;
     my $letter = shift;
+    my $rule   = shift;
 
     my $format = $self->format;
     return $format unless $format =~ /%/;
 
+    if ( $format eq '%z' ) {
+        return $self->offset_as_z_format($rule);
+    }
+
     return sprintf( $format, $letter );
+}
+
+sub offset_as_z_format {
+    my $self = shift;
+    my $rule = shift;
+
+    my $offset = $self->total_offset;
+    $offset += $rule->offset_from_std if $rule;
+    my $sign = $offset < 0 ? '-' : '+';
+    $offset = abs($offset);
+    my $h = int( $offset / 3600 );
+    my $m = ( $offset % 3600 ) / 60;
+    if ( $m == 0 ) {
+        return sprintf( '%s%02d', $sign, $h );
+    }
+    return sprintf( '%s%02d%02d', $sign, $h, $m );
 }
 
 sub expand_from_rules {
@@ -144,7 +179,8 @@ sub expand_from_rules {
                 local_start_datetime => $dt + DateTime::Duration->new(
                     seconds => $self->total_offset + $rule->offset_from_std
                 ),
-                short_name => $self->formatted_short_name( $rule->letter ),
+                short_name =>
+                    $self->formatted_short_name( $rule->letter, $rule ),
                 observance => $self,
                 rule       => $rule,
             );
@@ -167,19 +203,19 @@ sub _sorted_rules_for_year {
 
     ## no critic (BuiltinFunctions::ProhibitComplexMappings)
     my @rules = (
-        map      { $_->[0] }
-            sort { $a->[1] <=> $b->[1] }
-            map {
+        map  { $_->[0] }
+        sort { $a->[1] <=> $b->[1] }
+        map {
             my $dt = $_->utc_start_datetime_for_year(
                 $year,
                 $self->offset_from_utc, 0
             );
             [ $_, $dt ]
-            }
-            grep {
+        }
+        grep {
             $_->min_year <= $year
                 && ( ( !$_->max_year ) || $_->max_year >= $year )
-            } $self->rules
+        } $self->rules
     );
 
     my %rules_by_month;
@@ -195,31 +231,7 @@ sub _sorted_rules_for_year {
     # in northern Africa.
     my @final_rules;
     for my $month ( sort { $a <=> $b } keys %rules_by_month ) {
-        my @r = @{ $rules_by_month{$month} };
-        if ( @r == 2 ) {
-            my ($repeating) = grep { !defined $_->max_year() } @r;
-            my ($this_year)
-                = grep { $_->max_year() && $_->max_year() == $year } @r;
-            if ( $repeating && $this_year ) {
-
-                # We used to pick the repeating rule for year 2037 only
-                # because it seemed like that's what zic did in the past. Now
-                # it seems to pick the "this year" rule instead.
-                if ($DateTime::TimeZone::OlsonDB::DEBUG) {
-                    ## no critic (InputOutput::RequireCheckedSyscalls)
-                    print
-                        "Found two rules for the same month, picking the one for this year\n";
-                }
-
-                push @final_rules, $this_year;
-                next;
-            }
-
-            push @final_rules, @r;
-        }
-        else {
-            push @final_rules, @r;
-        }
+        push @final_rules, @{ $rules_by_month{$month} };
     }
 
     return @final_rules;
@@ -375,7 +387,7 @@ sub _first_rule {
         print ' Next rule starts:  ', $next_dt->datetime, "\n"
             if $next_dt && $DateTime::TimeZone::OlsonDB::DEBUG;
 
-        print ' No next rule\n\n'
+        print " No next rule\n\n"
             if !$next_dt && $DateTime::TimeZone::OlsonDB::DEBUG;
         ## use critic
 
@@ -410,7 +422,7 @@ sub _first_no_dst_rule {
     my $self = shift;
 
     return first { !$_->offset_from_std }
-    sort { $a->min_year <=> $b->min_year } $self->rules;
+        sort { $a->min_year <=> $b->min_year } $self->rules;
 }
 
 1;

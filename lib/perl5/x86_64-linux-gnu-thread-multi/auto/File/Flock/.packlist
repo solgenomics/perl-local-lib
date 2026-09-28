@@ -1,3 +1,6 @@
 /home/production/cxgn/local-lib/lib/perl5/File/Flock.pm
 /home/production/cxgn/local-lib/lib/perl5/File/Flock/Forking.pm
 /home/production/cxgn/local-lib/lib/perl5/File/Flock/Subprocess.pm
+/home/production/cxgn/local-lib/man/man3/File::Flock.3pm
+/home/production/cxgn/local-lib/man/man3/File::Flock::Forking.3pm
+/home/production/cxgn/local-lib/man/man3/File::Flock::Subprocess.3pm

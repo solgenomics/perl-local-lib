@@ -1,2 +1,3 @@
-/home/production/cxgn/local-lib/lib/perl5/WWW/RobotRules.pm
-/home/production/cxgn/local-lib/lib/perl5/WWW/RobotRules/AnyDBM_File.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/WWW/RobotRules.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/WWW/RobotRules/AnyDBM_File.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/WWW/RobotRules/DB_File.pm

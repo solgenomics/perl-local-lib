@@ -14,7 +14,7 @@ Alien::Build::Manual::FAQ - Frequently Asked Questions about Alien::Build
 
 =head1 VERSION
 
-version 2.46
+version 2.84
 
 =head1 SYNOPSIS
 
@@ -67,6 +67,43 @@ If you need to provide custom flags to configure, you can do that too:
  };
 
 If your package requires GNU Make, use C<%{gmake}> instead of C<%{make}>.
+
+=head3 autoconf without configure script
+
+A number of Open Source projects are using autotools, but do not provide the
+C<configure> script.  When alienizing these types of packages you have a
+few choices:
+
+=over 4
+
+=item build configure using autotools
+
+The Alien L<Alien::Autotools> is designed to provide autotools for building
+such packages from source.  The advantage is that this is how the upstream
+developers intend on having their package built.  The downside is that it
+is also adds more prereqs to your Alien.  The silver lining is that if you
+require this Alien in the C<share> block (as you should), then these prereqs
+will only be pulled in during a share install when they are needed.
+
+Please see the L<Alien::Autotools> documentation for specifics on how it
+can be used in your L<alienfile>.
+
+=item patch the package locally before build
+
+You can use the L<alienfile/patch> directive to patch the alienized package
+locally before building.  This can sometimes be challenging because Autotools
+uses timestamps in order to decide what needs to be rebuilt, and patching
+can sometimes confuse it into thinking more needs to be rebuilt than what
+actually does.
+
+=item build configure and tarball
+
+You can also build the configure script during development of your alien,
+generate the tarball and provide it somewhere like GitHub and use that
+as the source instead of the original source.  This should usually be
+a last resort if the other two methods prove too difficult.
+
+=back
 
 =head3 autoconf-like
 
@@ -392,6 +429,17 @@ to your prerequisites for you if you specify a C<https> URL.  Some websites allo
 from C<http> but then redirect to C<https>.  If you can it is better to specify C<https>, if you
 cannot, then you can instead use the C<ssl> property on either of those two plugins.
 
+=head2 Does not detect system package even though it is installed
+
+This could just be because the alien requires a more recent package that what is provided by your
+operating system.
+
+It could also be because you do not have the development package installed.  Many Linux vendors
+in particular separate packages into runtime and development pages.  On RPM based systems these
+development packages usually have C<-devel> suffix (example runtime: C<libffi> and development:
+C<libffi-devel>).  On Debian based systems these development packages usually have a C<-dev>
+suffix (example runtime: C<libffi> and development: C<libffi-dev>).
+
 =head2 Network fetch is turned off
 
 If you get an error like this:
@@ -427,7 +475,7 @@ also set the environment variable on just some aliens.
 =head2 For testing I would like to test both system and share installs!
 
 You can use the C<ALIEN_INSTALL_TYPE> environment variable.  It will force either a C<share> or
-C<system> install depending on how it is set.  For travis you can do something like this:
+C<system> install depending on how it is set.  For Travis-CI you can do something like this:
 
  env:
    matrix:
@@ -490,7 +538,13 @@ L<https://github.com/PerlAlien/Alien-Build/issues>
 
 =head1 SEE ALSO
 
-L<Alien::Build>, L<Alien::Build::MM>, L<Alien::Build::Plugin>, L<alienfile>
+=over 4
+
+=item L<Alien::Build::Manual>
+
+Other L<Alien::Build> manuals.
+
+=back
 
 =head1 AUTHOR
 
@@ -554,9 +608,11 @@ Håkon Hægland (hakonhagland, HAKONH)
 
 nick nauwelaerts (INPHOBIA)
 
+Florian Weimer
+
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011-2020 by Graham Ollis.
+This software is copyright (c) 2011-2022 by Graham Ollis.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

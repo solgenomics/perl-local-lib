@@ -6,7 +6,7 @@ use strict;
 use warnings;
 use namespace::autoclean;
 
-our $VERSION = '1.33';
+our $VERSION = '1.45';
 
 use DateTime::Locale::Data;
 use DateTime::Locale::FromData;
@@ -380,7 +380,7 @@ DateTime::Locale - Localization support for DateTime.pm
 
 =head1 VERSION
 
-version 1.33
+version 1.45
 
 =head1 SYNOPSIS
 
@@ -594,7 +594,7 @@ software much more, unless I get so many donations that I can consider working
 on free software full time (let's all have a chuckle at that together).
 
 To donate, log into PayPal and send money to autarch@urth.org, or use the
-button at L<https://www.urth.org/fs-donation.html>.
+button at L<https://houseabsolute.com/foss-donations/>.
 
 =head1 AUTHOR
 
@@ -602,13 +602,21 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 CONTRIBUTORS
 
-=for stopwords Alexander Pankoff Karen Etheridge Mohammad S Anwar Ryley Breiddal Sergey Leschenko yasu47b
+=for stopwords Alexander Pankoff Jacques Deguest James Raspass Karen Etheridge Mohammad S Anwar Ryley Breiddal Sergey Leschenko yasu47b
 
 =over 4
 
 =item *
 
 Alexander Pankoff <ccntrq@screenri.de>
+
+=item *
+
+Jacques Deguest <jack@deguest.jp>
+
+=item *
+
+James Raspass <jraspass@gmail.com>
 
 =item *
 
@@ -634,7 +642,7 @@ yasu47b <nakayamayasuhiro1986@gmail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2003 - 2021 by Dave Rolsky.
+This software is copyright (c) 2003 - 2025 by Dave Rolsky.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

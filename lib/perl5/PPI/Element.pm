@@ -25,12 +25,11 @@ use strict;
 use Clone 0.30      ();
 use Scalar::Util    qw{refaddr};
 use Params::Util    qw{_INSTANCE _ARRAY};
-use List::Util      ();
 use PPI::Util       ();
 use PPI::Node       ();
-use PPI::Singletons '%_PARENT';
+use PPI::Singletons '%_PARENT', '%_POSITION_CACHE';
 
-our $VERSION = '1.272';
+our $VERSION = '1.291';
 
 our $errstr = "";
 
@@ -256,12 +255,10 @@ immediately after the current one, or false if there is no next sibling.
 
 sub next_sibling {
 	my $self     = shift;
-	my $parent   = $_PARENT{refaddr $self} or return '';
 	my $key      = refaddr $self;
+	my $parent   = $_PARENT{$key} or return '';
 	my $elements = $parent->{children};
-	my $position = List::Util::first {
-		refaddr $elements->[$_] == $key
-		} 0..$#$elements;
+	my $position = $parent->__position($self);
 	$elements->[$position + 1] || '';
 }
 
@@ -279,12 +276,10 @@ sibling.
 
 sub snext_sibling {
 	my $self     = shift;
-	my $parent   = $_PARENT{refaddr $self} or return '';
 	my $key      = refaddr $self;
+	my $parent   = $_PARENT{$key} or return '';
 	my $elements = $parent->{children};
-	my $position = List::Util::first {
-		refaddr $elements->[$_] == $key
-		} 0..$#$elements;
+	my $position = $parent->__position($self);
 	while ( defined(my $it = $elements->[++$position]) ) {
 		return $it if $it->significant;
 	}
@@ -304,12 +299,10 @@ C<PPI::Element> object.
 
 sub previous_sibling {
 	my $self     = shift;
-	my $parent   = $_PARENT{refaddr $self} or return '';
 	my $key      = refaddr $self;
+	my $parent   = $_PARENT{$key} or return '';
 	my $elements = $parent->{children};
-	my $position = List::Util::first {
-		refaddr $elements->[$_] == $key
-		} 0..$#$elements;
+	my $position = $parent->__position($self);
 	$position and $elements->[$position - 1] or '';
 }
 
@@ -327,12 +320,10 @@ sibling.
 
 sub sprevious_sibling {
 	my $self     = shift;
-	my $parent   = $_PARENT{refaddr $self} or return '';
 	my $key      = refaddr $self;
+	my $parent   = $_PARENT{$key} or return '';
 	my $elements = $parent->{children};
-	my $position = List::Util::first {
-		refaddr $elements->[$_] == $key
-		} 0..$#$elements;
+	my $position = $parent->__position($self);
 	while ( $position-- and defined(my $it = $elements->[$position]) ) {
 		return $it if $it->significant;
 	}
@@ -467,9 +458,32 @@ sub previous_token {
 	}
 }
 
+=head2 presumed_features
 
+Returns a hash that indicates which features appear to be active for the given
+element.
 
+=cut
 
+sub presumed_features {
+	my ($self) = @_;
+
+	my @feature_mods;
+	my $walker = $self;
+	while ($walker) {
+		my $sib_walk = $walker;
+		while ($sib_walk) {
+			push @feature_mods, $sib_walk if $sib_walk->can("feature_mods");
+			$sib_walk = $sib_walk->sprevious_sibling;
+		}
+		$walker = $walker->parent;
+	}
+
+	my %feature_mods = map %{$_}, reverse grep defined, map $_->feature_mods,
+	  @feature_mods;
+
+	return \%feature_mods;
+}
 
 #####################################################################
 # Manipulation
@@ -589,12 +603,14 @@ To prevent accidental damage to code, in this initial implementation the
 replacement element B<must> be of the same class (or a subclass) as the
 one being replaced.
 
+If successful, returns the replace element.  Otherwise, returns C<undef>.
+
 =cut
 
 sub replace {
 	my $self    = ref $_[0] ? shift : return undef;
-	_INSTANCE(shift, ref $self) or return undef;
-	die "The ->replace method has not yet been implemented";
+	my $replace = _INSTANCE(shift, ref $self) or return undef;
+	return $self->parent->replace_child( $self, $replace );
 }
 
 =pod
@@ -785,7 +801,7 @@ sub _flush_locations {
 			next unless refaddr($Token) == refaddr($start);
 
 			# Found the start. Flush its location
-			delete $$Token->{_location};
+			delete $Token->{_location};
 			last;
 		}
 	}
@@ -842,8 +858,10 @@ sub _clear {
 # ->delete means our reference count has probably fallen to zero.
 # Therefore we don't need to remove ourselves from our parent,
 # just the index ( just in case ).
-### XS -> PPI/XS.xs:_PPI_Element__DESTROY 0.900+
-sub DESTROY { delete $_PARENT{refaddr $_[0]} }
+sub DESTROY {
+  delete $_PARENT{refaddr $_[0]};
+  delete $_POSITION_CACHE{refaddr $_[0]};
+}
 
 # Operator overloads
 sub __equals  { ref $_[1] and refaddr($_[0]) == refaddr($_[1]) }

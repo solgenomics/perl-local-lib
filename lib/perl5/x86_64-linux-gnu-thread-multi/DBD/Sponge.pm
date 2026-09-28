@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 {
     package DBD::Sponge;
 
@@ -92,12 +93,15 @@ use strict;
 		    || [ map { "col$_" } 1..$numFields ];
 	    $sth->{TYPE} = $attribs->{TYPE}
 		    || [ (DBI::SQL_VARCHAR()) x $numFields ];
-	    $sth->{PRECISION} = $attribs->{PRECISION}
-		    || [ map { length($sth->{NAME}->[$_]) } 0..$numFields -1 ];
 	    $sth->{SCALE} = $attribs->{SCALE}
 		    || [ (0) x $numFields ];
 	    $sth->{NULLABLE} = $attribs->{NULLABLE}
 		    || [ (2) x $numFields ];
+	    # Allow user to specify precision, otherwise
+	    # FETCH will lazily compute if needed
+	    if ($attribs->{PRECISION}) {
+		    $sth->{PRECISION} = $attribs->{PRECISION};
+	    }
 	}
 
 	$outer;
@@ -153,6 +157,7 @@ use strict;
 	return $dbh->set_err(42, "not enough parameters") unless @args >= 2;
 	return \@args;
     }
+
 }
 
 
@@ -176,7 +181,7 @@ use strict;
 	    my $NUM_OF_PARAMS = $sth->{NUM_OF_PARAMS};
 	    return $sth->set_err($DBI::stderr, @$row." values bound (@$row) but $NUM_OF_PARAMS expected")
 		if @$row != $NUM_OF_PARAMS;
-	    { local $^W; $sth->trace_msg("inserting (@$row)\n"); }
+	    { no warnings; $sth->trace_msg("inserting (@$row)\n"); }
 	    push @{ $sth->{rows} }, $row;
 	}
 	else {	# mark select sth as Active
@@ -201,6 +206,11 @@ use strict;
 	my ($sth, $attrib) = @_;
 	# would normally validate and only fetch known attributes
 	# else pass up to DBI to handle
+
+	if ($attrib eq 'PRECISION') {
+	    # prepare() did _not_ specify PRECISION, so lazily compute it now
+	    return $sth->{PRECISION} = _max_col_lengths(@{$sth}{'NUM_OF_FIELDS', 'rows'});
+	}
 	return $sth->SUPER::FETCH($attrib);
     }
 
@@ -209,6 +219,22 @@ use strict;
 	# would normally validate and only store known attributes
 	# else pass up to DBI to handle
 	return $sth->SUPER::STORE($attrib, $value);
+    }
+
+    sub _max_col_lengths {
+	# compute our columns' PRECISION (data length) by looking for the
+	# max lengths of each column's data, row by row
+	my ($num_of_fields, $rows) = @_;
+	my @precision = (0,) x $num_of_fields;
+	my $n = $num_of_fields - 1;
+	my $len;
+	for my $row (@$rows) {
+	    for my $i (0 .. $n) {
+		next unless defined($len = length($row->[$i]));
+		$precision[$i] = $len if $len > $precision[$i];
+	    }
+	}
+	return \@precision;
     }
 }
 
@@ -260,33 +286,38 @@ No username and password are needed.
 
 =item *
 
-The C<$statement> here is an arbitrary statement or name you want
-to provide as identity of your data. If you're using DBI::Profile
-it will appear in the profile data.
+The C<$statement> here is an arbitrary statement or name you want to
+provide as identity of your data. If you're using DBI::Profile it will
+appear in the profile data.
 
-Generally it's expected that you are preparing a statement handle
-as if a C<select> statement happened.
-
-=item *
-
-C<$data> is a reference to the data you are providing, given as an array of arrays.
+Generally it's expected that you are preparing a statement handle as if
+a C<select> statement happened.
 
 =item *
 
-C<$names> is a reference an array of column names for the C<$data> you are providing.
-The number and order should match the number and ordering of the C<$data> columns.
+C<$data> is a reference to the data you are providing, given as an array
+of arrays.
 
 =item *
 
-C<%attr> is a hash of other standard DBI attributes that you might pass to a prepare statement.
+C<$names> is a reference an array of column names for the C<$data> you
+are providing.  The number and order should match the number and
+ordering of the C<$data> columns.
 
-Currently only NAME, TYPE, and PRECISION are supported.
+=item *
+
+C<%attr> is a hash of other standard DBI attributes that you might pass
+to a prepare statement.
+
+Currently only NAME, TYPE, and PRECISION are supported.  TYPE defaults
+to SQL_VARCHAR.  PRECISION will be lazily computed if not supplied.
 
 =back
 
 =head1 BUGS
 
-Using this module to prepare INSERT-like statements is not currently documented.
+Using this module to prepare INSERT-like statements is not currently
+documented.
 
 =head1 AUTHOR AND COPYRIGHT
 

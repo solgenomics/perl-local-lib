@@ -1,3 +1,12 @@
-/* Fri Jul 13 13:32:02 2012 */
-/* Mixed revision working copy (15349:15353) */
-#define DBIXS_REVISION 15349
+/* Mon Jun 22 11:49:32 2026 */
+/* M  ChangeLog */
+/* M  doc/DBD-File.3 */
+/* M  doc/DBD-File.man */
+/* M  doc/DBI.3 */
+/* M  doc/DBI.html */
+/* M  doc/DBI.man */
+/* M  doc/DBI.md */
+/*  M lib/DBI/Changes.pm */
+#define DBIXS_RELEASE  1
+#define DBIXS_VERSION  649
+#define DBIXS_REVISION 1748

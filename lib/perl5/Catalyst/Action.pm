@@ -26,6 +26,7 @@ with 'MooseX::Emulate::Class::Accessor::Fast';
 use namespace::clean -except => 'meta';
 
 has class => (is => 'rw');
+has instance => (is=>'ro', required=>0, predicate=>'has_instance');
 has namespace => (is => 'rw');
 has 'reverse' => (is => 'rw');
 has attributes => (is => 'rw');
@@ -97,12 +98,23 @@ has number_of_args_constraints => (
         $tc->can('is_strictly_a_type_of') &&
         $tc->is_strictly_a_type_of('Tuple'))
       {
-        my @parameters = @{ $tc->parameters||[]};
-        if( defined($parameters[-1]) and exists($parameters[-1]->{slurpy})) {
-          return undef;
-        } else {
-          return my $total_params = scalar(@parameters);
+        my @parameters = @{ $tc->parameters||[] };
+        my $final = $parameters[-1];
+        if ( defined $final ) {
+          if ( blessed $final ) {
+            # modern form of slurpy
+            if ($final->can('is_strictly_a_type_of') && $final->is_strictly_a_type_of('Slurpy')) {
+              return undef;
+            }
+          }
+          else {
+            # old form of slurpy
+            if (ref $final eq 'HASH' && $final->{slurpy}) {
+              return undef;
+            }
+          }
         }
+        return scalar @parameters;
       } elsif($tc->is_a_type_of('Ref')) {
         return undef;
       } else {
@@ -350,7 +362,11 @@ no warnings 'recursion';
 
 sub dispatch {    # Execute ourselves against a context
     my ( $self, $c ) = @_;
-    return $c->execute( $self->class, $self );
+    if($self->has_instance) {
+        return $c->execute( $self->instance, $self );
+    } else {
+        return $c->execute( $self->class, $self );
+    }
 }
 
 sub execute {

@@ -1,14 +1,13 @@
 package Test::File;
 use strict;
 
-use vars qw(@EXPORT $VERSION);
-
 use Carp            qw(carp);
 use Exporter        qw(import);
 use File::Spec;
 use Test::Builder;
+use XSLoader;
 
-@EXPORT = qw(
+our @EXPORT = qw(
 	file_exists_ok file_not_exists_ok
 	file_empty_ok file_not_empty_ok file_size_ok file_max_size_ok
 	file_min_size_ok file_readable_ok file_not_readable_ok
@@ -30,7 +29,8 @@ use Test::Builder;
 	file_mtime_gt_ok file_mtime_lt_ok file_mtime_age_ok
 	);
 
-$VERSION = '1.991';
+our $VERSION = '1.995';
+XSLoader::load(__PACKAGE__, $VERSION) if $^O eq 'MSWin32';
 
 my $Test = Test::Builder->new();
 
@@ -66,6 +66,8 @@ name for the test.  If not supplied, a reasonable default will be
 generated.
 
 =head2 Functions
+
+=over 4
 
 =cut
 
@@ -103,7 +105,60 @@ sub _win32 {
 	}
 
 # returns true if symlinks can't exist
-sub _no_symlinks_here { ! eval { symlink("",""); 1 } }
+BEGIN {
+	my $cannot_symlink;
+
+	sub _no_symlinks_here {
+		return $cannot_symlink if defined $cannot_symlink;
+
+		$cannot_symlink = ! do {
+			eval {
+				symlink("","");                 # symlink exist in perl
+				_IsSymlinkCreationAllowed()		# symlink is ok in current session
+				}
+		};
+	}
+
+	sub _IsSymlinkCreationAllowed {
+		if ($^O eq 'MSWin32') {
+			#
+			# Bare copy of Perl's Win32::IsSymlinkCreationAllowed but with Test::File::Win32 namespace instead of Win32
+			#
+			my(undef, $major, $minor, $build) = Test::File::Win32::GetOSVersion();
+
+			# Vista was the first Windows version with symlink support
+			return !!0 if $major < 6;
+
+			# Since Windows 10 1703, enabling the developer mode allows to create
+			# symlinks regardless of process privileges
+			if ($major > 10 || ($major == 10 && ($minor > 0 || $build > 15063))) {
+				return !!1 if Test::File::Win32::IsDeveloperModeEnabled();
+			}
+
+			my $privs = Test::File::Win32::GetProcessPrivileges();
+
+			return !!0 unless $privs;
+
+			# It doesn't matter if the permission is enabled or not, it just has to
+			# exist. CreateSymbolicLink() will automatically enable it when needed.
+			return exists $privs->{SeCreateSymbolicLinkPrivilege};
+		}
+
+		1;
+	}
+
+=item has_symlinks
+
+Returns true is this module thinks that the current system supports
+symlinks.
+
+This is not a test function. It's something that tests can use to
+determine what it should expect or skip.
+
+=cut
+
+	sub has_symlinks { ! _no_symlinks_here() }
+}
 
 # owner_is and owner_isn't should skip on OS where the question makes no
 # sense.  I really don't know a good way to test for that, so I'm going
@@ -123,8 +178,6 @@ sub _obviously_non_multi_user {
 
 	return 0;
 	}
-
-=over 4
 
 =item file_exists_ok( FILENAME [, NAME ] )
 
@@ -1746,11 +1799,11 @@ If you are using the new C<Test2> stuff, see Test2::Tools::File
 
 This module is in Github:
 
-	https://github.com/briandfoy/test-file.git
+	https://github.com/briandfoy/test-file
 
 =head1 AUTHOR
 
-brian d foy, C<< <bdfoy@cpan.org> >>
+brian d foy, C<< <briandfoy@pobox.com> >>
 
 =head1 CREDITS
 
@@ -1773,9 +1826,12 @@ stuff.
 Torbjørn Lindahl is working on L<Test2::Tools::File> and we're
 working together to align our interfaces.
 
+Jean-Damien Durand added bits to use Win32::IsSymlinkCreationAllowed,
+new since Win32 0.55.
+
 =head1 COPYRIGHT AND LICENSE
 
-Copyright © 2002-2022, brian d foy <bdfoy@cpan.org>. All rights reserved.
+Copyright © 2002-2025, brian d foy <briandfoy@pobox.com>. All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the Artistic License 2.0

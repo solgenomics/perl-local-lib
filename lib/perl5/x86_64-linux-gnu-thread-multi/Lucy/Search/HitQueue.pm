@@ -15,7 +15,7 @@
 
 package Lucy::Search::HitQueue;
 use Lucy;
-our $VERSION = '0.006002';
+our $VERSION = '0.008000';
 $VERSION = eval $VERSION;
 
 1;

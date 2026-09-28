@@ -1,12 +1,159 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+1;
+
+__END__
 =head1 NAME
 
 DBI::Changes - List of significant changes to the DBI
 
 =encoding UTF-8
 
-=cut
+=head2 Changes in DBI 1.649 - 22 Jun 2026
 
-=head2 Changes in DBI 1.643 - ...
+=over 2
+
+=item *
+
+Extra Cwd::abs_path required for Windows
+
+=back
+
+=head2 Changes in DBI 1.648 - 04 Jun 2026
+
+=over 2
+
+=item *
+
+Correct sprintf usage for trace_msg (issue#132)
+
+=item *
+
+Add DBIXS_VERSION & DBIXS_RELEASE to dbixs_rev.h
+
+=item *
+
+Remove -Wbad-function-cast
+
+=item *
+
+Fix possible stack overflow (old issue already noted by Tim) (CVE-2026-9698)
+
+=item *
+
+Do not allow table source locations outside explicit given folders
+
+=item *
+
+DBD::Sponge PRECISION handling (pr#12, pilcrow)
+
+=item *
+
+Fix possible buffer overflow in preparse (CVE-2026-10879)
+
+=item *
+
+Skip mismatching .so's (Greg, PR#81)
+
+=item *
+
+Fix cast warning in dbi_get_state (Greg, PR#182)
+
+=back
+
+=head2 Changes in DBI 1.647 - 20 Jan 2025
+
+=over 2
+
+=item *
+
+Spellcheck
+
+=item *
+
+Fix Makefile rules for Changes (Windows case issue)
+
+=item *
+
+Another example to bind columns (issue#159)
+
+=item *
+
+Fix fetchall_arrayref for undefined NAME (issue#156)
+
+=back
+
+=head2 Changes in DBI 1.646 - 11 Jan 2025
+
+=over 2
+
+=item *
+
+Remove "experimental" tag from statistics_info () (issue#134)
+
+=item *
+
+RT tickets moved to github issues (rwfranks++)
+- All RT tickets now marked as resolved with reference to GitHub issue
+
+=item *
+
+Fix install issue (issue #168)
+
+=back
+
+=head2 Changes in DBI 1.645 - 03 Sep 2024
+
+=over 2
+
+=item *
+
+Move developer tests to xt/
+
+=item *
+
+Make Changes match CPAN::Changes::Spec and regen DBI::Changes from that
+
+=item *
+
+Fixes for modern gcc i.c.w. recent perl (Daniël)
+
+=item *
+
+Small code & doc cleanups for recent perl
+
+=item *
+
+See TODO in `perldoc DBI` to see where you can help with documentation!
+
+=back
+
+=head2 Changes in DBI 1.644 - 23 Aug 2024
+
+    Update Devel::PPPort,
+        thanks to H.Merijn Brand
+    Fix CVE-2014-10401 and CVE-2014-10402 - f_dir might not exist in DBD::File connections
+	thanks to Jens Rehsack & H.Merijn Brand
+    Do not check gccversion on clang
+        thanks to Daniël van Eeden
+    Upgrade GIMME to GIMME_V
+        thanks to Daniël van Eeden
+    Do not check with JSON::XS with perl-5.022 and later
+        thanks to H.Merijn Brand
+    Makefile.PL allows gcc-10 and up now
+        thanks to H.Merijn Brand (noted by XSven)
+    Do not leak $_ after callback execution (rt#144526, PR#117)
+	thanks to Mauke
+    Switch from Dynaloader to XSLoader (PR#94)
+	thanks to Todd
+    Tim handed the project to the team
+    Merge Pull Requests, resolve RT tickets, & resolve GH issues
+	thanks to many! Please check gitlog
+
+=head2 Changes in DBI 1.643 - 31 Jan 2020
 
     Fix memory corruption in XS functions when Perl stack is reallocated
         thanks to Pali
@@ -38,7 +185,7 @@ DBI::Changes - List of significant changes to the DBI
     Add new attribute RaiseWarn, similar to RaiseError,
         thanks to Pali
 
-=head2 Changes in DBI 1.642 - 28th October 2018
+=head2 Changes in DBI 1.642 - 28 Oct 2018
 
     Fix '.' in @INC for proxy test under parallel load
         thanks to H.Merijn Brand.
@@ -56,14 +203,14 @@ DBI::Changes - List of significant changes to the DBI
         thanks to Perlover #69
     Remove outdated links to DBI related training resources. RT#125999
 
-=head2 Changes in DBI 1.641 - 19th March 2018
+=head2 Changes in DBI 1.641 - 19 Mar 2018
 
     Remove dependency on Storable 2.16 introduced in DBI 1.639
         thanks to Ribasushi #60
     Avoid compiler warnings in Driver.xst #59
         thanks to pali #59
 
-=head2 Changes in DBI 1.640 - 28th January 2018
+=head2 Changes in DBI 1.640 - 28 Jan 2018
 
     Fix test t/91_store_warning.t for perl 5.10.0
         thanks to pali #57
@@ -73,7 +220,7 @@ DBI::Changes - List of significant changes to the DBI
     Add registration of mariadb_ prefix for new DBD::MariaDB driver
         thanks to pali #56
 
-=head2 Changes in DBI 1.639 - 28th December 2017
+=head2 Changes in DBI 1.639 - 28 Dec 2017
 
     Fix UTF-8 support for warn/croak calls within DBI internals,
         thanks to pali #53
@@ -86,7 +233,7 @@ DBI::Changes - List of significant changes to the DBI
     Corrected missing semicolon in example in documentation,
         thanks to pali #55
 
-=head2 Changes in DBI 1.637 - 16th August 2017
+=head2 Changes in DBI 1.637 - 16 Aug 2017
 
     Fix use of externally controlled format string (CWE-134) thanks to pali #44
         This could cause a crash if, for example, a db error contained a %.
@@ -108,7 +255,7 @@ DBI::Changes - List of significant changes to the DBI
     Adds links to more module names and fix typo, thanks to oalders #43
     Typo fix thanks to bor #37
 
-=head2 Changes in DBI 1.636 - 24th April 2016
+=head2 Changes in DBI 1.636 - 24 Apr 2016
 
     Fix compilation for threaded perl <= 5.12 broken in 1.635 RT#113955
     Revert change to DBI::PurePerl DESTROY in 1.635
@@ -116,7 +263,7 @@ DBI::Changes - List of significant changes to the DBI
     Output perl version and archname in t/01basics.t
     Add perl 5.22 and 5.22-extras to travis-ci config
 
-=head2 Changes in DBI 1.635 - 24th April 2016
+=head2 Changes in DBI 1.635 - 24 Apr 2016
 
     Fixed RaiseError/PrintError for UTF-8 errors/warnings. RT#102404
     Fixed cases where ShowErrorStatement might show incorrect Statement RT#97434
@@ -181,7 +328,7 @@ L<https://metacpan.org/author/RSAVAGE> Ron Savage,
 L<https://metacpan.org/author/ITCHARLIE> Charlie Gonzalez,
 L<https://twitter.com/jscook2345> Justin Cook.
 
-=head2 Changes in DBI 1.634 - 3rd August 2015
+=head2 Changes in DBI 1.634 - 03 Aug 2015
 
     Enabled strictures on all modules (Jose Luis Perez Diez) #22
         Note that this might cause new exceptions in existing code.
@@ -201,7 +348,7 @@ L<https://twitter.com/jscook2345> Justin Cook.
     Added Memory Leaks section to the DBI docs (Tim)
     Added Artistic v1 & GPL v1 LICENSE file (Jose Luis Perez Diez) #21
 
-=head2 Changes in DBI 1.633 - 11th Jan 2015
+=head2 Changes in DBI 1.633 - 11 Jan 2015
 
     Fixed selectrow_*ref to return undef on error in list context
         instead if an empty list.
@@ -216,7 +363,7 @@ L<https://twitter.com/jscook2345> Justin Cook.
     Added multi_ prefix for DBD::Multi (Dan Wright) and ad2_ prefix for
         DBD::AnyData2
 
-=head2 Changes in DBI 1.632 - 9th Nov 2014
+=head2 Changes in DBI 1.632 - 09 Nov 2014
 
     Fixed risk of memory corruption with many arguments to methods
         originally reported by OSCHWALD for Callbacks but may apply
@@ -238,7 +385,7 @@ L<https://twitter.com/jscook2345> Justin Cook.
     Added note to AutoInactiveDestroy docs strongly recommending that it
         is enabled in all new code.
 
-=head2 Changes in DBI 1.631 - 20th Jan 2014
+=head2 Changes in DBI 1.631 - 20 Jan 2014
 
 NOTE: This release changes the handle passed to Callbacks from being an 'inner'
 handle to being an 'outer' handle. If you have code that makes use of Callbacks,
@@ -257,7 +404,7 @@ ensure that you understand what this change means and review your callback code.
     Changed to avoid mg_get in neatsvpv during global destruction
         PR#10 [Matt Phillips]
 
-=head2 Changes in DBI 1.630 - 28th Oct 2013
+=head2 Changes in DBI 1.630 - 28 Oct 2013
 
 NOTE: This release enables PrintWarn by default regardless of $^W.
 Your applications may generate more log messages than before.
@@ -283,7 +430,7 @@ Your applications may generate more log messages than before.
 
 There was no DBI 1.629 release.
 
-=head2 Changes in DBI 1.628 - 22nd July 2013
+=head2 Changes in DBI 1.628 - 22 Jul 2013
 
     Fixed missing fields on partial insert via DBI::DBD::SqlEngine
         engines (DBD::CSV, DBD::DBM etc.) [H.Merijn Brand, Jens Rehsack]
@@ -302,11 +449,11 @@ There was no DBI 1.629 release.
     Spelling fixes [Ville Skyttä]
     Changed $VERSIONs to hardcoded strings [H.Merijn Brand]
 
-=head2 Changes in DBI 1.627 - 16th May 2013
+=head2 Changes in DBI 1.627 - 16 May 2013
 
     Fixed VERSION regression in DBI::SQL::Nano [Tim Bunce]
 
-=head2 Changes in DBI 1.626 - 15th May 2013
+=head2 Changes in DBI 1.626 - 15 May 2013
 
     Fixed pod text/link was reversed in a few cases RT#85168
         [H.Merijn Brand]
@@ -318,20 +465,20 @@ There was no DBI 1.629 release.
 
     Fixed skip() count arg in t/48dbi_dbd_sqlengine.t [Tim Bunce]
 
-=head2 Changes in DBI 1.625 (svn r15595) 28th March 2013
+=head2 Changes in DBI 1.625 (svn rev 15595) - 28 Mar 2013
 
   Fixed heap-use-after-free during global destruction RT#75614
     thanks to Reini Urban.
   Fixed ignoring RootClass attribute during connect() by
     DBI::DBD::SqlEngine reported in RT#84260 by Michael Schout
 
-=head2 Changes in DBI 1.624 (svn r15576) 22nd March 2013
+=head2 Changes in DBI 1.624 (svn rev 15576) - 22 Mar 2013
 
   Fixed Gofer for hash randomization in perl 5.17.10+ RT#84146
 
   Clarify docs for can() re RT#83207
 
-=head2 Changes in DBI 1.623 (svn r15547) 2nd Jan 2013
+=head2 Changes in DBI 1.623 (svn rev 15547) - 02 Jan 2013
 
   Fixed RT#64330 - ping wipes out errstr (Martin J. Evans).
   Fixed RT#75868 - DBD::Proxy shouldn't call connected() on the server.
@@ -367,27 +514,27 @@ There was no DBI 1.629 release.
     have been deprecated for several years and their use will now generate
     a warning.
 
-=head2 Changes in DBI 1.622 (svn r15327) 6th June 2012
+=head2 Changes in DBI 1.622 (svn rev 15327) - 06 Jun 2012
 
   Fixed lack of =encoding in non-ASCII pod docs. RT#77588
 
   Corrected typo in DBI::ProfileDumper thanks to Finn Hakansson.
 
-=head2 Changes in DBI 1.621 (svn r15315) 21st May 2012
+=head2 Changes in DBI 1.621 (svn rev 15315) - 21 May 2012
 
   Fixed segmentation fault when a thread is created from
     within another thread RT#77137, thanks to Dave Mitchell.
   Updated previous Changes to credit Booking.com for sponsoring
     Dave Mitchell's recent DBI optimization work.
 
-=head2 Changes in DBI 1.620 (svn r15300) 25th April 2012
+=head2 Changes in DBI 1.620 (svn rev 15300) - 25 Apr 2012
 
   Modified column renaming in fetchall_arrayref, added in 1.619,
     to work on column index numbers not names (an incompatible change).
   Reworked the fetchall_arrayref documentation.
   Hash slices in fetchall_arrayref now detect invalid column names.
 
-=head2 Changes in DBI 1.619 (svn r15294) 23rd April 2012
+=head2 Changes in DBI 1.619 (svn rev 15294) - 23 Apr 2012
 
   Fixed the connected method to stop showing the password in
     trace file (Martin J. Evans).
@@ -406,7 +553,7 @@ There was no DBI 1.629 release.
     thanks to Dagfinn Ilmari Mannsåker. RT#76572
   Reserved snmp_ and tree_ for DBD::SNMP and DBD::TreeData
 
-=head2 Changes in DBI 1.618 (svn r15170) 25rd February 2012
+=head2 Changes in DBI 1.618 (svn rev 15170) - 25 Feb 2012
 
   Fixed compiler warnings in Driver_xst.h (Martin J. Evans)
   Fixed compiler warning in DBI.xs (H.Merijn Brand)
@@ -422,7 +569,7 @@ There was no DBI 1.629 release.
   Minor changes to the install_method() docs in DBI::DBD.
   Updated dbipport.h from Devel::PPPort 3.20
 
-=head2 Changes in DBI 1.617 (svn r15107) 30th January 2012
+=head2 Changes in DBI 1.617 (svn rev 15107) - 30 Jan 2012
 
   NOTE: The officially supported minimum perl version will change
   from perl 5.8.1 (2003) to perl 5.8.3 (2004) in a future release.
@@ -457,7 +604,7 @@ There was no DBI 1.629 release.
   Updated link to the SQL Reunion 95 docs, RT69577 (Ash Daminato)
   Changed links for DBI recipes. RT73286 (Martin J. Evans)
 
-=head2 Changes in DBI 1.616 (svn r14616) 30th December 2010
+=head2 Changes in DBI 1.616 (svn rev 14616) - 30 Dec 2010
 
   Fixed spurious dbi_profile lines written to the log when
     profiling is enabled and a trace flag, like SQL, is used.
@@ -485,14 +632,14 @@ There was no DBI 1.629 release.
   Documented dbd_st_execute return (Martin J. Evans)
   Fixed typo in InactiveDestroy thanks to Emmanuel Rodriguez.
 
-=head2 Changes in DBI 1.615 (svn r14438) 21st September 2010
+=head2 Changes in DBI 1.615 (svn rev 14438) - 21 Sep 2010
 
   Fixed t/51dbm_file for file/directory names with whitespaces in them
     RT#61445 (Jens Rehsack)
   Fixed compiler warnings from ignored hv_store result (Martin J. Evans)
   Fixed portability to VMS (Craig A. Berry)
 
-=head2 Changes in DBI 1.614 (svn r14408) 17th September 2010
+=head2 Changes in DBI 1.614 (svn rev 14408) - 17 Sep 2010
 
   Fixed bind_param () in DBI::DBD::SqlEngine (rt#61281)
   Fixed internals to not refer to old perl symbols that
@@ -524,14 +671,14 @@ There was no DBI 1.629 release.
   Added register_compat_map() and table_meta_attr_changed() to
     DBD::File::Table to support clean fix of RT#61168 (Jens Rehsack)
 
-=head2 Changes in DBI 1.613 (svn r14271) 22nd July 2010
+=head2 Changes in DBI 1.613 (svn rev 14271) - 22 Jul 2010
 
   Fixed Win32 prerequisite module from PathTools to File::Spec.
 
   Changed attribute headings and fixed references in DBI pod (Martin J. Evans)
   Corrected typos in DBI::FAQ and DBI::ProxyServer (Ansgar Burchardt)
 
-=head2 Changes in DBI 1.612 (svn r14254) 16th July 2010
+=head2 Changes in DBI 1.612 (svn rev 14254) - 16 Jul 2010
 
 NOTE: This is a minor release for the DBI core but a major release for
 DBD::File and drivers that depend on it, like DBD::DBM and DBD::CSV.
@@ -578,7 +725,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added developer documentation (including a roadmap of future plans)
     for DBD::File
 
-=head2 Changes in DBI 1.611 (svn r13935) 29th April 2010
+=head2 Changes in DBI 1.611 (svn rev 13935) - 29 Apr 2010
 
   NOTE: minimum perl version is now 5.8.1 (as announced in DBI 1.607)
 
@@ -616,7 +763,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     support it (Martin J. Evans)
   Updated dbipport.h to Devel::PPPort 3.19 (H.Merijn Brand)
 
-=head2 Changes in DBI 1.609 (svn r12816) 8th June 2009
+=head2 Changes in DBI 1.609 (svn rev 12816) - 08 Jun 2009
 
   Fixes to DBD::File (H.Merijn Brand)
     added f_schema attribute
@@ -633,7 +780,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Clarified docs on stickyness of data type via bind_param().
   Clarified docs on stickyness of data type via bind_col().
 
-=head2 Changes in DBI 1.608 (svn r12742) 5th May 2009
+=head2 Changes in DBI 1.608 (svn rev 12742) - 05 May 2009
 
   Fixes to DBD::File (H.Merijn Brand)
     bind_param () now honors the attribute argument
@@ -653,7 +800,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Corrected many typos in DBI docs thanks to Martin J. Evans.
   Improved DBI::DBD docs thanks to H.Merijn Brand.
 
-=head2 Changes in DBI 1.607 (svn r11571) 22nd July 2008
+=head2 Changes in DBI 1.607 (svn rev 11571) - 22 Jul 2008
 
   NOTE: Perl 5.8.1 is now the minimum supported version.
   If you need support for earlier versions send me a patch.
@@ -663,7 +810,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added note to docs about effect of execute(@empty_array).
   Clarified docs for ReadOnly thanks to Martin Evans.
 
-=head2 Changes in DBI 1.605 (svn r11434) 16th June 2008
+=head2 Changes in DBI 1.605 (svn rev 11434) - 16 Jun 2008
 
   Fixed broken DBIS macro with threads on big-endian machines
     with 64bit ints but 32bit pointers. Ticket #32309.
@@ -694,13 +841,13 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added $drh->dbixs_revision method.
   Added explicit LICENSE specification (perl) to META.yaml
 
-=head2 Changes in DBI 1.604 (svn rev 10994) 24th March 2008
+=head2 Changes in DBI 1.604 (svn rev 10994) - 24 Mar 2008
 
   Fixed fetchall_arrayref with $max_rows argument broken in 1.603,
     thanks to Greg Sabino Mullane.
   Fixed a few harmless compiler warnings on cygwin.
 
-=head2 Changes in DBI 1.603
+=head2 Changes in DBI 1.603 - 22 Mar 2008
 
   Fixed pure-perl fetchall_arrayref with $max_rows argument
     to not error when fetching after all rows already fetched.
@@ -714,7 +861,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
 
   Added options to t/85gofer.t so it's more useful for manual testing.
 
-=head2 Changes in DBI 1.602 (svn rev 10706)  8th February 2008
+=head2 Changes in DBI 1.602 (svn rev 10706) - 08 Feb 2008
 
   Fixed potential coredump if stack reallocated while calling back
     into perl from XS code. Thanks to John Gardiner Myers.
@@ -734,7 +881,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     track_recent now also keeps track of N most recent errors.
     The connect method is now also counted in stats.
 
-=head2 Changes in DBI 1.601 (svn rev 10103),  21st October 2007
+=head2 Changes in DBI 1.601 (svn rev 10103) - 21 Oct 2007
 
   Fixed t/05thrclone.t to work with Test::More >= 0.71
     thanks to Jerry D. Hedden and Michael G Schwern.
@@ -748,7 +895,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added DBI::Util::CacheMemory for use with DBD::Gofer caching.
     It's a very fast and small strict subset of Cache::Memory.
 
-=head2 Changes in DBI 1.59 (svn rev 9874),  23rd August 2007
+=head2 Changes in DBI 1.59 (svn rev 9874) - 23 Aug 2007
 
   Fixed DBI::ProfileData to unescape headers lines read from data file.
   Fixed DBI::ProfileData to not clobber $_, thanks to Alexey Tourbin.
@@ -762,7 +909,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
 
   Added check_response_sub to DBI::Gofer::Execute
 
-=head2 Changes in DBI 1.58 (svn rev 9678),  25th June 2007
+=head2 Changes in DBI 1.58 (svn rev 9678) - 25 Jun 2007
 
   Fixed code triggering fatal error in bleadperl, thanks to Steve Hay.
   Fixed compiler warning thanks to Jerry D. Hedden.
@@ -770,7 +917,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     time() seems to be rounded not truncated from the high resolution time.
   Removed dump_results() test from t/80proxy.t.
 
-=head2 Changes in DBI 1.57 (svn rev 9639),  13th June 2007
+=head2 Changes in DBI 1.57 (svn rev 9639) - 13 Jun 2007
 
   Note: this release includes a change to the DBI::hash() function which will
   now produce different values than before *if* your perl was built with 64-bit
@@ -819,7 +966,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     Added --dumpnodes and --delete options.
   Added/updated docs for both DBI::ProfileDumper && ::Apache.
 
-=head2 Changes in DBI 1.56 (svn rev 9660),  18th June 2007
+=head2 Changes in DBI 1.56 (svn rev 9660) - 18 Jun 2007
 
   Fixed printf arg warnings thanks to JDHEDDEN.
   Fixed returning driver-private sth attributes via gofer.
@@ -838,7 +985,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     test automatic retry on failures and timeout handling.
   Added lots more docs to all the DBD::Gofer and DBI::Gofer classes.
 
-=head2 Changes in DBI 1.55 (svn rev 9504),  4th May 2007
+=head2 Changes in DBI 1.55 (svn rev 9504) - 04 May 2007
 
   Fixed set_err() so HandleSetErr hook is executed reliably, if set.
   Fixed accuracy of profiling when perl configured to use long doubles.
@@ -896,7 +1043,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     The http and mod_perl transports have been remove to their own distribution.
     Client and server will need upgrading together for this release.
 
-=head2 Changes in DBI 1.54 (svn rev 9157),  23rd February 2007
+=head2 Changes in DBI 1.54 (svn rev 9157) - 23 Feb 2007
 
   NOTE: This release includes the 'next big thing': DBD::Gofer.
   Take a look!
@@ -945,7 +1092,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added SQL_BIGINT type code (resolved to the ODBC/JDBC value (-5))
   Added $h->private_attribute_info method.
 
-=head2 Changes in DBI 1.53 (svn rev 7995),   31st October 2006
+=head2 Changes in DBI 1.53 (svn rev 7995) - 31 Oct 2006
 
   Fixed checks for weaken to work with early 5.8.x versions
   Fixed DBD::Proxy handling of some methods, including commit and rollback.
@@ -962,7 +1109,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     methods which returns executed tuples and rows affected.
   Added Tie::Cache::LRU example to docs thanks to Brandon Black.
 
-=head2 Changes in DBI 1.52 (svn rev 6840),   30th July 2006
+=head2 Changes in DBI 1.52 (svn rev 6840) - 30 Jul 2006
 
   Fixed memory leak (per handle) thanks to Nicholas Clark and Ephraim Dan.
   Fixed memory leak (16 bytes per sth) thanks to Doru Theodor Petrescu.
@@ -980,7 +1127,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     Changed DBI::Profile docs extensively - many new features.
     See DBI::Profile docs for more information.
 
-=head2 Changes in DBI 1.51 (svn rev 6475),   6th June 2006
+=head2 Changes in DBI 1.51 (svn rev 6475) - 06 Jun 2006
 
   Fixed $dbh->clone method 'signature' thanks to Jeffrey Klein.
   Fixed default ping() method to return false if !$dbh->{Active}.
@@ -1014,7 +1161,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added ability for DBI::Profile Path to include attributes
     and a summary of where the code was called from.
 
-=head2 Changes in DBI 1.50 (svn rev 2307),   13 December 2005
+=head2 Changes in DBI 1.50 (svn rev 2307) - 13 Dec 2005
 
   Fixed Makefile.PL options for gcc bug introduced in 1.49.
   Fixed handle magic order to keep DBD::Oracle happy.
@@ -1026,7 +1173,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added documentation for dbi_profile_merge(), including how to
     measure the time spent inside the DBI for an http request.
 
-=head2 Changes in DBI 1.49 (svn rev 2287),   29th November 2005
+=head2 Changes in DBI 1.49 (svn rev 2287) - 29 Nov 2005
 
   Fixed assorted attribute handling bugs in DBD::Proxy.
   Fixed croak() in DBD::NullP thanks to Sergey Skvortsov.
@@ -1067,7 +1214,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Ported DBI::ProfileDumper::Apache to mod_perl2 RC5+
     thanks to Philip M. Golluci
 
-=head2 Changes in DBI 1.48 (svn rev 928),    14th March 2005
+=head2 Changes in DBI 1.48 (svn rev 928) - 14 Mar 2005
 
   Fixed DBI::DBD::Metadata generation of type_info_all thanks to Steffen Goeldner
     (driver authors who have used it should rerun it).
@@ -1078,8 +1225,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     thanks to Zhuang (John) Li for polishing up my draft.
   Added registered driver prefixes: amzn_ for DBD::Amazon and yaswi_ for DBD::Yaswi.
 
-
-=head2 Changes in DBI 1.47 (svn rev 854),    2nd February 2005
+=head2 Changes in DBI 1.47 (svn rev 854) - 02 Feb 2005
 
   Fixed DBI::ProxyServer to not create pid files by default.
     References: Ubuntu Security Notice USN-70-1, CAN-2005-0077
@@ -1113,7 +1259,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Corrected and updated LongReadLen docs thanks to Bart Lateur.
   Added DBD::JDBC as a registered driver.
 
-=head2 Changes in DBI 1.46 (svn rev 584),    16th November 2004
+=head2 Changes in DBI 1.46 (svn rev 584) - 16 Nov 2004
 
   Fixed parsing bugs in DBI::SQL::Nano thanks to Jeff Zucker.
   Fixed a couple of bad links in docs thanks to Graham Barr.
@@ -1132,12 +1278,12 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     utility functions to help diagnose Unicode issues.
     All can be imported via the use DBI qw(:utils) tag.
 
-=head2 Changes in DBI 1.45 (svn rev 480),    6th October 2004
+=head2 Changes in DBI 1.45 (svn rev 480) - 06 Oct 2004
 
   Fixed DBI::DBD code for drivers broken in 1.44.
   Fixed "Free to wrong pool"/"Attempt to free unreferenced scalar" in FETCH.
 
-=head2 Changes in DBI 1.44 (svn rev 478),    5th October 2004
+=head2 Changes in DBI 1.44 (svn rev 478) - 05 Oct 2004
 
   Fixed build issues on VMS thanks to Jakob Snoer.
   Fixed DBD::File finish() method to return 1 thanks to Jan Dubois.
@@ -1161,8 +1307,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
 
   Added $h1->swap_inner_handle($h2) sponsored by BizRate.com
 
-
-=head2 Changes in DBI 1.43 (svn rev 377),    2nd July 2004
+=head2 Changes in DBI 1.43 (svn rev 377) - 02 Jul 2004
 
   Fixed connect() and connect_cached() RaiseError/PrintError
     which would sometimes show "(no error string)" as the error.
@@ -1196,7 +1341,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Removed "may change" warnings from the docs for table_info(),
     primary_key_info(), and foreign_key_info() methods.
 
-=head2 Changes in DBI 1.42 (svn rev 222),    12th March 2004
+=head2 Changes in DBI 1.42 (svn rev 222) - 12 Mar 2004
 
   Fixed $sth->{NUM_OF_FIELDS} of non-executed statement handle
     to be undef as per the docs (it was 0).
@@ -1240,7 +1385,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Corrected typos in docs thanks to Steffen Goeldner.
   Corrected execute_for_fetch example thanks to Dean Arnold.
 
-=head2 Changes in DBI 1.41 (svn rev 130),    22nd February 2004
+=head2 Changes in DBI 1.41 (svn rev 130) - 22 Feb 2004
 
   Fixed execute_for_array() so tuple_status parameter is optional
     as per docs, thanks to Ed Avis.
@@ -1290,7 +1435,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Corrected get_info() docs to include details of DBI::Const::GetInfoType.
   Clarified that $sth->{PRECISION} is OCTET_LENGTH for char types.
 
-=head2 Changes in DBI 1.40,    7th January 2004
+=head2 Changes in DBI 1.40 - 07 Jan 2004
 
   Fixed handling of CachedKids when DESTROYing threaded handles.
   Fixed sql_user_name() in DBI::DBD::Metadata (used by write_getinfo_pm)
@@ -1307,7 +1452,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added missing execute() in fetchall_hashref docs thanks to Iain Truskett.
   Added a CONTRIBUTING section to the docs with notes on creating patches.
 
-=head2 Changes in DBI 1.39,    27th November 2003
+=head2 Changes in DBI 1.39 - 27 Nov 2003
 
   Fixed STORE to not clear error during nested DBI call, again/better,
     thanks to Tony Bowden for the report and helpful test case.
@@ -1334,7 +1479,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Note: There is a bug in perl 5.8.2 when configured with threads
   and debugging enabled (bug #24463) which causes a DBI test to fail.
 
-=head2 Changes in DBI 1.38,    21th August 2003
+=head2 Changes in DBI 1.38 - 21 Aug 2003
 
   NOTE: The DBI now requires perl version 5.6.0 or later.
   (As per notice in DBI 1.33 released 27th February 2003)
@@ -1368,14 +1513,14 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added $DBI::Profile::ON_DESTROY_DUMP variable.
   Added docs for DBD::Sponge thanks to Mark Stosberg.
 
-=head2 Changes in DBI 1.37,    15th May 2003
+=head2 Changes in DBI 1.37 - 15 May 2003
 
   Fixed "Can't get dbh->{Statement}: unrecognised attribute" error in test
     caused by change to perl internals in 5.8.0
   Fixed to build with latest development perl (5.8.1@19525).
   Fixed C code to use all ANSI declarations thanks to Steven Lembark.
 
-=head2 Changes in DBI 1.36,    11th May 2003
+=head2 Changes in DBI 1.36 - 11 May 2003
 
   Fixed DBI->connect to carp instead of croak on 'old-style' usage.
   Fixed connect(,,, { RootClass => $foo }) to not croak if module not found.
@@ -1411,7 +1556,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added warning to trace log when $h->{foo}=... is ignored due to
     invalid prefix (e.g., not 'private_').
 
-=head2 Changes in DBI 1.35,    7th March 2003
+=head2 Changes in DBI 1.35 - 07 Mar 2003
 
   Fixed memory leak in fetchrow_hashref introduced in DBI 1.33.
   Fixed various DBD::Proxy errors introduced in DBI 1.33.
@@ -1424,7 +1569,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Updated DBI::DBD::Metadata for perl 5.5.3 thanks to Jonathan Leffler.
   Added note to install_method docs about setup_driver() method.
 
-=head2 Changes in DBI 1.34,    28th February 2003
+=head2 Changes in DBI 1.34 - 28 Feb 2003
 
   Fixed DBI::DBD docs to refer to DBI::DBD::Metadata thanks to Jonathan Leffler.
   Fixed dbi_time() compile using BorlandC on Windows thanks to Steffen Goeldner.
@@ -1443,7 +1588,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     version to the Bundle::DBI file.
   Updated minimum version numbers for modules in Bundle::DBI.
 
-=head2 Changes in DBI 1.33,    27th February 2003
+=head2 Changes in DBI 1.33 - 27 Feb 2003
 
   NOTE: Future versions of the DBI *will not* support perl 5.6.0 or earlier.
   : Perl 5.6.1 will be the minimum supported version.
@@ -1525,8 +1670,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
       the corresponding macro has been #defined:
           $drh->disconnect_all()    - dbd_discon_all
 
-
-=head2 Changes in DBI 1.32,    1st December 2002
+=head2 Changes in DBI 1.32 - 01 Dec 2002
 
   Fixed to work with 5.005_03 thanks to Tatsuhiko Miyagawa (I've not tested it).
   Reenabled taint tests (accidentally left disabled) spotted by Bradley Baetz.
@@ -1539,7 +1683,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     the excellent CPAN testers team: http://testers.cpan.org/
     (Please visit, see the valuable work they do and, ideally, join in!)
 
-=head2 Changes in DBI 1.31,    29th November 2002
+=head2 Changes in DBI 1.31 - 29 Nov 2002
 
   The fetchall_arrayref method, when called with a $maxrows parameter,
     no longer gives an error if called again after all rows have been
@@ -1593,8 +1737,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     If you have a ::db or ::st DESTROY methods that do nothing
     you can now remove them - which speeds up handle destruction.
 
-
-=head2 Changes in DBI 1.30,    18th July 2002
+=head2 Changes in DBI 1.30 - 18 Jul 2002
 
   Fixed problems with selectrow_array, selectrow_arrayref, and
     selectall_arrayref introduced in DBI 1.29.
@@ -1605,7 +1748,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     context to match fetchrow_array.
   Corrected selectrow_arrayref docs which showed selectrow_array thanks to Paul DuBois.
 
-=head2 Changes in DBI 1.29,    15th July 2002
+=head2 Changes in DBI 1.29 - 15 Jul 2002
 
   NOTE: This release changes the specified behaviour for the
   : fetchrow_array method when called in a scalar context:
@@ -1645,7 +1788,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Tested with perl 5.5.3 (vanilla, Solaris), 5.6.1 (vanilla, Solaris), and
     perl 5.8.0 (RC3@17527 with iThreads & Multiplicity on Solaris and FreeBSD).
 
-=head2 Changes in DBI 1.28,    14th June 2002
+=head2 Changes in DBI 1.28 - 14 Jun 2002
 
   Added $sth->{ParamValues} to return a hash of the most recent
     values bound to placeholders via bind_param() or execute().
@@ -1654,12 +1797,12 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     "DBD::foo::st execute failed: errstr [for statement ``...'' with params: 1='foo']"
   Further enhancements to DBD::PurePerl accuracy.
 
-=head2 Changes in DBI 1.27,    13th June 2002
+=head2 Changes in DBI 1.27 - 13 Jun 2002
 
   Fixed missing column in C implementation of fetchall_arrayref()
     thanks to Philip Molter for the prompt reporting of the problem.
 
-=head2 Changes in DBI 1.26,    13th June 2002
+=head2 Changes in DBI 1.26 - 13 Jun 2002
 
   Fixed t/40profile.t to work on Windows thanks to Smejkal Petr.
   Fixed $h->{Profile} to return undef, not error, if not set.
@@ -1689,14 +1832,14 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   HandleError docs updated to show that handler can edit error message.
   HandleError subroutine interface is now regarded as stable.
 
-=head2 Changes in DBI 1.25,    5th June 2002
+=head2 Changes in DBI 1.25 - 05 Jun 2002
 
   Fixed build problem on Windows and some compiler warnings.
   Fixed $dbh->{Driver} and $sth->{Statement} for driver internals
     These are 'inner' handles as per behaviour prior to DBI 1.16.
   Further minor improvements to DBI::PurePerl accuracy.
 
-=head2 Changes in DBI 1.24,    4th June 2002
+=head2 Changes in DBI 1.24 - 04 Jun 2002
 
   Fixed reference loop causing a handle/memory leak
     that was introduced in DBI 1.16.
@@ -1719,13 +1862,13 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Removed undocumented Handlers attribute (replaced by HandleError).
   Tested with 5.5.3 and 5.8.0 RC1.
 
-=head2 Changes in DBI 1.23,    25th May 2002
+=head2 Changes in DBI 1.23 - 25 May 2002
 
   Greatly improved DBI::PurePerl in performance and accuracy.
   Added more detail to DBI::PurePerl docs about what's not supported.
   Fixed undef warnings from t/15array.t and DBD::Sponge.
 
-=head2 Changes in DBI 1.22,    22nd May 2002
+=head2 Changes in DBI 1.22 - 22 May 2002
 
   Added execute_array() and bind_param_array() with special thanks
     to Dean Arnold. Not yet documented. See t/15array.t for examples.
@@ -1753,8 +1896,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Clarified docs for finish method.
   Clarified potentials problems with prepare_cached() thanks to Stephen Clouse.
 
-
-=head2 Changes in DBI 1.21,    7th February 2002
+=head2 Changes in DBI 1.21 - 07 Feb 2002
 
   The minimum supported perl version is now 5.005_03.
 
@@ -1817,8 +1959,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
       $dbh->{$_} = $attr->{$_} foreach keys %$attr;
     that DBI->connect does after the driver connect() method returns.
 
-
-=head2 Changes in DBI 1.20,    24th August 2001
+=head2 Changes in DBI 1.20 - 24 Aug 2001
 
   WARNING: This release contains two changes that may affect your code.
   : Any code using selectall_hashref(), which was added in March 2001, WILL
@@ -1873,7 +2014,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     especially like to thank Paul for his generosity and vision in
     supporting this work for many years.
 
-=head2 Changes in DBI 1.19,    20th July 2001
+=head2 Changes in DBI 1.19 - 20 Jul 2001
 
   Made fetchall_arrayref({ foo=>1, ...}) be more strict to the specification
     in relation to wanting hash slice keys to be lowercase names.
@@ -1896,7 +2037,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added prepare_cached() insert_hash() example thanks to Doug Wilson.
   Removed false docs for fetchall_hashref(), use fetchall_arrayref({}).
 
-=head2 Changes in DBI 1.18,    4th June 2001
+=head2 Changes in DBI 1.18 - 04 Jun 2001
 
   Fixed that altering ShowErrorStatement also altered AutoCommit!
     Thanks to Jeff Boes for spotting that clanger.
@@ -1910,7 +2051,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     thanks to Olga Voronova, who also implemented then in DBD::Oracle.
   Updated Win32::DBIODBC (Win32::ODBC emulation) thanks to Roy Lee.
 
-=head2 Changes in DBI 1.16,    30th May 2001
+=head2 Changes in DBI 1.16 - 30 May 2001
 
   Reimplemented fetchrow_hashref in C, now fetches about 25% faster!
   Changed behaviour if both PrintError and RaiseError are enabled
@@ -1933,7 +2074,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Updated Win32::DBIODBC (Win32::ODBC emulation) thanks to Roy Lee.
   Updated email and web addresses in DBI::FAQ thanks to Michael A Chase.
 
-=head2 Changes in DBI 1.15,    28th March 2001
+=head2 Changes in DBI 1.15 - 28 Mar 2001
 
   Added selectrow_arrayref
   Added selectrow_hashref
@@ -1979,7 +2120,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     Perl 5.005 and 5.006 both leak memory doing local($handle->{Foo}).
     Perl 5.004 doesn't. The leak is not a DBI or driver bug.
 
-=head2 Changes in DBI 1.14,	14th June 2000
+=head2 Changes in DBI 1.14 - 14 Jun 2000
 
   NOTE: This version is the one the DBI book is based on.
   NOTE: This version requires at least Perl 5.004.
@@ -1996,7 +2137,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added prepare_cached() example to the docs.
   Added further DBD::ADO enhancements from Thomas Lowery.
 
-=head2 Changes in DBI 1.13,	11th July 1999
+=head2 Changes in DBI 1.13 - 11 Jul 1999
 
   Fixed Win32 PerlEx IIS concurrency bugs thanks to Murray Nesbitt.
   Fixed problems with DBD::ExampleP long_list test mode.
@@ -2007,7 +2148,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Actually documented connect_cached thanks to Michael Schwern.
   Fixed user/key/cipher bug in ProxyServer thanks to Joshua Pincus.
 
-=head2 Changes in DBI 1.12,	29th June 1999
+=head2 Changes in DBI 1.12 - 29 Jun 1999
 
   Fixed significant DBD::ADO bug (fetch skipped first row).
   Fixed ProxyServer bug handling non-select statements.
@@ -2015,14 +2156,14 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Trace only shows calls to trace_msg and _set_fbav at high levels.
   Modified t/examp.t to workaround Cygwin buffering bug.
 
-=head2 Changes in DBI 1.11,	17th June 1999
+=head2 Changes in DBI 1.11 - 17 Jun 1999
 
   Fixed bind_columns argument checking to allow a single arg.
   Fixed problems with internal default_user method.
   Fixed broken DBD::ADO.
   Made default $DBI::rows more robust for some obscure cases.
 
-=head2 Changes in DBI 1.10,	14th June 1999
+=head2 Changes in DBI 1.10 - 14 Jun 1999
 
   Fixed trace_msg.al error when using Apache.
   Fixed dbd_st_finish enhancement in Driver.xst (internals).
@@ -2030,7 +2171,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
     and temporarily disabled warning added in 1.09.
   Thread safety optimised for single thread case.
 
-=head2 Changes in DBI 1.09,	9th June 1999
+=head2 Changes in DBI 1.09 - 09 Jun 1999
 
   Added optional minimum trace level parameter to trace_msg().
   Added warning in Makefile.PL that DBI will require 5.004 soon.
@@ -2049,7 +2190,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added portability fixes for MacOS from Chris Nandor.
   Updated mailing list address from fugue.com to isc.org.
 
-=head2 Changes in DBI 1.08,	12th May 1999
+=head2 Changes in DBI 1.08 - 12 May 1999
 
   Much improved DBD::ADO driver thanks to Phlip Plumlee and others.
   Connect now allows you to specify attribute settings within the DSN
@@ -2063,7 +2204,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Workaround for Cygwin32 build problem with help from Jong-Pork Park.
   bind_columns no longer needs undef or hash ref as first parameter.
 
-=head2 Changes in DBI 1.07,	6th May 1999
+=head2 Changes in DBI 1.07 - 06 May 1999
 
   Trace output now shows contents of array refs returned by DBI.
   Changed names of some result columns from type_info, type_info_all,
@@ -2075,7 +2216,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added code for MULTIPLICITY/PERL_OBJECT contributed by ActiveState.
   Added $sth->more_results (undocumented for now).
 
-=head2 Changes in DBI 1.06,	6th January 1999
+=head2 Changes in DBI 1.06 - 06 Jan 1999
 
   Fixed Win32 Makefile.PL problem in 1.04 and 1.05.
   Significant DBD::Proxy enhancements and fixes
@@ -2084,13 +2225,13 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added $sth->{NAME_uc} and $sth->{NAME_lc} attributes.
   Enhanced fetchrow_hashref to take an attribute name arg.
 
-=head2 Changes in DBI 1.05,	4th January 1999
+=head2 Changes in DBI 1.05 - 04 Jan 1999
 
   Improved DBD::ADO connect (thanks to Phlip Plumlee).
   Improved thread safety (thanks to Jochen Wiedmann).
   [Quick release prompted by truncation of copies on CPAN]
 
-=head2 Changes in DBI 1.04,	3rd January 1999
+=head2 Changes in DBI 1.04 - 03 Jan 1999
 
   Fixed error in Driver.xst. DBI build now tests Driver.xst.
   Removed unused variable compiler warnings in Driver.xst.
@@ -2098,7 +2239,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Further clarification in the DBI::DBD driver writers manual.
   Added optional name parameter to $sth->fetchrow_hashref.
 
-=head2 Changes in DBI 1.03,	1st January 1999
+=head2 Changes in DBI 1.03 - 01 Jan 1999
 
   Now builds with Perl>=5.005_54 (PERL_POLLUTE in DBIXS.h)
   DBI trace trims path from "at yourfile.pl line nnn".
@@ -2126,13 +2267,13 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Fixed DBD::Sponge to work with empty result sets.
   Complete rewrite of DBI::ProxyServer and DBD::Proxy.
 
-=head2 Changes in DBI 1.02,	2nd September 1998
+=head2 Changes in DBI 1.02 - 02 Sep 1998
 
   Fixed DBI::Shell including @ARGV and /current.
   Added basic DBI::Shell test.
   Renamed DBI::Shell /display to /format.
 
-=head2 Changes in DBI 1.01,	2nd September 1998
+=head2 Changes in DBI 1.01 - 02 Sep 1998
 
   Many enhancements to Shell (with many contributions from
   Jochen Wiedmann, Tom Lowery and Adam Marks).
@@ -2144,7 +2285,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   DBI->connect now honours PrintError=1 if connect fails.
   Assorted clarifications to the docs.
 
-=head2 Changes in DBI 1.00,	14th August 1998
+=head2 Changes in DBI 1.00 - 14 Aug 1998
 
   The DBI is no longer 'alpha' software!
   Added $dbh->tables and $dbh->table_info.
@@ -2154,7 +2295,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   DBI::Shell now uses neat_list to print results
   It also escapes "'" chars and converts newlines to spaces.
 
-=head2 Changes in DBI 0.95,	10th August 1998
+=head2 Changes in DBI 0.95 - 10 Aug 1998
 
   WARNING: THIS IS AN EXPERIMENTAL RELEASE!
 
@@ -2164,7 +2305,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Improved connect error reporting by DBD::Proxy.
   All trace/debug messages from DBI now go to trace file.
 
-=head2 Changes in DBI 0.94,	9th August 1998
+=head2 Changes in DBI 0.94 - 09 Aug 1998
 
   WARNING: THIS IS AN EXPERIMENTAL RELEASE!
 
@@ -2188,14 +2329,14 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Added @bool = DBI::looks_like_number(@ary).
   Many assorted improvements to the DBI docs.
 
-=head2 Changes in DBI 0.93,	13th February 1998
+=head2 Changes in DBI 0.93 - 13 Feb 1998
 
   Fixed DBI::DBD::dbd_postamble bug causing 'Driver.xsi not found' errors.
   Changes to handling of 'magic' values in neatsvpv (used by trace).
   execute (in Driver.xst) stops binding after first bind error.
   This release requires drivers to be rebuilt.
 
-=head2 Changes in DBI 0.92,	3rd February 1998
+=head2 Changes in DBI 0.92 - 03 Feb 1998
 
   Fixed per-handle memory leak (with many thanks to Irving Reid).
   Added $dbh->prepare_cached() caching variant of $dbh->prepare.
@@ -2213,7 +2354,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Fixed small 'once per interpreter' leak.
   Assorted minor documentation fixes.
 
-=head2 Changes in DBI 0.91,	10th December 1997
+=head2 Changes in DBI 0.91 - 10 Dec 1997
 
   NOTE: This fix may break some existing scripts:
   DBI->connect("dbi:...",$user,$pass) was not setting AutoCommit and PrintError!
@@ -2229,7 +2370,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Fixed to build okay with 5.004_54 with or without USE_THREADS.
   Note that the DBI has not been tested for thread safety yet.
 
-=head2 Changes in DBI 0.90,	6th September 1997
+=head2 Changes in DBI 0.90 - 06 Sep 1997
 
   Can once again be built with Perl 5.003.
   The DBI class can be subclassed more easily now.
@@ -2239,13 +2380,13 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Note: 0.90, 0.89 and possibly some other recent versions have
   a small memory leak. This will be fixed in the next release.
 
-=head2 Changes in DBI 0.89,	25th July 1997
+=head2 Changes in DBI 0.89 - 25 Jul 1997
 
   Minor fix to neatsvpv (mainly used for debug trace) to workaround
   bug in perl where SvPV removes IOK flag from an SV.
   Minor updates to the docs.
 
-=head2 Changes in DBI 0.88,	22nd July 1997
+=head2 Changes in DBI 0.88 - 22 Jul 1997
 
   Fixed build for perl5.003 and Win32 with Borland.
   Fixed documentation formatting.
@@ -2255,12 +2396,12 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   The DBI can now export SQL type values: use DBI ':sql_types';
   Modified Driver.xst and renamed DBDI.h to dbd_xsh.h
 
-=head2 Changes in DBI 0.87,	18th July 1997
+=head2 Changes in DBI 0.87 - 18 Jul 1997
 
   Fixed minor type clashes.
   Added more docs about placeholders and bind values.
 
-=head2 Changes in DBI 0.86,	16th July 1997
+=head2 Changes in DBI 0.86 - 16 Jul 1997
 
   Fixed failed connect causing 'unblessed ref' and other errors.
   Drivers must handle AutoCommit FETCH and STORE else DBI croaks.
@@ -2283,7 +2424,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   that won't appear in drivers for some time. Driver writers might like
   to read perldoc DBI::DBD and comment on or apply the information given.
 
-=head2 Changes in DBI 0.85,	25th June 1997
+=head2 Changes in DBI 0.85 - 25 Jun 1997
 
   NOTE: New-style connect now defaults to AutoCommit mode unless
   { AutoCommit => 0 } specified in connect attributes. See the docs.
@@ -2296,7 +2437,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Fixed bug which set some attributes true when there value was fetched.
   Added new internal DBIc_set() macro for drivers to use.
 
-=head2 Changes in DBI 0.84,	20th June 1997
+=head2 Changes in DBI 0.84 - 20 Jun 1997
 
   Added $h->{PrintError} attribute which, if set true, causes all errors to
   trigger a warn().
@@ -2307,7 +2448,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Renamed $h->debug to $h->trace() and added a trace filename arg.
   Assorted other minor tidy-ups.
 
-=head2 Changes in DBI 0.83,	11th June 1997
+=head2 Changes in DBI 0.83 - 11 Jun 1997
 
   Added driver specification syntax to DBI->connect data_source
   parameter: DBI->connect('dbi:driver:...', $user, $passwd);
@@ -2329,7 +2470,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Unknown driver specific attribute names no longer croak.
   Fixed problem with internal neatsvpv macro.
 
-=head2 Changes in DBI 0.82,	23rd May 1997
+=head2 Changes in DBI 0.82 - 23 May 1997
 
   Added $h->{RaiseError} attribute which, if set true, causes all errors to
   trigger a die(). This makes it much easier to implement robust applications
@@ -2345,12 +2486,12 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   changed (DBIXS_VERSION == 8 and DBISTATE_VERSION == 8) so drivers will have
   to be recompiled.
 
-=head2 Changes in DBI 0.81,	7th May 1997
+=head2 Changes in DBI 0.81 - 07 May 1997
 
   Minor fix to let DBI build using less modern perls.
   Fixed a suprious typo warning.
 
-=head2 Changes in DBI 0.80,	6th May 1997
+=head2 Changes in DBI 0.80 - 06 May 1997
 
   Builds with no changes on NT using perl5.003_99 (with thanks to Jeffrey Urlwin).
   Automatically supports Apache::DBI (with thanks to Edmund Mergl).
@@ -2363,14 +2504,13 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Reworked tests into standard t/*.t form.
   Added more pod text.  Fixed assorted bugs.
 
-
-=head2 Changes in DBI 0.79,	7th Apr 1997
+=head2 Changes in DBI 0.79 - 07 Apr 1997
 
   Minor release. Tidied up pod text and added some more descriptions
   (especially disconnect). Minor changes to DBI.xs to remove compiler
   warnings.
 
-=head2 Changes in DBI 0.78,	28th Mar 1997
+=head2 Changes in DBI 0.78 - 28 Mar 1997
 
   Greatly extended the pod documentation in DBI.pm, including the under
   used bind_columns method. Use 'perldoc DBI' to read after installing.
@@ -2382,7 +2522,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   DBI emulation layer for Win32::ODBC. Note that it's unsupported, your
   mileage will vary, and bug reports without fixes will probably be ignored.
 
-=head2 Changes in DBI 0.77,	21st Feb 1997
+=head2 Changes in DBI 0.77 - 21 Feb 1997
 
   Removed erroneous $h->errstate and $h->errmsg methods from DBI.pm.
   Added $h->err, $h->errstr and $h->state default methods in DBI.xs.
@@ -2391,17 +2531,16 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   (DBD authors will need to edit their Makefile.PL's to use
   -I$(INSTALLSITEARCH)/auto/DBI -I$(INSTALLSITEARCH)/DBI)
 
-
-=head2 Changes in DBI 0.76,	3rd Feb 1997
+=head2 Changes in DBI 0.76 - 03 Feb 1997
 
   Fixed a compiler type warnings (pedantic IRIX again).
 
-=head2 Changes in DBI 0.75,	27th Jan 1997
+=head2 Changes in DBI 0.75 - 27 Jan 1997
 
   Fix problem introduced by a change in Perl5.003_XX.
   Updated README and DBI.pm docs.
 
-=head2 Changes in DBI 0.74,	14th Jan 1997
+=head2 Changes in DBI 0.74 - 14 Jan 1997
 
   Dispatch now sets dbi_debug to the level of the current handle
   (this makes tracing/debugging individual handles much easier).
@@ -2412,7 +2551,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   No longer sets perl_destruct_level unless debug set >= 4.
   Make compatible with PerlIO and sfio.
 
-=head2 Changes in DBI 0.73,	10th Oct 1996
+=head2 Changes in DBI 0.73 - 10 Oct 1996
 
   Fixed some compiler type warnings (IRIX).
   Fixed DBI->internal->{DebugLog} = $filename.
@@ -2421,52 +2560,48 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Usage: $dbh->bind_param_inout($param, \$value, $maxlen [, \%attribs ])
   (only currently used by DBD::Oracle at this time.)
 
-=head2 Changes in DBI 0.72,	23 Sep 1996
+=head2 Changes in DBI 0.72 - 23 Sep 1996
 
   Using an undefined value as a handle now gives a better
   error message (mainly useful for emulators like Oraperl).
   $dbh->do($sql, @params) now works for binding placeholders.
 
-=head2 Changes in DBI 0.71,	10 July 1996
+=head2 Changes in DBI 0.71 - 10 Jul 1996
 
   Removed spurious abort() from invalid handle check.
   Added quote method to DBI interface and added test.
 
-=head2 Changes in DBI 0.70,	16 June 1996
+=head2 Changes in DBI 0.70 - 16 Jun 1996
 
   Added extra invalid handle check (dbih_getcom)
   Fixed broken $dbh->quote method.
   Added check for old GCC in Makefile.PL
 
-=head2 Changes in DBI 0.69
+=head2 Changes in DBI 0.69 - 07 May 1996
 
   Fixed small memory leak.
   Clarified the behaviour of DBI->connect.
   $dbh->do now returns '0E0' instead of 'OK'.
   Fixed "Can't read $DBI::errstr, lost last handle" problem.
 
-
-=head2 Changes in DBI 0.68,	2 Mar 1996
+=head2 Changes in DBI 0.68 - 02 Mar 1996
 
   Changes to suit perl5.002 and site_lib directories.
   Detects old versions ahead of new in @INC.
 
-
-=head2 Changes in DBI 0.67,	15 Feb 1996
+=head2 Changes in DBI 0.67 - 15 Feb 1996
 
   Trivial change to test suite to fix a problem shown up by the
   Perl5.002gamma release Test::Harness.
 
-
-=head2 Changes in DBI 0.66,	29 Jan 1996
+=head2 Changes in DBI 0.66 - 29 Jan 1996
 
   Minor changes to bring the DBI into line with 5.002 mechanisms,
   specifically the xs/pm VERSION checking mechanism.
   No functionality changes. One no-last-handle bug fix (rare problem).
   Requires 5.002 (beta2 or later).
 
-
-=head2 Changes in DBI 0.65,	23 Oct 1995
+=head2 Changes in DBI 0.65 - 23 Oct 1995
 
   Added $DBI::state to hold SQL CLI / ODBC SQLSTATE value.
   SQLSTATE "00000" (success) is returned as "" (false), all else is true.
@@ -2497,23 +2632,20 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   TABLE_TYPE, REMARKS in that order. The TABLE_CATALOGUE column
   should be ignored for now.
 
-
-=head2 Changes in DBI 0.64,	23 Oct 1995
+=head2 Changes in DBI 0.64 - 23 Oct 1995
 
   Fixed 'disconnect invalidates 1 associated cursor(s)' problem.
   Drivers using DBIc_ACTIVE_on/off() macros should not need any changes
   other than to test for DBIc_ACTIVE_KIDS() instead of DBIc_KIDS().
   Fixed possible core dump in dbih_clearcom during global destruction.
 
-
-=head2 Changes in DBI 0.63,	1 Sep 1995
+=head2 Changes in DBI 0.63 - 01 Sep 1995
 
   Minor update. Fixed uninitialised memory bug in method
   attribute handling and streamlined processing and debugging.
   Revised usage definitions for bind_* methods and readblob.
 
-
-=head2 Changes in DBI 0.62,	26 Aug 1995
+=head2 Changes in DBI 0.62 - 26 Aug 1995
 
   Added method redirection method $h->func(..., $method_name).
   This is now the official way to call private driver methods
@@ -2535,8 +2667,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Dispatch no longer bothers to call _untie().
   Faster startup via install_method/_add_dispatch changes.
 
-
-=head2 Changes in DBI 0.61,	22 Aug 1995
+=head2 Changes in DBI 0.61 - 22 Aug 1995
 
   Added $sth->bind_col($column, \$var [, \%attribs ]);
 
@@ -2570,8 +2701,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
 
   test.pl includes a trivial test of bind_param and bind_columns.
 
-
-=head2 Changes in DBI 0.60,	17 Aug 1995
+=head2 Changes in DBI 0.60 - 17 Aug 1995
 
   This release has significant code changes but much less
   dramatic than the previous release. The new implementors data
@@ -2601,8 +2731,7 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   There will be further changes in the interface but nothing
   as dramatic as these last two releases! (I hope :-)
 
-
-=head2 Changes in DBI 0.59	15 Aug 1995
+=head2 Changes in DBI 0.59 - 15 Aug 1995
 
   NOTE: THIS IS AN UNSTABLE RELEASE!
 
@@ -2613,14 +2742,12 @@ Jens Rehsack, Martin J. Evans, and H.Merijn Brand for all their contributions.
   Study DBD::Oracle version 0.21 for more details.
   (Comparing parts of v0.21 with v0.20 may be useful.)
 
-
-=head2 Changes in DBI 0.58	21 June 1995
+=head2 Changes in DBI 0.58 - 21 Jun 1995
 
   Added DBI->internal->{DebugLog} = $filename;
   Reworked internal logging.
   Added $VERSION.
   Made disconnect_all a compulsory method for drivers.
-
 
 =head1 ANCIENT HISTORY
 

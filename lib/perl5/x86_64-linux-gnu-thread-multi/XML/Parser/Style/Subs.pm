@@ -1,21 +1,27 @@
 # $Id: Subs.pm,v 1.1 2003-07-27 16:07:49 matt Exp $
 
 package XML::Parser::Style::Subs;
+use strict;
+use warnings;
 
 sub Start {
     no strict 'refs';
     my $expat = shift;
     my $tag   = shift;
-    my $sub   = $expat->{Pkg} . "::$tag";
-    eval { &$sub( $expat, $tag, @_ ) };
+    my $fname = $expat->{Pkg} . "::$tag";
+    if ( defined &$fname ) {
+        ( \&$fname )->( $expat, $tag, @_ );
+    }
 }
 
 sub End {
     no strict 'refs';
     my $expat = shift;
     my $tag   = shift;
-    my $sub   = $expat->{Pkg} . "::${tag}_";
-    eval { &$sub( $expat, $tag ) };
+    my $fname = $expat->{Pkg} . "::${tag}_";
+    if ( defined &$fname ) {
+        ( \&$fname )->( $expat, $tag );
+    }
 }
 
 1;

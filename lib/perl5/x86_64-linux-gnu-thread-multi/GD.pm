@@ -16,7 +16,7 @@ use GD::Polygon;
 
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS $AUTOLOAD);
 
-$VERSION = '2.76';
+$VERSION = '2.86';
 our $XS_VERSION = $VERSION;
 $VERSION = eval $VERSION;
 
@@ -300,9 +300,9 @@ compatibility with older versions of libgd.
 Alternatively, you may create a GD::Image object based on an existing
 image by providing an open filehandle, a filename, or the image data
 itself.  The image formats automatically recognized and accepted are:
-GIF, PNG, JPEG, XBM, XPM, GD2, TIFF, WEBP, HEIF or AVIF. Other formats,
+GIF, PNG, JPEG, XBM, XPM, BMP, GD2, TIFF, WEBP, HEIF or AVIF. Other formats,
 including WBMP, and GD version 1, cannot be recognized automatically
-at this time.
+at this time, only by filename.
 
 If something goes wrong (e.g. insufficient memory), this call will
 return undef.
@@ -407,16 +407,28 @@ contents of an X Bitmap (black & white) file:
 There is no newFromXbmData() function, because there is no
 corresponding function in the gd library.
 
-=item B<$image = GD::Image-E<gt>newFromWBMP($file, [$truecolor])>
+=item B<$image = GD::Image-E<gt>newFromWBMP($file)>
 
 This works in exactly the same way as C<newFromPng>, but reads the
-contents of an Windows BMP Bitmap file:
+contents of a Wireless Application Protocol Bitmap (WBMP) file:
 
-	open (BMP,"coredump.bmp") || die;
-	$myImage = GD::Image->newFromWBMP(\*BMP) || die;
-	close BMP;
+	open (WBMP,"coredump.wbmp") || die;
+	$myImage = GD::Image->newFromWBMP(\*WBMP) || die;
+	close WBMP;
 
 There is no newFromWBMPData() function, because there is no
+corresponding function in the gd library.
+
+=item B<$image = GD::Image-E<gt>newFromBmp($file)>
+
+This works in exactly the same way as C<newFromPng>, but reads the
+contents of a Windows Bitmap (BMP) file:
+
+	open (BMP,"coredump.bmp") || die;
+	$myImage = GD::Image->newFromBmp(\*BMP) || die;
+	close BMP;
+
+There is no newFromBmpData() function, because there is no
 corresponding function in the gd library.
 
 =item B<$image = GD::Image-E<gt>newFromGd($file)>
@@ -615,6 +627,13 @@ pipe it to a display program, or write it to a file.  Example:
 
 Same as gd(), except that it returns the data in compressed GD2
 format.
+
+=item B<$bmpdata = $image-E<gt>bmp([$compression])>
+
+This returns the image data in BMP format, which is a Windows Bitmap.
+If compression is set to 1, it will use RLE compression on the pixel
+data; otherwise, setting it to 0 (the default) will leave the BMP 
+pixel data uncompressed.
 
 =item B<$wbmpdata = $image-E<gt>wbmp([$foreground])>
 
@@ -1617,7 +1636,7 @@ operations prior to drawing.
 
 Using a negative color index will disable antialiasing, as described
 in the libgd manual page at
-L<http://www.boutell.com/gd/manual2.0.9.html#gdImageStringFT>.
+L<https://libgd.github.io/manuals/2.0.35/#gdImageStringFT>.
 
 An optional 8th argument allows you to pass a hashref of options to
 stringFT().  Several hashkeys are recognized: B<linespacing>,
@@ -1941,6 +1960,13 @@ down and to the right.
 
 	$poly->offset(10,30);
 
+=item B<$poly-E<gt>rotate($rad)>
+
+Rotate all the vertices of the polygon by the specified clockwise radian angle.
+
+        use Math::Trig;
+	$poly->rotate(deg2rad(180));
+
 =item B<$poly-E<gt>map($srcL,$srcT,$srcR,$srcB,$destL,$dstT,$dstR,$dstB)>
 
 Map the polygon from a source rectangle to an equivalent position in a
@@ -1953,7 +1979,7 @@ box as the source rectangle.
 	# Make the polygon really tall
 	$poly->map($poly->bounds,0,0,50,200);
 
-=item B<$poly-E<gt>scale($sx,$sy, [$tx,$ty])>
+=item B<$poly-E<gt>scale($sx,[$sy, [$tx,$ty]])>
 
 Scale each vertex of the polygon by the X and Y factors indicated by
 sx and sy.  For example scale(2,2) will make the polygon twice as
@@ -1961,7 +1987,9 @@ large.  For best results, move the center of the polygon to position
 (0,0) before you scale, then move it back to its previous position.
 Accepts an optional offset vector.
 
-=item B<$poly-E<gt>transform($sx,$rx,$ry,$sy, $tx,$ty)>
+Undefined $sy defaults to $sx, ie. scale(2.0) scales the polyon by 2.
+
+=item B<$poly-E<gt>transform($sx,$sy, $rx,$ry, $tx,$ty)>
 
 Run each vertex of the polygon through a 2D affine transformation
 matrix, where sx and sy are the X and Y scaling factors, rx and ry are
@@ -1982,6 +2010,13 @@ libgd:
 
     x_new = xx * x + xy * y + x0;
     y_new = yx * x + yy * y + y0;
+
+Thus offset by ($tx,$ty) is C<transform(1,1,0,0,$tx,$ty)>,
+scale by ($sx,$sy) is C<transform($sx,$sy,0,0,0,0)>,
+and rotation by clockwise radians ($r) is
+
+    ($s,$c) = (sin($r),cos($r));
+    $poly->transform($c,$s,-$s,$c,0,0);
 
 =back
 

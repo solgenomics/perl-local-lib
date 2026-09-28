@@ -1,1 +1,6 @@
-/home/production/cxgn/local-lib/lib/perl5/Test/Warnings.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/Test/Warnings.pm
+/home/production/cxgn/sgn/../newperl/lib/perl5/Test2/Warnings.pm
+/usr/local/man/man3/Test2::Warnings.3pm
+/usr/local/man/man3/Test::Warnings.3pm
+/usr/local/share/perl/5.40.1/Test/Warnings.pm
+/usr/local/share/perl/5.40.1/Test2/Warnings.pm

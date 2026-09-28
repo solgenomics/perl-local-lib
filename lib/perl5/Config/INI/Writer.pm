@@ -1,7 +1,7 @@
-use strict;
+use v5.12.0;
 use warnings;
-package Config::INI::Writer;
-$Config::INI::Writer::VERSION = '0.027';
+package Config::INI::Writer 0.029;
+
 use Mixin::Linewise::Writers;
 # ABSTRACT: a subclassable .ini-file emitter
 
@@ -10,7 +10,7 @@ our @CARP_NOT = qw(Mixin::Linewise::Writers);
 
 #pod =head1 SYNOPSIS
 #pod
-#pod If <$hash> contains:
+#pod If C<$hash> contains:
 #pod
 #pod   {
 #pod     '_'  => { admin => 'rjbs' },
@@ -431,7 +431,7 @@ sub stringify_value_assignment {
 sub stringify_value {
   my ($self, $value) = @_;
 
-  $value = defined $value ? $value : '';
+  $value //= q{};
 
   return $value;
 }
@@ -511,11 +511,11 @@ Config::INI::Writer - a subclassable .ini-file emitter
 
 =head1 VERSION
 
-version 0.027
+version 0.029
 
 =head1 SYNOPSIS
 
-If <$hash> contains:
+If C<$hash> contains:
 
   {
     '_'  => { admin => 'rjbs' },
@@ -556,10 +556,10 @@ The chief difference is that Config::INI::Writer is designed to be subclassed
 to allow for side-effects and self-reconfiguration to occur during the course
 of reading its input.
 
-=head1 PERL VERSION SUPPORT
+=head1 PERL VERSION
 
-This module has a long-term perl support period.  That means it will not
-require a version of perl released fewer than five years ago.
+This library should run on perls released even a long time ago.  It should work
+on any version of perl released in the last five years.
 
 Although it may work on older versions of perl, no guarantee is made that the
 minimum required version will not be increased.  The version may be increased
@@ -789,7 +789,7 @@ ephemerally.
 
 =head1 AUTHOR
 
-Ricardo Signes <rjbs@semiotic.systems>
+Ricardo Signes <cpan@semiotic.systems>
 
 =head1 COPYRIGHT AND LICENSE
 

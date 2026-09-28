@@ -19,12 +19,12 @@
 
 =head1 NAME
 
-DateTime::Locale::ff_Latn_SN - Locale data examples for the Fulah Senegal Latin (ff-Latn-SN) locale
+DateTime::Locale::ff_Latn_SN - Locale data examples for the Fula Senegal Latin (ff-Latn-SN) locale
 
 =head1 DESCRIPTION
 
 This pod file contains examples of the locale data available for the
-Fulah Senegal Latin locale.
+Fula Senegal Latin locale.
 
 =head2 Days
 
@@ -525,11 +525,11 @@ Fulah Senegal Latin locale.
    1995-12-22T09:05:02 = 22
   -0010-09-15T04:44:23 = 15
 
-=head3 h (h a)
+=head3 h (h a)
 
-   2008-02-05T18:30:30 = 6 kikiiɗe
-   1995-12-22T09:05:02 = 9 subaka
-  -0010-09-15T04:44:23 = 4 subaka
+   2008-02-05T18:30:30 = 6 kikiiɗe
+   1995-12-22T09:05:02 = 9 subaka
+  -0010-09-15T04:44:23 = 4 subaka
 
 =head3 hm (h:mm a)
 

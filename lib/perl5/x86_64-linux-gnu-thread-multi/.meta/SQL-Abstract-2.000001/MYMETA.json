@@ -83,5 +83,5 @@
       "x_IRC" : "irc://irc.perl.org/#dbix-class"
    },
    "version" : "2.000001",
-   "x_serialization_backend" : "JSON::PP version 4.04"
+   "x_serialization_backend" : "JSON::PP version 4.16"
 }

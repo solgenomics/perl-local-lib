@@ -1,10 +1,10 @@
-#!/pro/bin/perl
+#!/usr/bin/perl
 
 package Spreadsheet::Read;
 
 =head1 NAME
 
- Spreadsheet::Read - Read the data from a spreadsheet
+Spreadsheet::Read - Read the data from a spreadsheet
 
 =head1 SYNOPSIS
 
@@ -15,6 +15,7 @@ package Spreadsheet::Read;
  my $book  = ReadData ("test.xls");
  my $book  = ReadData ("test.xlsx");
  my $book  = ReadData ("test.xlsm");
+ my $book  = ReadData ("test.gnumeric");
  my $book  = ReadData ($fh, parser => "xls");
 
  Spreadsheet::Read::add ($book, "sheet.csv");
@@ -33,11 +34,11 @@ package Spreadsheet::Read;
 
 =cut
 
-use 5.8.1;
+use 5.008001;
 use strict;
 use warnings;
 
-our $VERSION = "0.84";
+our $VERSION = "0.95";
 sub  Version { $VERSION }
 
 use Carp;
@@ -47,31 +48,35 @@ our @EXPORT    = qw( ReadData cell2cr cr2cell );
 our @EXPORT_OK = qw( parses rows cellrow row add );
 
 use Encode       qw( decode );
+use List::Util   qw( min max );
 use File::Temp   qw( );
 use Data::Dumper;
 
 my @parsers = (
-    [ csv  => "Text::CSV_XS",				"0.71"		],
-    [ csv  => "Text::CSV_PP",				"1.17"		],
-    [ csv  => "Text::CSV",				"1.17"		],
-    [ ods  => "Spreadsheet::ParseODS",			"0.26"		],
-    [ ods  => "Spreadsheet::ReadSXC",			"0.26"		],
-    [ sxc  => "Spreadsheet::ParseODS",			"0.26"		],
-    [ sxc  => "Spreadsheet::ReadSXC",			"0.26"		],
-    [ xls  => "Spreadsheet::ParseExcel",		"0.34"		],
-    [ xlsx => "Spreadsheet::ParseXLSX",			"0.24"		],
-    [ xlsm => "Spreadsheet::ParseXLSX",			"0.24"		],
-    [ xlsx => "Spreadsheet::XLSX",			"0.13"		],
-#   [ prl  => "Spreadsheet::Perl",			""		],
-    [ sc   => "Spreadsheet::Read",			"0.01"		],
+    [ csv	=> "Text::CSV_XS",		"0.71"	],
+    [ csv	=> "Text::CSV_PP",		"1.17"	],
+    [ csv	=> "Text::CSV",			"1.17"	],
+    [ ods	=> "Spreadsheet::ParseODS",	"0.26"	],
+    [ ods	=> "Spreadsheet::ReadSXC",	"0.26"	],
+    [ sxc	=> "Spreadsheet::ParseODS",	"0.26"	],
+    [ sxc	=> "Spreadsheet::ReadSXC",	"0.26"	],
+    [ sxc	=> "Spreadsheet::ReadSXC__BAD",	"0.26"	], # For testing
+    [ xls	=> "Spreadsheet::ParseExcel",	"0.34"	],
+    [ xlsx	=> "Spreadsheet::ParseXLSX",	"0.24"	],
+    [ xlsm	=> "Spreadsheet::ParseXLSX",	"0.24"	],
+    [ xlsx	=> "Spreadsheet::XLSX",		"0.13"	],
+    [ xlsx	=> "Excel::ValueReader::XLSX",	"1.13"	],
+#   [ prl	=> "Spreadsheet::Perl",		""	],
+    [ sc	=> "Spreadsheet::Read",		"0.01"	],
+    [ gnumeric	=> "Spreadsheet::ReadGnumeric",	"0.2"	],
 
-    [ zzz1 => "Z10::Just::For::Testing",		"1.23"		],
-    [ zzz2 => "Z20::Just::For::Testing",		""		],
-    [ zzz3 => "Z30::Just::For::Testing",		"1.00"		],
+    [ zzz1	=> "Z10::Just::For::Testing",	"1.23"	],
+    [ zzz2	=> "Z20::Just::For::Testing",	""	],
+    [ zzz3	=> "Z30::Just::For::Testing",	"1.00"	],
 
     # Helper modules
-    [ ios  => "IO::Scalar",				""		],
-    [ dmp  => "Data::Peek",				""		],
+    [ ios	=> "IO::Scalar",		""	],
+    [ dmp	=> "Data::Peek",		""	],
     );
 my %can = ( supports => { map { $_->[1] => $_->[2] } @parsers });
 foreach my $p (@parsers) {
@@ -108,21 +113,29 @@ foreach my $p (@parsers) {
     $can{$format} = $preset;
     }
 delete $can{supports};
-for (@parsers) {
-    my ($flag, $mod, $vsn) = @$_;
+foreach my $p (@parsers) {
+    my ($flag, $mod, $vsn) = @$p;
     $can{$flag} and next;
     eval "require $mod; \$vsn and ${mod}->VERSION (\$vsn); \$can{\$flag} = '$mod'" and next;
-    $_->[0] = "! Cannot use $mod version $vsn: $@";
+    $p->[0] = "! Cannot use $mod version $vsn: $@";
     $can{$flag} = $@ =~ m/need to install|can(?:not|'t) locate/i
 	? 0	# Not found
 	: "";	# Too old
     }
 $can{sc} = __PACKAGE__;	# SquirrelCalc is built-in
 
-defined $Spreadsheet::ParseExcel::VERSION && $Spreadsheet::ParseExcel::VERSION < 0.61 and
-    *Spreadsheet::ParseExcel::Workbook::get_active_sheet = sub { undef; };
-defined $Spreadsheet::ParseODS::VERSION   && $Spreadsheet::ParseODS::VERSION   < 0.25 and
-    *Spreadsheet::ParseODS::Workbook::get_active_sheet   = sub { undef; };
+# Define ->get_active_sheet if not defined (yet)
+sub _def_gas {
+    for ([ 0.61, $Spreadsheet::ParseExcel::VERSION,  *Spreadsheet::ParseExcel::Workbook::get_active_sheet	],
+	 [ 0.25, $Spreadsheet::ParseODS::VERSION,    *Spreadsheet::ParseODS::Workbook::get_active_sheet		],
+	 [ 9.99, $Excel::ValueReader::XLSX::VERSION, *Excel::ValueReader::XLSX::get_active_sheet		],
+	 ) {
+	my ($mv, $v, $cb) = @$_;
+	defined $v && $v < $mv or next;
+	defined $cb && defined *{$cb}{CODE} and next;
+	*{$cb} = sub { undef };
+	}
+    } # _def_gas
 
 my $debug = 0;
 my %def_opts = (
@@ -177,6 +190,14 @@ sub _dump {
 
 sub _parser {
     my $type = shift		or  return "";
+    if ($type =~ m/::/ and my @p = grep { $_->[1] eq $type } @parsers) {
+	my $format = $p[0][0];
+	$ENV{"SPREADSHEET_READ_\U$format"} = $type;
+	eval "local \$_; require $type";
+	$@ and croak ("Forced backend $type for $format fails to load:\n$@");
+	$can{$format} = $type;
+	$type = $format;
+	}
     $type = lc $type;
     my $ods = $can{ods} ? "ods" : "sxc";
     # Aliases and fullnames
@@ -241,13 +262,15 @@ sub parses {
 	$@ = $1;
 	return 0;
 	}
-    return $can{$type};
+    return $can{$type} || 0;
     } # parses
 
 sub sheets {
     my $ctrl = shift->[0];
-    my %s = %{$ctrl->{sheet}};
-    wantarray ? sort { $s{$a} <=> $s{$b} } keys %s : $ctrl->{sheets};
+    wantarray or return $ctrl->{sheets};
+
+    my $s = $ctrl->{sheet} or return (); # No labels defined
+    sort { $s->{$a} <=> $s->{$b} } keys %$s;
     } # sheets
 
 # col2label (4) => "D"
@@ -265,6 +288,20 @@ sub col2label {
     $cell;
     } # col2label
 
+# label2col ("D") => 4
+sub label2col {
+    ref $_[0] eq __PACKAGE__ and shift;
+    my $l = shift        or  return;
+    $l =~ m/^[0-9]+$/    and return $l + 0;
+    $l =~ m/^[A-Za-z]+$/ or  return;
+    $l = uc $l;
+    my $c = 0;
+    while ($l =~ s/^([A-Z])//) {
+	$c = 26 * $c + 1 + ord ($1) - ord ("A");
+	}
+    return $c;
+    } # label2col
+
 # cr2cell (4, 18) => "D18"
 # No prototype to allow 'cr2cell (@rowcol)'
 sub cr2cell {
@@ -277,12 +314,8 @@ sub cr2cell {
 # cell2cr ("D18") => (4, 18)
 sub cell2cr {
     ref $_[0] eq __PACKAGE__ and shift;
-    my ($cc, $r) = (uc ($_[0]||"") =~ m/^([A-Z]+)([0-9]+)$/) or return (0, 0);
-    my $c = 0;
-    while ($cc =~ s/^([A-Z])//) {
-	$c = 26 * $c + 1 + ord ($1) - ord ("A");
-	}
-    ($c, $r);
+    my ($cc, $r) = (uc ($_[0]||"") =~ m/^([A-Z-z]+)([0-9]+)$/) or return (0, 0);
+    (label2col ($cc), $r);
     } # cell2cr
 
 # my @row = cellrow ($book->[1], 1);
@@ -342,7 +375,10 @@ sub sheet {
 sub _clipsheets {
     my ($opt, $ref) = @_;
 
-    $ref->[0]{sheets} or return $ref;
+    unless ($ref->[0]{sheets}) {
+	$ref->{sheet} ||= {};
+	return $ref;
+	}
 
     my ($rc, $cl)      = ($opt->{rc},   $opt->{cells});
     my ($oc, $os, $oa) = ($opt->{clip}, $opt->{strip}, $opt->{attr});
@@ -445,6 +481,43 @@ sub _xls_fill {
     return _xls_color ($bg);
     } # _xls_fill
 
+sub _missing_parser {
+    my ($type, $suggest) = (shift, "");
+    foreach my $p (@parsers) {
+	$p->[0] eq lc $type or next;
+	$suggest = "\nPlease install $p->[1]";
+	}
+    "No parser for $type found$suggest\n";
+    } # _missing_parser
+
+sub _txt_is_xml {
+    # Return true if $txt is gzipped or contains XML.  If we are also passed
+    # $ns_uri_of_interest, $txt must contain it in the first 1000 or so
+    # characters (but we try to search quickly rather than precisely).
+    my ($txt, $ns_uri_of_interest) = @_;
+
+    ref $txt and return; # Can't tell (unless we assume the stream is seekable).
+
+    if ($txt =~ m/\A\037\213/) {
+	# Literal gzipped string (/usr/share/misc/magic).  [this is a hack that
+	# works only because Gnumeric is the only format that uses gzip.  --
+	# rgr, 13-Jan-2023]
+	return 1;
+	}
+
+    if ($txt =~ m/\A<\?xml/) {
+	$ns_uri_of_interest or return 1;
+	$ns_uri_of_interest =~ s/([^\w\d])/\\$1/g;
+	my $prefix = length ($txt) > 10000 ? substr $txt, 0, 1000 : $txt;
+	return $prefix =~ m/xmlns:\w+=.$ns_uri_of_interest/;
+	}
+
+    $txt =~ m/\n/		and return; # safeguard for older perl versions
+    open my $in, "<", $txt	or  return;
+    read $in, my $block, 1000	or  return;
+    return _txt_is_xml ($block, $ns_uri_of_interest);
+    } # _txt_is_xml
+
 sub ReadData {
     my $txt = shift	or  return;
 
@@ -470,7 +543,7 @@ sub ReadData {
     $debug = defined $opt{debug} ? $opt{debug} : $def_opts{debug};
     $debug > 4 and _dump (Options => \%opt);
 
-    my %parser_opts = map { $_ => $opt{$_} }
+    my %parser_opts = map  { $_ => $opt{$_} }
 		      grep { !exists $def_opts{$_} }
 		      keys %opt;
 
@@ -485,7 +558,7 @@ sub ReadData {
     $io_ref &&  eof $txt and do { $@ = "Empty stream";  return };
 
     if ($opt{parser} ? $_parser eq "csv" : ($io_fil && $txt =~ m/\.(csv)$/i)) {
-	$can{csv} or croak "CSV parser not installed";
+	$can{csv} or croak _missing_parser ("CSV");
 
 	my $label = defined $opt{label} ? $opt{label} : $io_fil ? $txt : "IO";
 
@@ -514,6 +587,7 @@ sub ReadData {
 		attr	=> [],
 		merged	=> [],
 		active  => 1,
+		hidden	=> 0,
 		},
 	    );
 
@@ -560,6 +634,15 @@ sub ReadData {
 	    $in = $txt;	# Now pray ...
 	    }
 	$debug > 1 and print STDERR "CSV sep_char '$sep', quote_char '$quo'\n";
+	if (!exists $parser_opts{strict_eol} and
+	     my $ka = $data[0]{parser}->can ("known_attributes")) {
+	    if (grep m/^strict_eol$/ => $ka->()) {
+		#use DP;::diag DDumper \@data;
+		unless ($data[0]{parser} =~ m/CSV_PP$/ && $data[0]{version} le "2.06") {
+		    $parser_opts{strict_eol} = 1;
+		    }
+		}
+	    }
 	my $csv = $can{csv}->new ({
 	    %parser_opts,
 
@@ -583,6 +666,7 @@ sub ReadData {
 		$opt{attr}  and $data[1]{attr}[$c + 1][$r] = { @def_attr };
 		}
 	    }
+	$parser_opts{strict_eol} and $data[1]{eolt} = $csv->eol_type;
 	$csv->eof () or $data[0]{error} = [ $csv->error_diag ];
 	close $in;
 
@@ -601,7 +685,7 @@ sub ReadData {
 	     || $txt =~ m{\A.{2080}Microsoft Excel 5.0 Worksheet}
 	     || $txt =~ m{\A\x09\x04\x06\x00\x00\x00\x10\x00}
 		) {
-	    $can{xls} or croak "Spreadsheet::ParseExcel not installed";
+	    $can{xls} or croak _missing_parser ("XLS");
 	    my $tmpfile;
 	    if ($can{ios}) { # Do not use a temp file if IO::Scalar is available
 		$tmpfile = \$txt;
@@ -619,7 +703,7 @@ sub ReadData {
 	elsif ( # /usr/share/misc/magic
 		$txt =~ m{\APK\003\004.{4,30}(?:\[Content_Types\]\.xml|_rels/\.rels)}
 		) {
-	    $can{xlsx} or croak "XLSX parser not installed";
+	    $can{xlsx} or croak _missing_parser ("XLSX");
 	    my $tmpfile;
 	    if ($can{ios}) { # Do not use a temp file if IO::Scalar is available
 		$tmpfile = \$txt;
@@ -637,7 +721,7 @@ sub ReadData {
 	elsif ( # /usr/share/misc/magic
 		$txt =~ m{\APK\003\004.{9,30}\Qmimetypeapplication/vnd.oasis.opendocument.spreadsheet}
 		) {
-	    $can{ods} or croak "ODS parser not installed";
+	    $can{ods} or croak _missing_parser ("ODS");
 	    my $tmpfile;
 	    if ($can{ios}) { # Do not use a temp file if IO::Scalar is available
 		$tmpfile = \$txt;
@@ -661,8 +745,7 @@ sub ReadData {
 		     : ($io_fil && $txt =~ m/\.(xls[xm]?)$/i &&
 		      ($_parser = _parser ($1)))) {
 	my $parse_type = $_parser =~ m/x$/i  ? "XLSX" : "XLS";
-	my $parser = $can{lc $parse_type} or
-	    croak "Parser for $parse_type is not installed";
+	my $parser = $can{lc $parse_type} or croak _missing_parser ($parse_type);
 	#$debug and print STDERR __FILE__, "#", __LINE__, " | $_parser | $parser | $parse_type\n";
 	$debug and print STDERR "Opening $parse_type ", $io_ref ? "<REF>" : $txt,
 	    " using $parser-", $can{lc $parse_type}->VERSION, "\n";
@@ -670,15 +753,19 @@ sub ReadData {
 	my $oBook = eval {
 	    $io_ref
 		? $parse_type eq "XLSX"
-		? $can{xlsx} =~ m/::XLSX$/
-		? $parser->new ($io_ref)
-		: $parser->new (%parser_opts)->parse ($io_ref)
-		: $parser->new (%parser_opts)->Parse ($io_ref)
+		 ? $can{xlsx} eq "Spreadsheet::XLSX"
+		  ?  $parser->new ($io_ref)                       # Spreadsheet::XLXS        ($io)
+		  : $can{xlsx} eq "Excel::ValueReader::XLSX"
+		   ? $parser->new (xlsx => $io_ref, %parser_opts) # Excel::ValueReader::XLSX ($io / $content)
+		   : $parser->new (%parser_opts)->parse ($io_ref) # Spreadsheet::ParseXLSX   ($io)
+		  :  $parser->new (%parser_opts)->Parse ($io_ref) # Spreadsheet::ParseExcel  ($io)
 		: $parse_type eq "XLSX"
-		? $can{xlsx} =~ m/::XLSX$/
-		? $parser->new ($txt)
-		: $parser->new (%parser_opts)->parse ($txt)
-		: $parser->new (%parser_opts)->Parse ($txt);
+		 ? $can{xlsx} eq "Spreadsheet::XLSX"
+		  ?  $parser->new ($txt)                          # Spreadsheet::XLXS        ($file / $content)
+		  : $can{xlsx} eq "Excel::ValueReader::XLSX"
+		   ? $parser->new (xlsx => $txt, %parser_opts)	  # Excel::ValueReader::XLSX ($file / $content)
+		   : $parser->new (%parser_opts)->parse ($txt)    # Spreadsheet::ParseXLSX   ($file / $content)
+		 :   $parser->new (%parser_opts)->Parse ($txt);   # Spreadsheet::ParseExcel  ($file / $content)
 	    };
 	unless ($oBook) {
 	    # cleanup will fail on folders with spaces.
@@ -716,13 +803,60 @@ sub ReadData {
 	    0x16	=> "yyyy-mm-dd hh:mm",	# m-d-yy h:mm
 	    );
 	$oBook->{FormatStr}{$_} = $def_fmt{$_} for keys %def_fmt;
-	my $oFmt = $parse_type eq "XLSX"
-	    ? $can{xlsx} =~ m/::XLSX$/
+	my $oFmt = eval { $parse_type eq "XLSX"
+	    ? $can{xlsx} eq "Spreadsheet::XLSX"
 		? Spreadsheet::XLSX::Fmt2007->new
 		: Spreadsheet::ParseExcel::FmtDefault->new
-	    :     Spreadsheet::ParseExcel::FmtDefault->new;
+	    :     Spreadsheet::ParseExcel::FmtDefault->new
+	    };
 
 	$debug > 20 and _dump ("oBook before conversion", $oBook);
+	if ($can{xlsx} eq "Excel::ValueReader::XLSX" and !exists $oBook->{SheetCount}) {
+	    my @sheets = $oBook->sheet_names;
+	    $data[0]{sheet}  = { map { $sheets[$_] => $_ + 1 } 0 .. $#sheets };
+	    $data[0]{sheets} = scalar @sheets;
+
+	    foreach my $sheet_name (@sheets) {
+
+		my $grid = $oBook->values ($sheet_name);
+
+		my $sheet = {
+		    label  => $sheet_name,
+		    minrow => 1,
+		    mincol => 1,
+		    indx   => 1,
+		    merged => [],
+		    cell   => [],
+		    attr   => [],
+		    };
+		# Transpose to column vectors.
+		# The A1, B5 etc items could be added here as well.
+		my @c;
+		foreach my $r (0 .. $#$grid) {
+		    my $row = $grid->[$r];
+		    foreach my $c (0 .. $#$row) {
+			# add 1 for array base 1
+			my $val = $grid->[$r][$c];
+			my $cell = cr2cell ($c + 1, $r + 1);
+			$opt{rc}    and $sheet->{cell}[$c + 1][$r + 1] = $val;
+			$opt{cells} and $sheet->{$cell} = $val;
+			$c[$c] = 1;
+			}
+		    }
+
+		# First entry in @t is padding so number of items
+		# is the max index.
+		$sheet->{maxcol} = scalar @c;
+
+		# No padding of first entry in $grid so
+		# number of items is the array length.
+		$sheet->{maxrow} = @$grid;
+
+		push @data => $sheet;
+		}
+	    #use DP;die DDumper { oBook => $oBook, oFmt => $oFmt, data => \@data, parser_type => $parse_type };
+	    }
+
 	if ($parse_type eq "ODS" and !exists $oBook->{SheetCount}) {
 	    my $styles = delete $oBook->{_styles};
 	    my $sheets = delete $oBook->{_sheets};
@@ -740,6 +874,7 @@ sub ReadData {
 			MaxRow		=> $sh->{row_max},
 			MinCol		=> $sh->{col_min},
 			MaxCol		=> $sh->{row_max},
+			SheetHidden	=> $sh->{sheet_hidden} || 0,
 			RowHidden	=> $sh->{hidden_rows},
 			ColHidden	=> $sh->{hidden_cols},
 			_SheetNo	=> $x++,
@@ -778,6 +913,7 @@ sub ReadData {
 	    }
 
 	$debug and print STDERR "\t$data[0]{sheets} sheets\n";
+	_def_gas ();
 	my $active_sheet = $oBook->get_active_sheet
 			|| $oBook->{ActiveSheet}
 			|| $oBook->{SelectedSheet};
@@ -795,6 +931,7 @@ sub ReadData {
 		attr	=> [],
 		merged  => [],
 		active	=> 0,
+		hidden	=> $oWkS->{SheetHidden} || 0,
 		);
 	    # $debug and $sheet{_parser} = $oWkS;
 	    defined $sheet{label}  or  $sheet{label}  = "-- unlabeled --";
@@ -899,7 +1036,7 @@ sub ReadData {
 			    }
 			defined $fmt and $fmt =~ s/\\//g;
 			$opt{cells} and	# Formatted value
-			    $sheet{$cell} = defined $val ? $FmT && exists $def_fmt{$FmT->{FmtIdx}}
+			    $sheet{$cell} = $oFmt && defined $val ? $FmT && exists $def_fmt{$FmT->{FmtIdx}}
 				? $oFmt->ValFmt ($oWkC, $oBook)
 				: $oWkC->Value : undef;
 			if ($opt{attr}) {
@@ -953,7 +1090,7 @@ sub ReadData {
 	    for (@{$sheet{cell}}) {
 		defined or $_ = [];
 		}
-	    push @data, { %sheet };
+	    push @data => { %sheet };
 #	    $data[0]{sheets}++;
 	    if ($sheet{label} eq "-- unlabeled --") {
 		$sheet{label} = "";
@@ -970,7 +1107,7 @@ sub ReadData {
 	     and ($can{$_parser} || "") !~ m/sxc/i) {
 	my $parse_type = "ODS";
 	my $parser = $can{lc $parse_type} or
-	    croak "Parser for $parse_type is not installed";
+	    croak _missing_parser ($parse_type);
 	#$debug and print STDERR __FILE__, "#", __LINE__, " | $_parser | $parser | $parse_type\n";
 	$debug and print STDERR "Opening $parse_type ", $io_ref ? "<REF>" : $txt,
 	    " using $parser-", $can{lc $parse_type}->VERSION, "\n";
@@ -1003,6 +1140,7 @@ sub ReadData {
 	# $debug and $data[0]{_parser} = $oBook;
 
 	$debug and print STDERR "\t$data[0]{sheets} sheets\n";
+	_def_gas ();
 	my $active_sheet = $oBook->get_active_sheet;
 	my $current_sheet = 0;
 	foreach my $oWkS ($oBook->worksheets) {
@@ -1018,6 +1156,7 @@ sub ReadData {
 		attr	=> [],
 		merged  => [],
 		active	=> 0,
+		hidden	=> 0,
 		);
 	    # $debug and $sheet{_parser} = $oWkS;
 	    defined $sheet{label} or $sheet{label} = "-- unlabeled --";
@@ -1069,7 +1208,7 @@ sub ReadData {
 		    $opt{cells} and	# Formatted value
 			$sheet{$cell} = defined $val ? $oWkC->value : undef;
 		    if ($opt{attr}) {
-			my $FnT = $FmT ? $FmT->{font_face} : undef;
+#			my $FnT = $FmT ? $FmT->{font_face} : undef;
 			my $fmi;
 			#my $fmi = $FmT ? $FmT->{FmtIdx}
 			#   ? $oBook->{FormatStr}{$FmT->{FmtIdx}}
@@ -1170,6 +1309,7 @@ sub ReadData {
 		attr	=> [],
 		merged  => [],
 		active  => 1,
+		hidden	=> 0,
 		},
 	    );
 
@@ -1196,9 +1336,22 @@ sub ReadData {
 	return _clipsheets \%opt, [ @data ];
 	}
 
+    if ($opt{parser} ? _parser ($opt{parser}) eq "gnumeric"
+		     : _txt_is_xml ($txt, "http://www.gnumeric.org/v10.dtd")) {
+	$can{gnumeric} or croak _missing_parser ("gnumeric");
+
+	my $gnm = $can{gnumeric}->new (%parser_opts,
+				       attr      => $opt{attr},
+				       cells     => $opt{cells},
+				       merge     => $opt{merge},
+				       rc        => $opt{rc},
+				       gzipped_p => $opt{gzipped_p});
+	return _clipsheets \%opt, $gnm->parse ($txt);
+	}
+
     if ($opt{parser} ? _parser ($opt{parser}) eq "sxc"
 		     : ($txt =~ m/^<\?xml/ or -f $txt)) {
-	$can{sxc} or croak "Spreadsheet::ReadSXC not installed";
+	$can{sxc} or croak _missing_parser ("SXC");
 
 	ref $txt && $can{sxc}->VERSION <= 0.23 and
 	    croak ("Sorry, references as input are not supported by Spreadsheet::ReadSXC before 0.23");
@@ -1206,7 +1359,7 @@ sub ReadData {
 	my $using = "using $can{sxc}-" . $can{sxc}->VERSION;
 	my $sxc_options = { %parser_opts, OrderBySheet => 1 }; # New interface 0.20 and up
 	my $sxc;
-	   if ($txt =~ m/\.(sxc|ods)$/i) {
+	if ($txt =~ m/\.(sxc|ods)$/i) {
 	    $debug and print STDERR "Opening \U$1\E $txt $using\n";
 	    $debug and print STDERR __FILE__, "#", __LINE__, "\n";
 	    $sxc = Spreadsheet::ReadSXC::read_sxc      ($txt, $sxc_options) or return;
@@ -1264,6 +1417,7 @@ sub ReadData {
 		    attr   => [],
 		    merged => [],
 		    active => 0,
+		    hidden => 0,
 		    );
 		my $sheet_idx = 1 + @data;
 		$debug and print STDERR "\tSheet $sheet_idx '$sheet{label}' $sheet{maxrow} rows\n";
@@ -1352,6 +1506,8 @@ sub AUTOLOAD {
 
 package Spreadsheet::Read::Sheet;
 
+use List::Util qw( min max );
+
 sub cell {
     my ($sheet, @id) = @_;
     @id == 2 && $id[0] =~ m/^[0-9]+$/ && $id[1] =~ m/^[0-9]+$/ and
@@ -1387,6 +1543,11 @@ sub col2label {
     return Spreadsheet::Read::col2label (@_);
     } # col2label
 
+sub label2col {
+    $_[0] =~ m/::/ and shift; # class unused
+    return Spreadsheet::Read::label2col (@_);
+    } # label2col
+
 sub cr2cell {
     $_[0] =~ m/::/ and shift; # class unused
     return Spreadsheet::Read::cr2cell (@_);
@@ -1408,6 +1569,11 @@ sub active {
     return $sheet->{active};
     } # label
 
+sub hidden {
+    my $sheet = shift;
+    return $sheet->{hidden};
+    } # label
+
 # my @row = $sheet->cellrow (1);
 sub cellrow {
     my ($sheet, $row) = @_;
@@ -1424,19 +1590,100 @@ sub row {
     } # row
 
 # my @col = $sheet->cellcolumn (1);
+# my @col = $sheet->cellcolumn ("A");
 sub cellcolumn {
     my ($sheet, $col) = @_;
-    defined $col && $col > 0 && $col <= $sheet->{maxcol} or return;
+    defined $col or return;
+    $col =~ m/^[A-Za-z]+$/ and $col = label2col ($col);
+    $col > 0 && $col <= $sheet->{maxcol} or return;
     my $s = $sheet->{cell};
     map { $s->[$col][$_] } 1..$sheet->{maxrow};
     } # cellcolumn
 
 # my @col = $sheet->column (1);
+# my @col = $sheet->column ("A");
 sub column {
     my ($sheet, $col) = @_;
-    defined $col && $col > 0 && $col <= $sheet->{maxcol} or return;
+    defined $col or return;
+    $col =~ m/^[A-Za-z]+$/ and $col = label2col ($col);
+    $col > 0 && $col <= $sheet->{maxcol} or return;
     map { $sheet->{$sheet->cr2cell ($col, $_)} } 1..$sheet->{maxrow};
     } # column
+
+# my $arrayref = $sheet->cellrange ("B3:D5");
+# my $arrayref = $sheet->cellrange (2, 3, 4, 5);
+sub cellrange {
+    my ($sheet, @r) = @_;
+    my $s = $sheet->{cell};
+    if (@r == 1 && $r[0] =~ m/^([A-Za-z]+[0-9]+):([A-Za-z]+[0-9]+)$/) {
+	my ($cl, $rt) = cell2cr (uc $1);
+	my ($cr, $rb) = cell2cr (uc $2);
+	$cl = min ($sheet->{maxcol}, max (1, $cl));
+	$rt = min ($sheet->{maxrow}, max (1, $rt));
+	$cr = min ($sheet->{maxcol}, max (1, $cr));
+	$rb = min ($sheet->{maxrow}, max (1, $rb));
+	my @R;
+	foreach my $c ($cl .. $cr) {
+	    push @R => [ map { $s->[$c][$_] } $rt .. $rb ];
+	    }
+	return \@R;
+	}
+    if (@r == 4 and $r[0] =~ m/^-?[0-9]+/ && $r[1] =~ m/^-?[0-9]+/
+		 && $r[2] =~ m/^-?[0-9]+/ && $r[3] =~ m/^-?[0-9]+/) {
+	$r[0] < 0 and $r[0] = $sheet->{maxcol} + 1 + $r[0];
+	$r[1] < 0 and $r[1] = $sheet->{maxrow} + 1 + $r[1];
+	$r[2] < 0 and $r[2] = $sheet->{maxcol} + 1 + $r[2];
+	$r[3] < 0 and $r[3] = $sheet->{maxrow} + 1 + $r[3];
+	$r[0] = min ($sheet->{maxcol}, max (1, $r[0]));
+	$r[1] = min ($sheet->{maxrow}, max (1, $r[1]));
+	$r[2] = min ($sheet->{maxcol}, max (1, $r[2]));
+	$r[3] = min ($sheet->{maxrow}, max (1, $r[3]));
+	my @R;
+	foreach my $c ($r[0] .. $r[2]) {
+	    push @R => [ map { $s->[$c][$_] } $r[1] .. $r[3] ];
+	    }
+	return \@R;
+	}
+    } # cellrange
+
+# my $hashref = $sheet->range ("A3:D7")
+# my $hashref = $sheet->range (1, 3, 4, 7)
+sub range {
+    my ($sheet, @r, $R) = @_;
+    if (@r == 1 && $r[0] =~ m/^([A-Za-z]+[0-9]+):([A-Za-z]+[0-9]+)$/) {
+	my ($cl, $rt) = cell2cr (uc $1);
+	my ($cr, $rb) = cell2cr (uc $2);
+	$cl = min ($sheet->{maxcol}, max (1, $cl));
+	$rt = min ($sheet->{maxrow}, max (1, $rt));
+	$cr = min ($sheet->{maxcol}, max (1, $cr));
+	$rb = min ($sheet->{maxrow}, max (1, $rb));
+	foreach my $c ($cl .. $cr) {
+	    foreach my $r ($rt .. $rb) {
+		my $C = $sheet->cr2cell ($c, $r);
+		$R->{$C} = $sheet->{$C};
+		}
+	    }
+	return $R;
+	}
+    if (@r == 4 and $r[0] =~ m/^-?[0-9]+/ && $r[1] =~ m/^-?[0-9]+/
+		 && $r[2] =~ m/^-?[0-9]+/ && $r[3] =~ m/^-?[0-9]+/) {
+	$r[0] < 0 and $r[0] = $sheet->{maxcol} + 1 + $r[0];
+	$r[1] < 0 and $r[1] = $sheet->{maxrow} + 1 + $r[1];
+	$r[2] < 0 and $r[2] = $sheet->{maxcol} + 1 + $r[2];
+	$r[3] < 0 and $r[3] = $sheet->{maxrow} + 1 + $r[3];
+	$r[0] = min ($sheet->{maxcol}, max (1, $r[0]));
+	$r[1] = min ($sheet->{maxrow}, max (1, $r[1]));
+	$r[2] = min ($sheet->{maxcol}, max (1, $r[2]));
+	$r[3] = min ($sheet->{maxrow}, max (1, $r[3]));
+	foreach my $c ($r[0] .. $r[2]) {
+	    foreach my $r ($r[1] .. $r[3]) {
+		my $C = $sheet->cr2cell ($c, $r);
+		$R->{$C} = $sheet->{$C};
+		}
+	    }
+	return $R;
+	}
+    } # range
 
 # Convert {cell}'s [column][row] to a [row][column] list
 # my @rows = $sheet->rows ();
@@ -1492,17 +1739,36 @@ Spreadsheet::Read tries to transparently read *any* spreadsheet and
 return its content in a universal manner independent of the parsing
 module that does the actual spreadsheet scanning.
 
+The parser has to be available and is not provided by this module.
+
+=head2 Supported spreadsheets
+
+=head3 OpenOffice and LibreOffice (C<ODS> and C<SXC>)
+
 For OpenOffice and/or LibreOffice this module uses
+L<Spreadsheet::ParseODS|https://metacpan.org/pod/Spreadsheet::ParseODS> or
 L<Spreadsheet::ReadSXC|https://metacpan.org/release/Spreadsheet-ReadSXC>
+
+=head3 Microsoft Excel (C<XLSX> and C<XLS>)
 
 For Microsoft Excel this module uses
 L<Spreadsheet::ParseExcel|https://metacpan.org/release/Spreadsheet-ParseExcel>,
-L<Spreadsheet::ParseXLSX|https://metacpan.org/release/Spreadsheet-ParseXLSX>, or
-L<Spreadsheet::XLSX|https://metacpan.org/release/Spreadsheet-XLSX> (stronly
+L<Spreadsheet::ParseXLSX|https://metacpan.org/release/Spreadsheet-ParseXLSX>,
+L<Excel::ValueReader::XLSX|https://metacpan.org/release/Excel-ValueReader-XLSX>, or
+L<Spreadsheet::XLSX|https://metacpan.org/release/Spreadsheet-XLSX> (strongly
 discouraged).
+
+=head3 CSV (C<CSV>)
 
 For CSV this module uses L<Text::CSV_XS|https://metacpan.org/release/Text-CSV_XS>
 or L<Text::CSV_PP|https://metacpan.org/release/Text-CSV>.
+
+=head3 Gnumeric (C<gnumeric>)
+
+For Gnumeric this module uses
+L<Spreadsheet::ReadGnumeric|https://metacpan.org/release/Spreadsheet-ReadGnumeric>.
+
+=head3 SquirrelCalc (C<sc>)
 
 For SquirrelCalc there is a very simplistic built-in parser
 
@@ -1536,6 +1802,7 @@ The data is returned as an array reference:
         attr    => [],
         merged  => [],
         active  => 1,
+        hidden  => 0,
         A1      => 1,
         B5      => "Nugget",
         },
@@ -1549,7 +1816,7 @@ To keep as close contact to spreadsheet users, row and column 1 have
 index 1 too in the C<cell> element of the sheet hash, so cell "A1" is
 the same as C<cell> [1, 1] (column first). To switch between the two,
 there are helper functions available: C<cell2cr ()>, C<cr2cell ()>,
-and C<col2label ()>.
+C<col2label ()> and C<label2col ()>.
 
 The C<cell> hash entry contains unformatted data, while the hash entries
 with the traditional labels contain the formatted values (if applicable).
@@ -1668,6 +1935,18 @@ environment variables. The other options then will not be tested for:
 
  env SPREADSHEET_READ_CSV=Text::CSV_PP ...
 
+You can also directly pass the required backend, forcing the matching
+type, but this excludes version checking.
+
+ # Checks for minimal version
+ BEGIN { $ENV{SPREADSHEET_READ_CSV} = "Text::CSV_PP" }
+ my $book = ReadData ("test.csv", parser => "csv");
+
+ vs
+
+ # NO check for minimal version
+ my $book = ReadData ("test.csv", parser => "Text::CSV_PP");
+
 =item cells
 X<cells>
 
@@ -1778,15 +2057,27 @@ that parser supports attributes.
 
 =head3 col2label
 
- my $col_id = col2label (col);
+ my $col_id = col2label ($col);
 
- my $col_id = $book->col2label (col);  # OO
+ my $col_id = $book->col2label ($col);  # OO
 
 C<col2label ()> converts a C<(column)> (1 based) to the letters used in the
 traditional cell notation:
 
   my $id = col2label ( 4); # $id now "D"
   my $id = col2label (28); # $id now "AB"
+
+=head3 label2col
+
+ my $col = label2col ($id);
+
+ my $col = $book->label2col ($id);  # OO
+
+C<label2col ()> converts a C<(column ID)> to the 1-based numeric equivalent
+or C<undef> on invalid C<$id>.
+
+  my $c = label2col ("D");  # $c now 4
+  my $c = label2col ("AB"); # $c now 28
 
 =head3 cr2cell
 
@@ -1871,14 +2162,15 @@ use argument list, or call it fully qualified.
  $book->parses ("CSV"); # OO
 
 C<parses ()> returns Spreadsheet::Read's capability to parse the
-required format. L<C<ReadData>|/ReadData> will pick its preferred parser
-for that format unless overruled. See L<C<parser>|/parser>.
+required format or C<0> if it does not. L<C<ReadData>|/ReadData>
+will pick its preferred parser for that format unless overruled.
+See L<C<parser>|/parser>.
 
-C<parses ()> is not imported by default, so either specify it in the
-use argument list, or call it fully qualified.
+C<parses ()> is not imported by default, so either specify it in
+the use argument list, or call it fully qualified.
 
-If C<$format> is false (C<undef>, C<"">, or C<0>), C<parses ()> will
-return a sorted list of supported types.
+If C<$format> is false (C<undef>, C<"">, or C<0>), C<parses ()>
+will return a sorted list of supported types.
 
  @my types = parses ("");   # e.g: csv, ods, sc, sxc, xls, xlsx
 
@@ -1925,7 +2217,11 @@ returns and is only kept for backward compatibility reasons.
  my @sheets = $book->sheets; # OO
 
 In scalar context return the number of sheets in the book.
-In list context return the labels of the sheets in the book.
+
+In list context return the labels of the sheets in the book. This list only
+returns known unique labels in sorted order. Sheets could have no label or
+there can be more sheets with the same label (depends on the spreadsheet
+format and the parser used).
 
 =head3 sheet
 
@@ -2014,6 +2310,8 @@ pair (1 based):
 
  my @col = $sheet->column ($col);
 
+C<$col> can be numeric (1-based) or traditional.
+
 Get full column of formatted values (like C<< $sheet->{C1} .. $sheet->{C9} >>)
 
 Note that the indexes in the returned list are 0-based.
@@ -2021,6 +2319,8 @@ Note that the indexes in the returned list are 0-based.
 =head3 cellcolumn
 
  my @col = $sheet->cellcolumn ($col);
+
+C<$col> can be numeric (1-based) or traditional.
 
 Get full column of unformatted values (like C<< $sheet->{cell}[3][1] .. $sheet->{cell}[3][9] >>)
 
@@ -2041,6 +2341,27 @@ Note that the indexes in the returned list are 0-based.
 Get full row of unformatted values (like C<< $sheet->{cell}[1][3] .. $sheet->{cell}[7][3] >>)
 
 Note that the indexes in the returned list are 0-based.
+
+=head3 cellrange
+
+ my $arrayref = $sheet->cellrange ("B3:D5");
+ my $arrayref = $sheet->cellrange (2, 3, 4, 5);
+ my $arrayref = $sheet->cellrange (-4, -5, -1, -1);
+
+Return an arrayref with the selected cells from C<< $sheet->{cell} >>.
+When the range is given as (top-left, bottom-right) numeric CR pairs, negative
+values are allowed (count from rigth/bottom) and automatically clipped to be
+inside the existing data set.
+
+=head3 range
+
+ my $hashref = $sheet->range ("B3:D5");
+ my $hashref = $sheet->range (2, 3, 4, 5);
+ my $hashref = $sheet->range (-4, -5, -1, -1);
+
+Return a hashref with all the fields in the given range. When the range is given
+as (top-left, bottom-right) numeric CR pairs, negative values are allowed (count
+from rigth/bottom) and automatically clipped to be inside the existing data set.
 
 =head3 rows
 
@@ -2082,6 +2403,14 @@ Returns 1 if the selected sheet is active, otherwise returns 0.
 
 Currently only works on XLS (as of Spreadsheed::ParseExcel-0.61).
 CSV is always active.
+
+=head3 hidden
+
+ my $sheet_is_hidden = $sheet->hidden;
+
+Returns 1 if the selected sheet is hidden, otherwise returns 0.
+
+Fully depends on the backend supporting this.  CSV and SC are never hidden.
 
 =head2 Using CSV
 
@@ -2324,8 +2653,11 @@ Show (parts of) a spreadsheet in plain text, CSV, or HTML
         --list      Show supported spreadsheet formats and exit
         -u          Use unformatted values
         --strip[=#] Strip leading and/or traing spaces of all cells
+                    # & 01 = leading, # & 02 = trailing, 3 = default
+        --clip=#    Clip cells to max length #
         --noclip    Do not strip empty sheets and
                     trailing empty rows and columns
+        --no-empty  Skip empty rows
          --no-nl[=R] Replace all newlines in cells with R (default space)
         -e <enc>    Set encoding for input and output
         -b <enc>    Set encoding for input
@@ -2343,23 +2675,29 @@ Show (parts of) a spreadsheet in plain text, CSV, or HTML
         -s <sep>    Use separator <sep>. Default '|', \n allowed
                     Overrules ',' when used with --csv
         -L          Line up the columns
+        -B  --box   Like -L but also add outer frame
         -n [skip]   Number lines (prefix with column number)
                     optionally skip <skip> (header) lines
         -A          Show field attributes in ANSI escapes
         -h[#]       Show # header lines
         -D          Dump each record with Data::Peek or Data::Dumper
          --hash     Like -D but as hash with first row as keys
-     Output Index only:
-        -i          Show sheet names and size only
      Output CSV:
         -c          Output CSV, separator = ','
         -m          Output CSV, separator = ';'
+     Output Index only:
+        -i          Show sheet names and size only
      Output HTML:
         -H          Output HTML
      Selection:
         -S <sheets> Only print sheets <sheets>. 'all' is a valid set
                     Default only prints the first sheet
         -R <rows>   Only print rows    <rows>. Default is 'all'
+                    Ranges and lists supported as 2,4-7,8-
+                    Trailing - is to end of data
+                    Negative rows count from tail -8--2 is allowed
+         --head[=n] Alias for -R1..n   where n defaults to 10
+         --tail[=n] Alias for -R-n-    where n defaults to 10
         -C <cols>   Only print columns <cols>. Default is 'all'
         -F <flds>   Only fields <flds> e.g. -FA3,B16
      Ordering (column numbers in result set *after* selection):
@@ -2371,8 +2709,9 @@ Show (parts of) a spreadsheet in plain text, CSV, or HTML
                     #rn  - order on column # numeric descending
 
  Examples:
-     xlscat -i foo.xls
-     xlscat --in-sep=: --sort=3n -L /etc/passwd
+     xlscat   -i foo.xls
+     xlscat   --in-sep=: --sort=3n -L /etc/passwd
+     xlsgrep  pattern file.ods
 
 =head2 C<xlsgrep>
 
@@ -2387,8 +2726,11 @@ Show (parts of) a spreadsheet that match a pattern in plain text, CSV, or HTML
         --list      Show supported spreadsheet formats and exit
         -u          Use unformatted values
         --strip[=#] Strip leading and/or traing spaces of all cells
+                    # & 01 = leading, # & 02 = trailing, 3 = default
+        --clip=#    Clip cells to max length #
         --noclip    Do not strip empty sheets and
                     trailing empty rows and columns
+        --no-empty  Skip empty rows
          --no-nl[=R] Replace all newlines in cells with R (default space)
         -e <enc>    Set encoding for input and output
         -b <enc>    Set encoding for input
@@ -2406,24 +2748,30 @@ Show (parts of) a spreadsheet that match a pattern in plain text, CSV, or HTML
         -s <sep>    Use separator <sep>. Default '|', \n allowed
                     Overrules ',' when used with --csv
         -L          Line up the columns
+        -B  --box   Like -L but also add outer frame
         -n [skip]   Number lines (prefix with column number)
                     optionally skip <skip> (header) lines
         -A          Show field attributes in ANSI escapes
         -h[#]       Show # header lines
         -D          Dump each record with Data::Peek or Data::Dumper
          --hash     Like -D but as hash with first row as keys
-     Grep options:
-        -i          Ignore case
-        -w          Match whole words only
      Output CSV:
         -c          Output CSV, separator = ','
         -m          Output CSV, separator = ';'
+     Grep options:
+        -i          Ignore case
+        -w          Match whole words only
      Output HTML:
         -H          Output HTML
      Selection:
         -S <sheets> Only print sheets <sheets>. 'all' is a valid set
                     Default only prints the first sheet
         -R <rows>   Only print rows    <rows>. Default is 'all'
+                    Ranges and lists supported as 2,4-7,8-
+                    Trailing - is to end of data
+                    Negative rows count from tail -8--2 is allowed
+         --head[=n] Alias for -R1..n   where n defaults to 10
+         --tail[=n] Alias for -R-n-    where n defaults to 10
         -C <cols>   Only print columns <cols>. Default is 'all'
         -F <flds>   Only fields <flds> e.g. -FA3,B16
      Ordering (column numbers in result set *after* selection):
@@ -2435,8 +2783,9 @@ Show (parts of) a spreadsheet that match a pattern in plain text, CSV, or HTML
                     #rn  - order on column # numeric descending
 
  Examples:
-     xlscat -i foo.xls
-     xlscat --in-sep=: --sort=3n -L /etc/passwd
+     xlscat   -i foo.xls
+     xlscat   --in-sep=: --sort=3n -L /etc/passwd
+     xlsgrep  pattern file.ods
 
 =head2 C<xlsx2csv>
 
@@ -2450,7 +2799,7 @@ Convert a spreadsheet to CSV. This is just a small wrapper over C<xlscat>.
      -Z    --zip     Convert sheets to CSV's in ZIP
      -J s  --join=s  Use s to join filename-sheetname (-)
      -o f  --out=f   Set output filename
-     -i f  --in=f    Set infut  filename
+     -i f  --in=f    Set input  filename
      -f    --force   Force overwrite output if exists
      -s s  --sep=s   Set CSV separator character
  Unless -A is used, all other options are passed on to xlscat
@@ -2476,6 +2825,15 @@ Show a spreadsheet in a perl/Tk spreadsheet widget
 Show the differences between two spreadsheets.
 
  usage: ssdiff [--verbose[=1]] file.xls file.xlsx
+
+=head1 Vulnerabilities
+
+As this is just a wrapper over the actual parsers, it cannot vouch for
+vulnerabilities in these parsers.  We try to keep up with the CVE's as
+published, and check for weaknesses. For a more thorough report see
+L<this security-posting|https://security.metacpan.org/2024/02/10/vulnerable-spreadsheet-parsing-modules.html>.
+
+For vulnerabilities in this module, please read F<SECURITY.md>.
 
 =head1 TODO
 
@@ -2515,6 +2873,9 @@ FastXLSX library.
 This is SAX based parser, so you can parse very large XLSX file with
 lower memory usage.
 
+Last commit 2021-02-16, so I will take PR's but won't do it myself as
+there seems to be little gain in supporting this.
+
 =back
 
 =item Other spreadsheet formats
@@ -2524,12 +2885,6 @@ I consider adding any spreadsheet interface that offers a usable API.
 Under investigation:
 
 =over 2
-
-=item Gnumeric (.gnumeric)
-
-I have seen no existing CPAN module yet.
-
-It is gzip'ed XML
 
 =item Kspread (.ksp)
 
@@ -2567,6 +2922,8 @@ L<Text::CSV_PP|https://metacpan.org/release/Text-CSV> (the pure perl version).
 
 L<Spreadsheet::ParseExcel|https://metacpan.org/release/Spreadsheet-ParseExcel> is
 the best parser for old-style Microsoft Excel (.xls) files.
+Most recent commit was Dec 2023. Please use version 0.66 or higher to prevent
+possible memory bombs.
 
 =item Spreadsheet::ParseXLSX
 
@@ -2575,16 +2932,28 @@ like L<Spreadsheet::ParseExcel|https://metacpan.org/release/Spreadsheet-ParseExc
 but for new Microsoft Excel 2007+ files (.xlsx). They have the same API.
 
 This module uses L<XML::Twig|https://metacpan.org/release/XML-Twig> to parse the
-internal XML.
+internal XML. Most recent commit was in Dec 2023. Please use version 0.29 or
+higher to prevent possible memory bombs.
 
 =item Spreadsheet::XLSX
 
 See L<Spreadsheet::XLSX|https://metacpan.org/release/Spreadsheet-XLSX>
 documentation.
 
-This module is dead and deprecated. It is B<buggy and unmaintained>.  I<Please>
-use L<Spreadsheet::ParseXLSX|https://metacpan.org/release/Spreadsheet-ParseXLSX>
+This module is dead and deprecated. It is B<buggy and unmaintained> (Most recent
+commit was Oct 2014).  I<Please> use
+L<Spreadsheet::ParseXLSX|https://metacpan.org/release/Spreadsheet-ParseXLSX>
 instead.
+
+=item Excel::ValueReader::XLSX
+
+See L<Excel::ValueReader::XLSX|https://metacpan.org/release/Excel-ValueReader-XLSX>
+documentation.
+
+This module aims at speed-reading ignoring all attributes and formatting.
+
+Using this backend does not, and will not, support parsing strings, string-refs,
+or globs. Only filenames and file handles are supported.
 
 =item Spreadsheet::ParseODS
 
@@ -2596,6 +2965,12 @@ successor of  L<Spreadsheet::ReadSXC|https://metacpan.org/release/Spreadsheet-Re
 
 L<Spreadsheet::ReadSXC|https://metacpan.org/release/Spreadsheet-ReadSXC> is a
 parser for OpenOffice/LibreOffice (.sxc and .ods) spreadsheet files.
+
+=item Spreadsheet::ReadGnumeric
+
+L<Spreadsheet::ReadGnumeric|https://metacpan.org/release/Spreadsheet-ReadGnumeric>
+is a parser for L<Gnumeric|http://www.gnumeric.org/> (.gnumeric) spreadsheet
+files.
 
 =item Spreadsheet::BasicRead
 
@@ -2635,7 +3010,7 @@ H.Merijn Brand <perl5@tux.freedom.nl>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2005-2021 H.Merijn Brand
+Copyright (C) 2005-2025 H.Merijn Brand
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

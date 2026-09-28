@@ -3,19 +3,19 @@ package Specio::Constraint::Intersection;
 use strict;
 use warnings;
 
-our $VERSION = '0.47';
+our $VERSION = '0.53';
 
-use List::Util qw( all );
+use List::Util 1.33 qw( all );
 use Role::Tiny::With;
+use Specio qw( _clone );
 use Specio::OO;
-use Storable qw( dclone );
 
 use Specio::Constraint::Role::Interface;
 with 'Specio::Constraint::Role::Interface';
 
 {
     ## no critic (Subroutines::ProtectPrivateSubs)
-    my $attrs = dclone( Specio::Constraint::Role::Interface::_attrs() );
+    my $attrs = _clone( Specio::Constraint::Role::Interface::_attrs() );
     ## use critic
 
     for my $name (qw( _constraint _inline_generator )) {
@@ -133,7 +133,7 @@ Specio::Constraint::Intersection - A class for intersection constraints
 
 =head1 VERSION
 
-version 0.47
+version 0.53
 
 =head1 SYNOPSIS
 
@@ -175,8 +175,6 @@ L<Specio::Role::Inlinable> roles.
 
 Bugs may be submitted at L<https://github.com/houseabsolute/Specio/issues>.
 
-I am also usually active on IRC as 'autarch' on C<irc://irc.perl.org>.
-
 =head1 SOURCE
 
 The source code repository for Specio can be found at L<https://github.com/houseabsolute/Specio>.
@@ -187,7 +185,7 @@ Dave Rolsky <autarch@urth.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2012 - 2021 by Dave Rolsky.
+This software is Copyright (c) 2012 - 2025 by Dave Rolsky.
 
 This is free software, licensed under:
 

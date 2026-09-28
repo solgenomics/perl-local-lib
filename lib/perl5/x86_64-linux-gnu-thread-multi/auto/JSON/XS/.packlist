@@ -1,4 +1,11 @@
-/home/production/cxgn/local-lib/bin/json_xs
-/home/production/cxgn/local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/JSON/XS.pm
-/home/production/cxgn/local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/JSON/XS/Boolean.pm
-/home/production/cxgn/local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/JSON/XS/XS.so
+/home/production/cxgn/sgn/../local-lib/bin/json_xs
+/home/production/cxgn/sgn/../local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/JSON/XS.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/JSON/XS/Boolean.pm
+/home/production/cxgn/sgn/../local-lib/lib/perl5/x86_64-linux-gnu-thread-multi/auto/JSON/XS/XS.so
+/usr/local/bin/json_xs
+/usr/local/lib/x86_64-linux-gnu/perl/5.40.1/JSON/XS.pm
+/usr/local/lib/x86_64-linux-gnu/perl/5.40.1/JSON/XS/Boolean.pm
+/usr/local/lib/x86_64-linux-gnu/perl/5.40.1/auto/JSON/XS/XS.so
+/usr/local/man/man1/json_xs.1p
+/usr/local/man/man3/JSON::XS.3pm
+/usr/local/man/man3/JSON::XS::Boolean.3pm

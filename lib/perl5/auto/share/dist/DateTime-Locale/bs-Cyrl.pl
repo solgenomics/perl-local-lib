@@ -1,6 +1,6 @@
 {
   am_pm_abbreviated => [
-    "\N{U+043f}\N{U+0440}\N{U+0435} \N{U+043f}\N{U+043e}\N{U+0434}\N{U+043d}\N{U+0435}",
+    "\N{U+043f}\N{U+0440}\N{U+0435}\N{U+202f}\N{U+043f}\N{U+043e}\N{U+0434}\N{U+043d}\N{U+0435}",
     "\N{U+043f}\N{U+043e}\N{U+043f}\N{U+043e}\N{U+0434}\N{U+043d}\N{U+0435}",
   ],
   available_formats => {
@@ -36,7 +36,7 @@
     MMMd => "dd. MMM",
     Md => "dd.MM.",
     d => "d",
-    h => "h a",
+    h => "h\N{U+202f}a",
     hm => "h:mm a",
     hms => "h:mm:ss a",
     hmsv => "h:mm:ss a v",
@@ -271,5 +271,5 @@
   time_format_medium => "HH:mm:ss",
   time_format_short => "HH:mm",
   variant => undef,
-  version => 40,
+  version => 47,
 }

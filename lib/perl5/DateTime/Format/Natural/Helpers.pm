@@ -10,7 +10,7 @@ use constant VIRT_FLAG => false;
 
 our ($VERSION, @EXPORT_OK, %flag);
 
-$VERSION = '0.06';
+$VERSION = '0.08';
 @EXPORT_OK = qw(%flag);
 
 my @flags = (
@@ -25,6 +25,7 @@ my @flags = (
     { noon_midnight     => VIRT_FLAG },
     { morn_aftern_even  => VIRT_FLAG },
     { before_after_from => VIRT_FLAG },
+    { eve_day           => VIRT_FLAG },
 );
 
 {
@@ -117,14 +118,14 @@ sub _time_meridiem
     my $self = shift;
     my ($time, $period) = @_;
 
-    my ($hour) = split /:/, $$time;
+    my ($hour) = split /[:\.]/, $$time;
 
     my %hours = (
         am => $hour - (($hour == 12) ? 12 :  0),
         pm => $hour + (($hour == 12) ?  0 : 12),
     );
 
-    $$time =~ s/^ \d+? (?:(?=\:)|$)/$hours{$period}/x;
+    $$time =~ s/^ \d+? (?:(?=[:\.])|$)/$hours{$period}/x;
 }
 
 1;

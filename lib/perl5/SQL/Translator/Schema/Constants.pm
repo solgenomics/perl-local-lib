@@ -35,6 +35,8 @@ This module exports the following constants for Schema features;
 
 =item UNIQUE
 
+=item EXCLUDE
+
 =back
 
 =cut
@@ -43,18 +45,19 @@ use strict;
 use warnings;
 use base qw( Exporter );
 require Exporter;
-our $VERSION = '1.62';
+our $VERSION = '1.66';
 
 our @EXPORT = qw[
-    CHECK_C
-    FOREIGN_KEY
-    FULL_TEXT
-    SPATIAL
-    NOT_NULL
-    NORMAL
-    NULL
-    PRIMARY_KEY
-    UNIQUE
+  CHECK_C
+  FOREIGN_KEY
+  FULL_TEXT
+  SPATIAL
+  NOT_NULL
+  NORMAL
+  NULL
+  PRIMARY_KEY
+  UNIQUE
+  EXCLUDE
 ];
 
 #
@@ -77,6 +80,8 @@ use constant NULL => 'NULL';
 use constant PRIMARY_KEY => 'PRIMARY KEY';
 
 use constant UNIQUE => 'UNIQUE';
+
+use constant EXCLUDE => 'EXCLUDE';
 
 1;
 
