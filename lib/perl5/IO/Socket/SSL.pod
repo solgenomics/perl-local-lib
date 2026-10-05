@@ -1,4 +1,4 @@
-
+CK
 =head1 NAME
 
 IO::Socket::SSL - SSL sockets with IO::Socket interface
@@ -545,8 +545,8 @@ The following debugs levels are defined, but used not in any consistent way:
 
 =item *
 
-2 - Print also information about call flow from L<IO::Socket::SSL> and progress
-information from L<Net::SSLeay>.
+2 - Print also information about call flow from L<IO::Socket::SSL>, progress
+information from L<Net::SSLeay> and state information from OpenSSL.
 
 =item *
 
@@ -947,10 +947,35 @@ It is also possible to skip C<algo$>, i.e. only specify the fingerprint. In
 this case the likely algorithms will be automatically detected based on the
 length of the digest string.
 
+Examples:
+
+    sha1$pub$f0f0c49b8a04a2dd2110e10f7806c97d87d0b26f  # pubkey SHA-1
+    sha1$f0f0c49b8a04a2dd2110e10f7806c97d87d0b26f      # certificate SHA-1
+    f0f0c49b8a04a2dd2110e10f7806c97d87d0b26f           # certificate SHA-1
+
 You can specify a list of fingerprints in case you have several acceptable
 certificates.
 If a fingerprint matches the topmost (i.e. leaf) certificate no additional
 validations can make the verification fail.
+
+Note that the default behavior of SSL_fingerprint is to be an alternative to the
+normal validation. A mismatching fingerprint does not override a successful
+validation of the certificate, but a matching fingerprint can override an
+otherwise failed validation. To enforce a fingerprint see
+C<SSL_force_fingerprint>.
+
+=item SSL_force_fingerprint
+
+Set this to true to enforce strict certificate pinning: the connection will be
+rejected unless the peer certificate matches one of the fingerprints given in
+C<SSL_fingerprint>, even if the certificate chain would otherwise be trusted.
+
+Without this option, C<SSL_fingerprint> acts as an alternative trust anchor —
+a matching fingerprint can unlock an otherwise-rejected certificate (e.g.
+self-signed or from an unknown CA), but a non-matching fingerprint does not
+block a certificate that passes normal chain validation. With this option, the
+fingerprint check is the sole trust decision: any certificate not in the
+fingerprint list is rejected regardless of CA trust.
 
 =item SSL_cert_file | SSL_cert | SSL_key_file | SSL_key
 
@@ -1032,7 +1057,6 @@ SSL_use_cert will implicitly be set if SSL_server is set.
 For convenience it is also set if it was not given but a cert was given for use
 (SSL_cert_file or similar).
 
-
 =item SSL_version
 
 Sets the version of the SSL protocol used to transmit data.
@@ -1040,25 +1064,26 @@ Sets the version of the SSL protocol used to transmit data.
 'SSLv2', 'SSLv3', 'TLSv1', 'TLSv1_1', 'TLSv1_2', or 'TLSv1_3' restrict
 handshake and protocol to the specified version.
 All values are case-insensitive.  Instead of 'TLSv1_1', 'TLSv1_2', and
-'TLSv1_3' one can also use 'TLSv11', 'TLSv12', and 'TLSv13'.  Support for
-'TLSv1_1', 'TLSv1_2', and 'TLSv1_3' requires recent versions of Net::SSLeay
-and openssl.
+'TLSv1_3' one can also use 'TLSv11', 'TLSv12', and 'TLSv13'.  Which protocol
+versions are actually supported depend on the versions of OpenSSL and
+Net::SSLeay installed, but modern protocols like TLS 1.3 are supported by these
+for many years now.
 
 Independent from the handshake format you can limit to set of accepted SSL
 versions by adding !version separated by ':'.
 
-The default SSL_version is 'SSLv23:!SSLv3:!SSLv2' which means, that the
-handshake format is compatible to SSL2.0 and higher, but that the successful
-handshake is limited to TLS1.0 and higher, that is no SSL2.0 or SSL3.0 because
-both of these versions have serious security issues and should not be used
-anymore.
+The default SSL_version is 'SSLv23:!TLSv1:!TLSv1_1:!SSLv3:!SSLv2'. This means,
+that the handshake format is compatible to SSL2.0 and higher, but that the
+successful handshake is limited to TLS1.2 and higher, that is no SSL2.0, SSL3.0,
+TLS 1.0 or TLS 1.1 because these versions have serious security issues and
+should not be used anymore.
+
 You can also use !TLSv1_1 and !TLSv1_2 to disable TLS versions 1.1 and 1.2 while
 still allowing TLS version 1.0.
-
-Setting the version instead to 'TLSv1' might break interaction with older
-clients, which need and SSL2.0 compatible handshake. On the other
-side some clients just close the connection when they receive a TLS version 1.1
-request. In this case setting the version to
+Setting the version instead to 'TLSv1' might break interaction with very old or
+broken clients, which expect a SSL2.0 compatible handshake. On the other
+side some broken clients just close the connection when they receive a TLS
+version 1.1 request. In this case setting the version to
 'SSLv23:!SSLv2:!SSLv3:!TLSv1_1:!TLSv1_2' might help.
 
 =item SSL_cipher_list
@@ -1082,7 +1107,7 @@ B<SSL_cert*>.
 
 If this option is set the TLS 1.3 ciphersuites for the connection will be
 set to the given value. This is similar to SSL_cipher_list, but only for TLS 1.3
-ciphers. See argument C<-ciphersuits> in the OpenSSL documentation
+ciphers. See argument C<-ciphersuites> in the OpenSSL documentation
 (L<https://www.openssl.org/docs/manmaster/man1/openssl-ciphers.html>) for
 details.
 
@@ -1152,6 +1177,8 @@ This option sets the verification mode for the peer certificate.
 You may combine SSL_VERIFY_PEER (verify_peer), SSL_VERIFY_FAIL_IF_NO_PEER_CERT
 (fail verification if no peer certificate exists; ignored for clients),
 SSL_VERIFY_CLIENT_ONCE (verify client once; ignored for clients).
+Note that SSL_VERIFY_FAIL_IF_NO_PEER_CERT and SSL_VERIFY_CLIENT_ONCE must be
+used together with SSL_VERIFY_PEER.
 See OpenSSL man page for SSL_CTX_set_verify for more information.
 
 The default is SSL_VERIFY_NONE for server  (e.g. no check for client
@@ -1248,8 +1275,6 @@ If you want to verify that the peer certificate has not been revoked
 by the signing authority, set this value to true. OpenSSL will search
 for the CRL in your SSL_ca_path, or use the file specified by
 SSL_crl_file.  See the Net::SSLeay documentation for more details.
-Note that this functionality appears to be broken with OpenSSL <
-v0.9.7b, so its use with lower versions will result in an error.
 
 =item SSL_crl_file
 
@@ -1276,13 +1301,17 @@ This is the default if SSL_verify_mode is VERIFY_NONE.
 
 =item SSL_OCSP_TRY_STAPLE
 
-Try OCSP stapling, but don't complain if it gets no stapled response back.
+Try OCSP stapling, but don't fail if no usable stapled response is received.
+Both a missing staple and a broken or unverifiable staple are treated the same:
+the connection continues without OCSP revocation information from the staple.
 This is the default if SSL_verify_mode is VERIFY_PEER (the default).
 
 =item SSL_OCSP_MUST_STAPLE
 
-Consider it a hard error, if the server does not send a stapled OCSP response
-back. Most servers currently send no stapled OCSP response back.
+Require a valid stapled OCSP response; fail the connection if none is received.
+A broken or unverifiable staple is treated the same as a missing one — both
+cause the connection to fail with "did not receive the required stapled OCSP
+response". Most servers currently send no stapled OCSP response back.
 
 =item SSL_OCSP_FAIL_HARD
 
@@ -1331,6 +1360,36 @@ which needs to have methods C<put($key,\%entry)> and C<get($key)> (returning
 C<\%entry>) where entry is the hash representation of the OCSP response with
 fields like C<nextUpdate>. The default implementation of the cache will consider
 responses valid as long as C<nextUpdate> is less then the current time.
+
+=item SSL_psk
+
+PSK to use instead of certificate. Requires the peer to use the same PSK.
+
+On the client side the identity and psk need to be provided as array-ref with
+C<<[identity,psk]>>. Alternatively only the psk might be provided, in which case
+C<io_socket_ssl> is used as identity.
+On the server side a single psk might be given which will then be use no matter
+which identity hint was given by the client. Alternatively a hash-ref can be
+provided with identity as key and psk as value to serve clients with different
+psk based on the identity hint. The special identity C<''> is used to set a
+default psk.
+
+To use PSK make sure to have the relevant ciphers enabled. With TLS 1.3 this
+is implicit, but with TLS 1.2 and lower explicitly add PSK to C<SSL_cipher_list>
+since it is not enabled by default.
+
+Note that the given psk is expected to be binary and not hexadecimal as some
+other tools do. To convert hex to binary use C<pack("H*",hexstring)>.
+Also note that the error messages one gets if either identity or psk don't match
+the configuration in the peer can be useless ("handshake failure") or misleading
+("bad mac").
+
+PSK support needs respective API functionality in Net::SSLeay, which was
+only fully included in 1.94. C<< IO::Socket::SSL->can_psk() >> returns undef if
+functionality is not available and a hash-ref with details otherwise: key
+C<client> in the hash signals support for using PSK in a SSL client (available
+since Net::SSLeay 1.82) while key server for support of PSK in SSL server (since
+Net::SSLeay 1.94).
 
 =item SSL_reuse_ctx
 
@@ -1509,6 +1568,12 @@ Example:
 
     my $srv = IO::Socket::SSL->new(..., SSL_ticket_keycb => $keycb);
 
+=item SSL_on_peer_shutdown CODE
+
+This defines a callback which gets called on receiving SSL shutdown (close
+notify) from the peer. This can be used to override the default behavior, see
+C<stop_SSL> for more.
+
 =item SSL_mode_release_buffers 1|0
 
 This enables or disables the SSL_MODE_RELEASE_BUFFERS option on the SSL object.
@@ -1516,6 +1581,35 @@ With this option the read buffer will be released after each SSL_read but will
 need to be reallocated for each new SSL_read. If memory usage is a concern this
 might save lots of memory in the mean time though, about 34k per idle SSL
 connection according to the documentation in SSL_CTX_set_mode(3ssl).
+
+=item SSL_usebio 1|0
+
+If this option is used with C<start_SSL> (not supported somewhere else) it will
+not upgrade the given IO handle but instead wrap it inside a new IO object and
+use openssl memory BIO's to manage exchange between TLS layer and socket layer.
+While this will add some overhead it makes it possible to stack TLS layers, i.e.
+first create an outer TLS connection (without or with SSL_usebio) and then
+create the inner TLS layer with SSL_usebio, using the outer TLS connection as
+the IO handle in C<start_SSL>.
+
+Example:
+
+   # create TLS connection to TLS enabled http proxy
+   my $outer = IO::Socket::SSL->new('proxy.test:3128');
+
+   # send proxy request
+   print $outer "CONNECT real-target.test:443 HTTP/1.0\r\n\r\n";
+   ... # read and check response from proxy on $outer
+
+   # create an inner TLS connection to the server inside $outer
+   my $inner = IO::Socket::SSL->start_SSL($outer,
+      SSL_usebio => 1,
+      SSL_hostname => 'real-target.test', # SNI
+   );
+
+   # send request to server through proxy using $inner
+   print $inner "GET / HTTP/1.0\r\nHost: real-target.test\r\n\r\n";
+   ... # read response from server on $inner
 
 =back
 
@@ -1545,8 +1639,11 @@ by both peers.
 A naive implementation would thus wait until it receives the
 close notify message from the peer - which conflicts with the commonly expected
 semantic that a close will not block. The default behavior is thus to only send
-a close notify but not  wait for the close notify of the peer. If this is
-required C<SSL_fast_shutdown> need to be explicitly set to false.
+a close notify but not  wait for the close notify of the peer.
+If it should instead wait for a close notify from the peer than
+C<SSL_fast_shutdown> must be explicitly set to false:
+
+     $self->close(SSL_fast_shutdown => 0);
 
 There are also cases where a SSL shutdown should not be done at all. This is
 true for example when forking to let a child deal with the socket and closing
@@ -1554,7 +1651,9 @@ the socket in the parent process. A naive explicit C<close> or an implicit close
 when destroying the socket in the parent would send a close notify to the peer
 which would make the SSL socket in the client process unusable. In this case an
 explicit C<close> with C<SSL_no_shutdown> set to true should be done in the
-parent process.
+parent process:
+
+     $self->close(SSL_no_shutdown => 1);
 
 For more details and other arguments see C<stop_SSL> which gets called from
 C<close> to shutdown the SSL state of the socket.
@@ -1593,14 +1692,13 @@ most a single SSL frame. This means, that no more than 16.384 bytes, which is
 the maximum size of an SSL frame, will be written at once.
 
 For non-blocking sockets SSL specific behavior applies.
-Pease read the specific section in this documentation.
+Please read the specific section in this documentation.
 
 =item B<peek( BUF, LEN, [ OFFSET ])>
 
 This function has exactly the same syntax as B<sysread>, and performs nearly the
 same task but will not advance the read position so that successive calls to
-peek() with the same arguments will return the same results.  This function
-requires OpenSSL 0.9.6a or later to work.
+peek() with the same arguments will return the same results.
 
 =item B<pending()>
 
@@ -1654,8 +1752,9 @@ Net::SSLeay.
 =item B<peer_certificate($field;[$refresh])>
 
 If a peer certificate exists, this function can retrieve values from it.
-If no field is given the internal representation of certificate from Net::SSLeay
-is returned.
+If no field is given the internal representation of certificate (X509 handle)
+from Net::SSLeay is returned, with reference owned internally (i.e. should not
+be freed).
 If refresh is true it will not used a cached version, but check again in case
 the certificate of the connection has changed due to renegotiation.
 
@@ -1690,15 +1789,20 @@ See Net::SSLeay::X509_get_subjectAltNames.
 
 This is similar to C<peer_certificate> but will return the sites own
 certificate. The same arguments for B<$field> can be used.
-If no B<$field> is given the certificate handle from the underlying OpenSSL will
-be returned. This handle will only be valid as long as the SSL connection exists
-and if used afterwards it might result in strange crashes of the application.
+If no B<$field> is given the X509 handle from the underlying OpenSSL will
+be returned. This handle is owned internally and will only be valid as long as
+the SSL connection exists. If used afterwards it might result in strange crashes
+of the application.
 
 =item B<peer_certificates>
 
-This returns all the certificates send by the peer, e.g. first the peers own
-certificate and then the rest of the chain. You might use B<CERT_asHash> from
-L<IO::Socket::SSL::Utils> to inspect each of the certificates.
+This returns all the certificates send by the peer as X509 handles, e.g. first
+the peers own certificate and then the rest of the chain. You might use
+B<CERT_asHash> from L<IO::Socket::SSL::Utils> to inspect each of the
+certificates.
+
+Like with B<sock_certificate> and B<peer_certificates> the handles are owned
+internally and will only be valid as long as the SSL connection exists.
 
 This function depends on a version of Net::SSLeay >= 1.58 .
 
@@ -1756,7 +1860,7 @@ exist.
 =item gist (rfc5971)
 
 Simple wildcards are allowed in subjectAltNames and common name, but common name
-will only be checked if their are no DNS names in subjectAltNames.
+will only be checked if there are no DNS names in subjectAltNames.
 
 =item default
 
@@ -1850,6 +1954,14 @@ This returns false if the socket could not be opened, 1 if the socket could be
 opened and the SSL handshake was successful done and -1 if the underlying
 IO::Handle is open, but the SSL handshake failed.
 
+=item B<is_SSL()>
+
+This returns undefined if there is no SSL object associated with the socket.
+It will return C<rw> if the state of the SSL object has SSL active for both
+directions, C<r> if there was a locally initiated SSL shutdown (close notify),
+C<w> if a remote SSL shutdown was received and C<> (empty string but defined) if
+a bidirectional SSL shutdown was done.
+
 =item B<< IO::Socket::SSL->start_SSL($socket, ... ) >>
 
 This will convert a glob reference or a socket that you provide to an
@@ -1861,12 +1973,16 @@ inherits from IO::Socket::SSL and you want the $socket to be blessed into your
 own class instead, use MyClass->start_SSL($socket) to achieve the desired
 effect.
 
-Note that if start_SSL() fails in SSL negotiation, $socket will remain blessed
-in its original class.	 For non-blocking sockets you better just upgrade the
-socket to IO::Socket::SSL and call accept_SSL or connect_SSL and the upgraded
-object. To just upgrade the socket set B<SSL_startHandshake> explicitly to 0. If
-you call start_SSL w/o this parameter it will revert to blocking behavior for
-accept_SSL and connect_SSL.
+Note that if start_SSL() fails (wrong arguments, error in SSL negotiation ...),
+it will try to bless the socket back to its original class. This will fail
+if the given socket was not blessed, since there is no builtin "unbless".
+Therefore better use IO::Socket (or other IO::Handle) objects as C<$socket>
+instead of creating unblessed sockets with C<socket> or similar.
+
+For non-blocking sockets you better just upgrade the socket to IO::Socket::SSL
+and call accept_SSL or connect_SSL and the upgraded object. To just upgrade the
+socket set B<SSL_startHandshake> explicitly to 0. If you call start_SSL w/o this
+parameter it will revert to blocking behavior for accept_SSL and connect_SSL.
 
 If given the parameter "Timeout" it will stop if after the timeout no SSL
 connection was established. This parameter is only used for blocking sockets, if
@@ -1888,8 +2004,30 @@ with the same arguments once the socket is ready.
 For calling from C<stop_SSL> C<SSL_fast_shutdown> default to false, e.g. it
 waits for the close_notify of the peer. This is necessary in case you want to
 downgrade the socket and continue to use it as a plain socket.
+If C<SSL_fast_shutdown> is set to true only the write direction will be
+shutdown for SSL and there can still be SSL data read. Read direction will
+then be closed either automatically when receiving a shutdown from the peer
+during read or by explicitly calling C<stop_SSL> with C<SSL_fast_shutdown> false.
 
-After stop_SSL the socket can again be used to exchange plain data.
+After a complete stop_SSL the socket can again be used to exchange plain data.
+Even if the SSL shutdown is only done for writing (C<SSL_fast_shutdown>) plain
+data can be immediately written.
+
+If the SSL shutdown was initiated by the peer it will lead to an implicit SSL
+shutdown for reading and sysread will return with 0 in this case. It will also
+SSL shutdown the local side. After this the socket is ready to receive plain
+data from the peer and locally send data will also be transmitted in plain. To
+prevent accidental sending/receiving plain data after such implicit SSL
+shutdown, the read and write functions will return undef with $ERRNO set to
+EPERM until an explicit stop_SSL was done. If the peer directly closes the TCP
+connection ater the SSL shutdown without sending plain data this will still be
+detected though.
+
+If this default behavior is not wanted a callback can be setup using
+C<SSL_on_peer_shutdown> which gets C<$self> as first argument. The result from
+the callback will then be returned instead of 0 and no local SSL shutdown will
+be automatically initiated. Similar no explicit stop_SSL is needed before
+receiving plain data since the callback is considered explicit action enough.
 
 =item B<connect_SSL>, B<accept_SSL>
 
@@ -1900,6 +2038,34 @@ They will return undef until the handshake succeeded or an error got thrown.
 As long as the function returns undef and $! is set to EWOULDBLOCK one could
 retry the call after the socket got readable (SSL_WANT_READ) or writeable
 (SSL_WANT_WRITE).
+
+=item B<set_msg_callback>
+
+This will add/remove a user defined callback for each message, internally using
+openssl SSL_set_msg_callback API. To make sure that the callback is active
+before the handshake starts, combine it with C<< SSL_startHandshake => 0 >> in
+the preceding setup of the SSL object. To remove callback explicitly call it
+with an empty callback function.
+
+Example:
+
+    $sock = IO::Socket::SSL->new( .... , SSL_startHandshake => 0);
+    # set callback
+    $sock->set_msg_callback(\&cb, $cbarg1, $cbarg2);
+    $sock->connect_SSL();
+
+    sub cb {
+	my ($sock,
+	    # see SSL_set_msg_callback for the following args
+	    $direction, $ssl_ver, $content_type, $buf, $len, $ssl,
+	    $cbarg1, $cbarg2)
+	    = @_;
+	...
+	if (no_longer_need_cb) {
+	    # disable callback
+	    $sock->set_msg_callback(undef);
+	}
+    }
 
 =item B<ocsp_resolver>
 
@@ -2114,6 +2280,20 @@ the print/printf/syswrite and read/sysread families instead.
 
 =back
 
+=head1 ACCESS TO INTERNALS
+
+C<IO::Socket::SSL> uses internally C<Net::SSLeay> which provides a lower level
+API to OpenSSL and provides functions which work directly with OpenSSL SSL and
+CTX handles. Sometimes it might be necessary to get direct access to these
+handles from C<IO::Socket::SSL> in order to apply functionality available only
+with C<Net::SSLeay>.
+
+For this C<_get_ssl_object> can be used on the C<IO::Socket::SSL> object to get
+access to the OpenSSL SSL handle and C<_get_ctx_object> can be used on
+C<IO::Socket::SSL> and C<IO::Socket::SSL_Context> objects to access the OpenSSL
+CTX handle. Use very carefully since OpenSSL memory/reference management must be
+done manually with C<Net::SSLeay>.
+
 =head1 DEPRECATIONS
 
 The following functions are deprecated and are only retained for compatibility:
@@ -2166,10 +2346,6 @@ thread will not work.
 
 IO::Socket::SSL does not work together with Storable::fd_retrieve/fd_store.
 See BUGS file for more information and how to work around the problem.
-
-Non-blocking and timeouts (which are based on non-blocking) are not
-supported on Win32, because the underlying IO::Socket::INET does not support
-non-blocking on this platform.
 
 If you have a server and it looks like you have a memory leak you might
 check the size of your session cache. Default for Net::SSLeay seems to be

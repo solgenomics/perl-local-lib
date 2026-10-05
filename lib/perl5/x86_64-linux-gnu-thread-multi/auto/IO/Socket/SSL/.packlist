@@ -3,3 +3,7 @@
 /home/production/cxgn/local-lib/lib/perl5/IO/Socket/SSL/Intercept.pm
 /home/production/cxgn/local-lib/lib/perl5/IO/Socket/SSL/PublicSuffix.pm
 /home/production/cxgn/local-lib/lib/perl5/IO/Socket/SSL/Utils.pm
+/home/production/cxgn/local-lib/man/man3/IO::Socket::SSL.3pm
+/home/production/cxgn/local-lib/man/man3/IO::Socket::SSL::Intercept.3pm
+/home/production/cxgn/local-lib/man/man3/IO::Socket::SSL::PublicSuffix.3pm
+/home/production/cxgn/local-lib/man/man3/IO::Socket::SSL::Utils.3pm
