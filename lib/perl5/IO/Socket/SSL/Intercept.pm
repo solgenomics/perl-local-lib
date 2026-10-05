@@ -73,13 +73,19 @@ sub new {
 sub DESTROY {
     # call various ssl _free routines
     my $self = shift or return;
-    for ( \$self->{cacert}, 
-	map { \$_->{cert} } ref($self->{cache}) ne 'CODE' ? values %{$self->{cache}} :()) {
+    my @cert = (\$self->{cacert});
+    my @key = (\$self->{cakey}, \$self->{certkey});
+    if (ref($self->{cache}) ne 'HASH') {
+	my @v = values %{$self->{cache}};
+	push @cert, map { \$_->{cert} } @v;
+	push @key, map { \$_->{key} } @v if !$self->{certkey};
+    }
+    for (@cert) {
 	$$_ or next;
 	CERT_free($$_);
 	$$_ = undef;
     }
-    for ( \$self->{cakey}, \$self->{pubkey} ) {
+    for (@key) {
 	$$_ or next;
 	KEY_free($$_);
 	$$_ = undef;
@@ -105,7 +111,8 @@ sub clone_cert {
 	    } @$ext;
 	}
 	my ($clone,$key) = CERT_create(
-	    %$hash,
+	    %$hash, 
+	    ignore_invalid_args => 1,
 	    issuer_cert => $self->{cacert},
 	    issuer_key => $self->{cakey},
 	    key => $self->{certkey},
@@ -147,9 +154,9 @@ sub serialize {
     if ( ref($self->{cache}) eq 'HASH' ) {
 	while ( my($k,$v) = each %{ $self->{cache}} ) {
 	    $data .= pack("N/aN/aN/aN", $k,
-		PEM_cert2string($k->{cert}),
-		$k->{key} ? PEM_key2string($k->{key}) : '',
-		$k->{atime});
+		PEM_cert2string($v->{cert}),
+		$v->{key} ? PEM_key2string($v->{key}) : '',
+		$v->{atime});
 	}
     }
     return $data;
@@ -311,7 +318,7 @@ It can be either given by an EVP_PKEY object from L<Net::SSLeay>s internal
 representation, or using a file in PEM format.
 The key should not have a passphrase.
 
-=item pubkey EVP_PKEY | pubkey_file filename
+=item cert_key EVP_PKEY | cert_key_file filename
 
 This optional argument specifies the public key used for the cloned certificate.
 It can be either given by an EVP_PKEY object from L<Net::SSLeay>s internal
@@ -345,7 +352,7 @@ This call should return either an existing (cached) C<< (cert,key) >> or
 call C<sub> without arguments to create a new C<< (cert,key) >>, store it
 and return it.
 If called with C<< $cache->('type') >> the function should just return 1 to
-signal that it supports the current type of cache. If it reutrns nothing
+signal that it supports the current type of cache. If it returns nothing
 instead the older cache interface is assumed for compatibility reasons.
 
 =back
@@ -361,7 +368,7 @@ created certificates).
 =item B<< $string = $mitm->serialize >>
 
 This creates a serialized version of the object (e.g. a string) which can then
-be used to persistantly store created certificates over restarts of the
+be used to persistently store created certificates over restarts of the
 application. The cache will only be serialized if it is a HASH.
 To work together with L<Storable> the C<STORABLE_freeze> function is defined to
 call C<serialize>.

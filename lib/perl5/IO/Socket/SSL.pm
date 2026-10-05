@@ -13,23 +13,20 @@
 
 package IO::Socket::SSL;
 
-our $VERSION = '2.074';
+our $VERSION = '2.099';
 
 use IO::Socket;
 use Net::SSLeay 1.46;
 use IO::Socket::SSL::PublicSuffix;
 use Exporter ();
-use Errno qw( EWOULDBLOCK EAGAIN ETIMEDOUT EINTR EPIPE );
+use Errno qw( EWOULDBLOCK EAGAIN ETIMEDOUT EINTR EPIPE EPERM );
 use Carp;
+use Scalar::Util qw(weaken blessed dualvar);
+use Symbol;
 use strict;
 
 my $use_threads;
 BEGIN {
-    die "no support for weaken - please install Scalar::Util" if ! do {
-	local $SIG{__DIE__};
-	eval { require Scalar::Util; Scalar::Util->import("weaken"); 1 }
-	    || eval { require WeakRef; WeakRef->import("weaken"); 1 }
-    };
     require Config;
     $use_threads = $Config::Config{usethreads};
 }
@@ -77,6 +74,8 @@ my $check_partial_chain; # use X509_V_FLAG_PARTIAL_CHAIN if available
 my $auto_retry;      # (clear|set)_mode SSL_MODE_AUTO_RETRY with OpenSSL 1.1.1+ with non-blocking
 my $ssl_mode_release_buffers = 0; # SSL_MODE_RELEASE_BUFFERS if available
 my $can_ciphersuites; # support for SSL_CTX_set_ciphersuites (TLS 1.3)
+my $can_client_psk; # work as PSK client
+my $can_server_psk; # work as PSK server
 
 my $openssl_version;
 my $netssleay_version;
@@ -115,6 +114,8 @@ BEGIN {
 	&& $netssleay_version >= 1.80;
     $can_pha = defined &Net::SSLeay::CTX_set_post_handshake_auth;
     $can_ciphersuites = defined &Net::SSLeay::CTX_set_ciphersuites;
+    $can_client_psk = defined &Net::SSLeay::CTX_set_psk_client_callback;
+    $can_server_psk = defined &Net::SSLeay::CTX_set_psk_server_callback;
 
     if (defined &Net::SSLeay::SESSION_up_ref) {
 	$session_upref = 1;
@@ -193,11 +194,11 @@ if ( defined &Net::SSLeay::CTX_set_min_proto_version
     };
 }
 
-
 # global defaults
 my %DEFAULT_SSL_ARGS = (
     SSL_check_crl => 0,
-    SSL_version => 'SSLv23:!SSLv3:!SSLv2', # consider both SSL3.0 and SSL2.0 as broken
+    # TLS 1.1 and lower are deprecated with RFC 8996
+    SSL_version => 'SSLv23:!TLSv1:!TLSv1_1:!SSLv3:!SSLv2',
     SSL_verify_callback => undef,
     SSL_verifycn_scheme => undef,  # fallback cn verification
     SSL_verifycn_publicsuffix => undef,  # fallback default list verification
@@ -283,13 +284,6 @@ my $GLOBAL_SSL_SERVER_ARGS = {};
 # hack which is used to filter bad settings from used modules
 my $FILTER_SSL_ARGS = undef;
 
-# non-XS Versions of Scalar::Util will fail
-BEGIN{
-    die "You need the XS Version of Scalar::Util for dualvar() support" if !do {
-	local $SIG{__DIE__}; local $SIG{__WARN__}; # be silent
-	eval { use Scalar::Util 'dualvar'; dualvar(0,''); 1 };
-    };
-}
 
 # get constants for SSL_OP_NO_* now, instead calling the related functions
 # every time we setup a connection
@@ -320,7 +314,7 @@ my $DEFAULT_X509_STORE_flags = 0;
 }
 
 our $DEBUG;
-use vars qw(@ISA $SSL_ERROR @EXPORT);
+our $SSL_ERROR;
 
 {
     # These constants will be used in $! at return from SSL_connect,
@@ -333,7 +327,7 @@ use vars qw(@ISA $SSL_ERROR @EXPORT);
     my $y = $Net_SSLeay_ERROR_WANT_WRITE;
     use constant SSL_WANT_WRITE => dualvar( \$y, 'SSL wants a write first' );
 
-    @EXPORT = qw(
+    our @EXPORT = qw(
 	SSL_WANT_READ SSL_WANT_WRITE SSL_VERIFY_NONE SSL_VERIFY_PEER
 	SSL_VERIFY_FAIL_IF_NO_PEER_CERT SSL_VERIFY_CLIENT_ONCE
 	SSL_OCSP_NO_STAPLE SSL_OCSP_TRY_STAPLE SSL_OCSP_MUST_STAPLE
@@ -346,6 +340,7 @@ my @caller_force_inet4; # in case inet4 gets forced we store here who forced it
 
 my $IOCLASS;
 my $family_key; # 'Domain'||'Family'
+our @ISA;
 BEGIN {
     # declare @ISA depending of the installed socket class
 
@@ -587,21 +582,38 @@ my %SSL_OBJECT;
 my %CREATED_IN_THIS_THREAD;
 sub CLONE { %CREATED_IN_THIS_THREAD = (); }
 
-# all keys used internally, these should be cleaned up at end
-my @all_my_keys = qw(
-    _SSL_arguments
-    _SSL_certificate
-    _SSL_ctx
+# all keys specific for the current state of the socket
+# these should be removed on close
+my %all_my_conn_keys = map { $_ => 1 } qw(
     _SSL_fileno
-    _SSL_in_DESTROY
-    _SSL_ioclass_downgrade
-    _SSL_ioclass_upgraded
-    _SSL_last_err
     _SSL_object
-    _SSL_ocsp_verify
     _SSL_opened
     _SSL_opening
-    _SSL_servername
+    _SSL_read_closed
+    _SSL_write_closed
+    _SSL_rawfd
+    _SSL_bio_socket
+    _SSL_bio_sub
+);
+
+my %all_my_conn_and_cert_keys = (
+    %all_my_conn_keys,
+    _SSL_certificate => 1,
+);
+
+# all keys used internally, these should be cleaned up at end
+# but not already on close
+my %all_my_keys = (
+    %all_my_conn_and_cert_keys,
+    map { $_ => 1 } qw(
+	_SSL_arguments
+	_SSL_ctx
+	_SSL_ioclass_upgraded
+	_SSL_last_err
+	_SSL_ocsp_verify
+	_SSL_servername
+	_SSL_msg_callback
+    )
 );
 
 
@@ -633,6 +645,8 @@ sub configure {
     # set Blocking only explicitly if it was set
     $arg_hash->{Blocking} = 1 if defined ($blocking);
 
+    # close newly created socket on SSL fail
+    $arg_hash->{SSL_keepSocketOnError} = 0 if !exists $arg_hash->{SSL_keepSocketOnError};
     $self->configure_SSL($arg_hash) || return;
 
     if ($arg_hash->{$family_key} ||= $arg_hash->{Domain} || $arg_hash->{Family}) {
@@ -662,7 +676,11 @@ sub configure_SSL {
     # add user defined defaults, maybe after filtering
     $FILTER_SSL_ARGS->($is_server,$arg_hash) if $FILTER_SSL_ARGS;
 
-    delete @{*$self}{@all_my_keys};
+    # keep socket open on error by default when just upgrading
+    $arg_hash->{SSL_keepSocketOnError} = 1 if !exists $arg_hash->{SSL_keepSocketOnError};
+
+    # cleanup in case there was something left, but leave BIO socket
+    _cleanup_ssl($self, undef, '_SSL_bio_socket');
     ${*$self}{_SSL_opened} = $is_server;
     ${*$self}{_SSL_arguments} = $arg_hash;
 
@@ -730,9 +748,8 @@ sub connect_SSL {
 	${*$self}{'_SSL_opening'} = 1;
 	my $arg_hash = ${*$self}{'_SSL_arguments'};
 
-	my $fileno = ${*$self}{'_SSL_fileno'} = fileno($self);
-	return $self->_internal_error("Socket has no fileno",9)
-	    if ! defined $fileno;
+	my $biosock = ${*$self}{_SSL_bio_socket};
+	die "cannot upgrade socket in-place with SSL BIO" if $args->{SSL_usebio} && !$biosock;
 
 	$ctx = ${*$self}{'_SSL_ctx'};  # Reference to real context
 	$ssl = ${*$self}{'_SSL_object'} = Net::SSLeay::new($ctx->{context})
@@ -750,8 +767,18 @@ sub connect_SSL {
 	    }
 	}
 
-	Net::SSLeay::set_fd($ssl, $fileno)
-	    || return $self->error("SSL filehandle association failed");
+	if ($biosock) {
+	    ${*$self}{_SSL_fileno} = fileno($biosock);
+	    _bio_attach($self);
+	} else {
+	    my $fileno = ${*$self}{_SSL_fileno} = fileno($self);
+	    return $self->_internal_error("Socket has no fileno",9)
+		if ! defined $fileno;
+	    Net::SSLeay::set_fd($ssl, $fileno)
+		|| return $self->error("SSL filehandle association failed");
+	}
+
+	set_msg_callback($self) if $DEBUG>=2 || ${*$self}{_SSL_msg_callback};
 
 	if ( $can_client_sni ) {
 	    my $host;
@@ -787,7 +814,13 @@ sub connect_SSL {
 		|| $arg_hash->{SSL_hostname};
 	    if ( ! defined $host ) {
 		if ( $host = $arg_hash->{PeerAddr} || $arg_hash->{PeerHost} ) {
-		    $host =~s{:[a-zA-Z0-9_\-]+$}{};
+		    $host =~s{^
+			(
+			    (?:[^:\[]+) |    # ipv4|host
+			    (?:\[(?:.*)\])   # [ipv6|host]
+			)
+			(:[\w\-]+)?          # optional :port
+		    $}{$1}x;                 # ipv4|host|ipv6
 		}
 	    }
 	    ${$ctx->{verify_name_ref}} = $host;
@@ -814,6 +847,7 @@ sub connect_SSL {
     }
 
     $ssl ||= ${*$self}{'_SSL_object'};
+    my $dobio = ${*$self}{'_SSL_bio_sub'};
 
     $SSL_ERROR = $! = undef;
     my $timeout = exists $args->{Timeout}
@@ -831,6 +865,7 @@ sub connect_SSL {
 
     my $start = defined($timeout) && time();
     {
+      retry_after_dobio:
 	$SSL_ERROR = undef;
 	$CURRENT_SSL_OBJECT = $self;
 	$DEBUG>=3 && DEBUG("call Net::SSLeay::connect" );
@@ -838,7 +873,14 @@ sub connect_SSL {
 	$CURRENT_SSL_OBJECT = undef;
 	$DEBUG>=3 && DEBUG("done Net::SSLeay::connect -> $rv" );
 	if ( $rv < 0 ) {
-	    if ( my $err = $self->_skip_rw_error( $ssl,$rv )) {
+	    my $err = $self->_skip_rw_error( $ssl,$rv );
+	    if (!$err && $dobio) {
+		goto retry_after_dobio if $dobio->($self,
+		    $SSL_ERROR == SSL_WANT_READ,
+		    $SSL_ERROR == SSL_WANT_WRITE,
+		    \$err);
+	    }
+	    if ($err) {
 		$self->error("SSL connect attempt failed");
 		delete ${*$self}{'_SSL_opening'};
 		${*$self}{'_SSL_opened'} = -1;
@@ -902,6 +944,9 @@ sub connect_SSL {
 
     $ctx ||= ${*$self}{'_SSL_ctx'};
 
+    # _SSL_ocsp_verify is set only when a staple was received and fully
+    # verified. A missing staple and a broken/unverifiable staple both leave it
+    # undef, so MUST_STAPLE treats both identically as "no usable staple".
     if ( my $ocsp_result = ${*$self}{_SSL_ocsp_verify} ) {
 	# got result from OCSP stapling
 	if ( $ocsp_result->[0] > 0 ) {
@@ -974,23 +1019,34 @@ sub accept {
 	$socket = $self->SUPER::accept($class) || return;
 	$DEBUG>=2 && DEBUG('accept created normal socket '.$socket );
 
-	# don't continue with accept_SSL if SSL_startHandshake is set to 0
-	my $sh = ${*$self}{_SSL_arguments}{SSL_startHandshake};
-	if (defined $sh && ! $sh) {
-	    ${*$socket}{_SSL_ctx} = ${*$self}{_SSL_ctx};
-	    ${*$socket}{_SSL_arguments} = {
-		%{${*$self}{_SSL_arguments}},
-		SSL_server => 0,
-	    };
-	    $DEBUG>=2 && DEBUG('will not start SSL handshake yet');
-	    return wantarray ? ($socket, getpeername($socket) ) : $socket
-	}
+        # don't continue with accept_SSL if SSL_startHandshake is set to 0
+        my $sh = ${*$self}{_SSL_arguments}{SSL_startHandshake};
+        if (defined $sh && ! $sh) {
+	    $socket = _setup_accepted_socket($self,$socket);
+            $DEBUG>=2 && DEBUG('will not start SSL handshake yet');
+            return wantarray ? ($socket, getpeername($socket) ) : $socket
+        }
     }
 
     $self->accept_SSL($socket) || return;
     $DEBUG>=2 && DEBUG('accept_SSL ok' );
 
     return wantarray ? ($socket, getpeername($socket) ) : $socket;
+}
+
+sub _setup_accepted_socket {
+    my ($self,$socket) = @_;
+    my $args = ${*$self}{_SSL_arguments};
+    my $biosock = ${*$self}{_SSL_bio_socket};
+    my $usebio = $biosock || $args->{SSL_usebio};
+    if ($socket != $self) {
+	$socket = _bio_wrap_socket(blessed($self), $biosock = $socket) if $usebio;
+	${*$socket}{_SSL_ctx} = ${*$self}{_SSL_ctx};
+	${*$socket}{_SSL_arguments} = { %$args, SSL_server => 0 };
+    } elsif ($usebio && !$biosock) {
+	die "cannot upgrade socket in-place with SSL BIO"
+    }
+    return $socket;
 }
 
 sub accept_SSL {
@@ -1001,18 +1057,8 @@ sub accept_SSL {
     my $ssl;
     if ( ! ${*$self}{'_SSL_opening'} ) {
 	$DEBUG>=2 && DEBUG('starting sslifying' );
+	$socket = _setup_accepted_socket($self,$socket) if $socket != $self;
 	${*$self}{'_SSL_opening'} = $socket;
-	if ($socket != $self) {
-	    ${*$socket}{_SSL_ctx} = ${*$self}{_SSL_ctx};
-	    ${*$socket}{_SSL_arguments} = {
-		%{${*$self}{_SSL_arguments}},
-		SSL_server => 0
-	    };
-	}
-
-	my $fileno = ${*$socket}{'_SSL_fileno'} = fileno($socket);
-	return $socket->_internal_error("Socket has no fileno",9)
-	    if ! defined $fileno;
 
 	$ssl = ${*$socket}{_SSL_object} =
 	    Net::SSLeay::new(${*$socket}{_SSL_ctx}{context})
@@ -1021,11 +1067,21 @@ sub accept_SSL {
 	$SSL_OBJECT{$ssl} = [$socket,1];
 	weaken($SSL_OBJECT{$ssl}[0]);
 
-	Net::SSLeay::set_fd($ssl, $fileno)
-	    || return $socket->error("SSL filehandle association failed");
+	my $fileno = ${*$socket}{_SSL_fileno} = fileno($socket);
+	if (${*$socket}{_SSL_bio_socket}) {
+	    _bio_attach($socket);
+	} else {
+	    return $socket->_internal_error("Socket has no fileno",9)
+		if ! defined $fileno;
+	    Net::SSLeay::set_fd($ssl, $fileno)
+		|| return $socket->error("SSL filehandle association failed");
+	}
+
+	set_msg_callback($self) if $DEBUG>=2 || ${*$self}{_SSL_msg_callback};
     }
 
-    $ssl ||= ${*$socket}{'_SSL_object'};
+    $ssl ||= ${*$socket}{_SSL_object};
+    my $dobio = ${*$socket}{_SSL_bio_sub};
 
     $SSL_ERROR = $! = undef;
     #$DEBUG>=2 && DEBUG('calling ssleay::accept' );
@@ -1044,13 +1100,21 @@ sub accept_SSL {
 
     my $start = defined($timeout) && time();
     {
+      retry_after_dobio:
 	$SSL_ERROR = undef;
 	$CURRENT_SSL_OBJECT = $self;
 	my $rv = Net::SSLeay::accept($ssl);
 	$CURRENT_SSL_OBJECT = undef;
 	$DEBUG>=3 && DEBUG( "Net::SSLeay::accept -> $rv" );
 	if ( $rv < 0 ) {
-	    if ( my $err = $socket->_skip_rw_error( $ssl,$rv )) {
+	    my $err = $socket->_skip_rw_error( $ssl,$rv );
+	    if (!$err && $dobio) {
+		goto retry_after_dobio if $dobio->($self,
+		    $SSL_ERROR == SSL_WANT_READ,
+		    $SSL_ERROR == SSL_WANT_WRITE,
+		    \$err);
+	    }
+	    if ($err) {
 		$socket->error("SSL accept attempt failed");
 		delete ${*$self}{'_SSL_opening'};
 		${*$socket}{'_SSL_opened'} = -1;
@@ -1110,89 +1174,309 @@ sub accept_SSL {
     return $socket;
 }
 
+sub _bio_wrap_socket {
+    my ($class,$upper_socket) = @_;
+    my $self = bless gensym(),$class;
+    ${*$self}{_SSL_bio_socket} = $upper_socket;
+    return $self;
+}
 
-####### I/O subroutines ########################
+sub _bio_attach {
+    my $self = shift;
+    my $ssl = ${*$self}{_SSL_object} or die "no SSL object for BIO attach";
 
-if ($auto_retry) {
-    *blocking = sub {
-	my $self = shift;
-	{ @_ && $auto_retry->(${*$self}{_SSL_object} || last, @_); }
-	return $self->SUPER::blocking(@_);
+    my $rbio = Net::SSLeay::BIO_new(Net::SSLeay::BIO_s_mem());
+    my $wbio = Net::SSLeay::BIO_new(Net::SSLeay::BIO_s_mem());
+    Net::SSLeay::set_bio($ssl, $rbio, $wbio);
+    my $wbuf = ''; # BIO_read(wbio) but not syswrite yet
+    my $rbuf = ''; # collect full TLS record before BIO_write($rbio)
+
+    ${*$self}{_SSL_bio_sub} = sub {
+	my ($self,$read,$write,$r_err) = @_;
+	my $biosock = ${*$self}{_SSL_bio_socket} or die "no BIO socket";
+	my $rv = 0;
+
+	while ($wbuf ne '' or Net::SSLeay::BIO_pending($wbio)>0) {
+	    if ($wbuf eq '') {
+		my $buf = Net::SSLeay::BIO_read($wbio);
+		if (!defined $buf or $buf eq '') {
+		    last; # nothing new to write
+		} else {
+		    $wbuf .= $buf;
+		}
+	    }
+	    my $n = syswrite($biosock,$wbuf);
+	    if ($n) {
+		substr($wbuf,0,$n,'');
+		$rv += $write || 0;
+		$write = 0; # count only once but continue to flush wbuf
+	    } elsif (!defined $n) {
+		goto socket_error if !$!{EAGAIN} && !$!{EWOULDBLOCK};
+		last;
+	    } else {
+		# should not return 0 with non-empty wbuf, treat as error
+		goto socket_error;
+	    }
+	}
+
+	# $read should only be requested on SSL_WANT_READ. It will only feed a
+	# single and complete TLS record into the BIO since it is unknown if
+	# more data are actually wanted by the TLS layer
+
+	{
+	    $read or last;
+
+	    # read (remaining part of) single TLS record
+	    my $need = 5-length($rbuf); # TLS record start
+	    my $n;
+	    while ($need>0) {
+		$n = sysread($biosock,$rbuf,$need,length($rbuf));
+		goto full_read_failed if !$n;
+		$need -= $n;
+	    }
+	    $need = unpack("x3n", $rbuf); # extract length of record
+	    while ($need>0) {
+		$n = sysread($biosock,$rbuf,$need,length($rbuf));
+		goto full_read_failed if !$n;
+		$need -= $n;
+	    }
+	    # full TLS record read -> send to BIO
+	    Net::SSLeay::BIO_write($rbio,$rbuf)>0 or die "BIO_write failed";
+	    $rbuf = '';
+	    $rv += $read;
+	    last;
+
+	  full_read_failed:  # $n == 0|undef
+	    if (defined $n) { # $n==0
+		# signal EOF
+		# XXX not available in Net::SSLeay, propagate via r_err
+		# Net::SSLeay::BIO_set_mem_eof_return($rbio, 0);
+		$$r_err = $Net_SSLeay_ERROR_SSL;
+	    } elsif ($!{EAGAIN} || $!{EWOULDBLOCK}) {
+		# retry later
+	    } else {
+		goto socket_error; # fatal
+	    }
+	}
+	return $rv;
+
+      socket_error:
+	# unavailable - Net::SSLeay::BIO_set_mem_eof_return($rbio, 0);
+	$$r_err = $Net_SSLeay_ERROR_SSL;
+	$DEBUG>=2 && DEBUG("biosock error: $!" );
+	return;
     };
 }
 
-sub _generic_read {
-    my ($self, $read_func, undef, $length, $offset) = @_;
-    my $ssl =  ${*$self}{_SSL_object} || return;
-    my $buffer=\$_[2];
 
-    $SSL_ERROR = $! = undef;
-    my ($data,$rwerr) = $read_func->($ssl, $length);
-    while ( ! defined($data)) {
-	if ( my $err = $self->_skip_rw_error( $ssl, defined($rwerr) ? $rwerr:-1 )) {
-	    # OpenSSL 1.1.0c+ : EOF can now result in SSL_read returning -1 and SSL_ERROR_SYSCALL
-	    # OpenSSL 3.0 : EOF can now result in SSL_read returning -1 and SSL_ERROR_SSL
-	    if (not $! and $err == $Net_SSLeay_ERROR_SSL || $err == $Net_SSLeay_ERROR_SYSCALL) {
-		# treat as EOF
-		$data = '';
-		last;
-	    }
-	    $self->error("SSL read error");
+# support user defined message callback but also internal debugging
+sub _msg_callback {
+    ##  my ($direction, $ssl_ver, $content_type, $buf, $len, $ssl, $userp) = @_;
+    IO::Socket::SSL::Trace::ossl_trace(@_) if $DEBUG>=2;
+    my $self = ($SSL_OBJECT{$_[5]} || return)->[0] || return;
+    if (my $cb = ${*$self}{_SSL_msg_callback}) {
+	my ($sub,@arg) = @$cb;
+	$sub->($self, @_[0..5], @arg);
+    }
+}
+
+my $ssleay_set_msg_callback = defined &Net::SSLeay::set_msg_callback
+    && \&Net::SSLeay::set_msg_callback;
+
+sub set_msg_callback {
+    my $self = shift;
+    if (@_) {
+	if ($_[0]) {
+	    # enable user defined callback: ($cb,@arg)
+	    die "no support for msg callback with this version of Net::SSLeay/OpenSSL"
+		if !$ssleay_set_msg_callback;
+	    ${*$self}{_SSL_msg_callback} = [@_];
+	} else {
+	    # disable user defined callback
+	    delete ${*$self}{_SSL_msg_callback};
 	}
+    }
+
+    # activate user set callback and/or internal for debugging
+    if ($ssleay_set_msg_callback and my $ssl = ${*$self}{_SSL_object}) {
+	$ssleay_set_msg_callback->($ssl,
+	    ($DEBUG>=2 || ${*$self}{_SSL_msg_callback})? \&_msg_callback : undef)
+    }
+}
+
+
+####### I/O subroutines ########################
+
+sub blocking {
+    my $self = shift;
+    { @_ && $auto_retry && $auto_retry->(${*$self}{_SSL_object} || last, @_); }
+    if (my $biosock = ${*$self}{_SSL_bio_socket}) {
+	return $biosock->blocking(@_);
+    } else {
+	return $self->SUPER::blocking(@_);
+    }
+}
+
+sub _generic_read {
+    my ($self, $ssl, $justpeek, $read_func, undef, $length, $offset) = @_;
+    my $buffer = \$_[4];
+
+    my ($data,$dobio);
+    while (1) {
+	$SSL_ERROR = $! = undef;
+	($data, my $err) = $read_func->($ssl, $length);
+	last if defined $data; # read success
+
+	$err = $self->_skip_rw_error($ssl, defined($err) ? $err:-1);
+	if (!$err) {
+	    $dobio = ${*$self}{_SSL_bio_sub} || 0 if !defined $dobio;
+	    if ($dobio) {
+		# retry after successfully reading from underlying fd on BIO
+		redo if $dobio->($self, 1, $SSL_ERROR == SSL_WANT_WRITE, \$err);
+	    }
+	    return if !$err; # see $SSL_ERROR/$! for details of rw-error
+	}
+
+	# OpenSSL 1.1.0c+ : EOF can now result in SSL_read returning -1 and SSL_ERROR_SYSCALL
+	# OpenSSL 3.0 : EOF can now result in SSL_read returning -1 and SSL_ERROR_SSL
+	if (not $! and $err == $Net_SSLeay_ERROR_SSL || $err == $Net_SSLeay_ERROR_SYSCALL) {
+	    # treat as EOF
+	    $data = '';
+	    # clear the "unexpected eof while reading" error (OpenSSL 3.0+)
+	    Net::SSLeay::ERR_clear_error();
+	    last;
+	}
+
+	$self->error("SSL read error"); # generic not recoverable error
 	return;
     }
 
-    $length = length($data);
     $$buffer = '' if !defined $$buffer;
     $offset ||= 0;
     if ($offset>length($$buffer)) {
 	$$buffer.="\0" x ($offset-length($$buffer));  #mimic behavior of read
     }
 
+    $length = length($data);
+    if (!$length && !$justpeek) {
+	my $status = Net::SSLeay::get_shutdown($ssl);
+	if ($status & SSL_RECEIVED_SHUTDOWN) {
+	    if ($status & SSL_SENT_SHUTDOWN) {
+		# fully done, close SSL object - no need to call shutdown again
+		$self->stop_SSL(SSL_no_shutdown => 1);
+	    } elsif (my $cb = ${*$self}{_SSL_arguments}{SSL_on_peer_shutdown}) {
+		# Mark as half done but leave further handling to callback
+		${*$self}{_SSL_read_closed} = 1;
+		return $cb->($self);
+	    } else {
+		# Half done, send also close notify
+		# Don't destruct _SSL_object since code might still rely on
+		# having access to it. Leave this to explicit stop_SSL or close.
+		local $SIG{PIPE} = 'IGNORE';
+		$SSL_ERROR = $! = undef;
+		Net::SSLeay::shutdown($ssl);
+		$dobio->($self,0,0,\(my $err)) if $dobio; # flush write
+		# Use "-1" to mark as automatic closed and thus require action
+		# before reading/sending plain data
+		${*$self}{_SSL_read_closed} = ${*$self}{_SSL_write_closed} = -1;
+	    }
+	}
+	return 0;
+    }
+
     substr($$buffer, $offset, length($$buffer), $data);
     return $length;
 }
 
+# This is only needed in case of a one sided SSL shutdown, i.e. if the fd is
+# still tied and has SSL_object, but needs to read or write in plain in one
+# direction. Here it will fdopen the SSL fd, thus loosing the class and tie.
+sub _rawfd {
+    my $self = shift;
+    return ${*$self}{_SSL_bio_socket}
+	|| (${*$self}{_SSL_rawfd} ||= do { open(my $fh,'+<&=',$self); $fh });
+}
+
+# peek to check if a non-SSL read would lead to more data
+# This is used with incomplete SSL_shutdown initiated by peer, so that one can
+# return EOF but not plain data until stop_SSL is locally called too
+sub _handle_read_closed_unack {
+    my ($self,$rc) = @_;
+    # reading eof is fine, reading plain data is not
+    my ($buf,$rv);
+    my $biosock = ${*$self}{_SSL_bio_socket};
+    if ($biosock and UNIVERSAL::can($biosock,'peek')) {
+	# upper IO::Socket::SSL?
+	$rv = $biosock->peek($buf,1);
+    } else {
+	$rv = recv($biosock || $self, $buf,1,MSG_PEEK);
+    }
+    return if ! defined $rv;
+    return 0 if $buf eq '';
+    $! = EPERM;
+    return;
+}
+
 sub read {
     my $self = shift;
-    ${*$self}{_SSL_object} && return _generic_read($self,
-	$self->blocking ? \&Net::SSLeay::ssl_read_all : \&Net::SSLeay::read,
-	@_
-    );
+    my $rc = ${*$self}{_SSL_read_closed} || 0;
+    if (my $ssl = !$rc && ${*$self}{_SSL_object}) {
+	return _generic_read($self, $ssl, 0,
+	    $self->blocking ? \&Net::SSLeay::ssl_read_all : \&Net::SSLeay::read,
+	    @_);
+    }
+
+    return _handle_read_closed_unack($self) if $rc<0;
 
     # fall back to plain read if we are not required to use SSL yet
-    return $self->SUPER::read(@_);
+    if (my $biosock = ${*$self}{_SSL_bio_socket}) {
+	return $biosock->read(@_);
+    } else {
+	return ($rc ? _rawfd($self) : $self)->SUPER::read(@_);
+    }
 }
 
 # contrary to the behavior of read sysread can read partial data
 sub sysread {
     my $self = shift;
-    ${*$self}{_SSL_object} && return _generic_read( $self,
-	\&Net::SSLeay::read, @_ );
+    my $rc = ${*$self}{_SSL_read_closed} || 0;
+    if (my $ssl = !$rc && ${*$self}{_SSL_object}) {
+	return _generic_read( $self, $ssl, 0, \&Net::SSLeay::read, @_ );
+    }
+
+    return _handle_read_closed_unack($self) if $rc<0;
 
     # fall back to plain sysread if we are not required to use SSL yet
-    my $rv = $self->SUPER::sysread(@_);
-    return $rv;
+    if (my $biosock = ${*$self}{_SSL_bio_socket}) {
+	return $biosock->sysread(@_);
+    } else {
+	return ($rc ? _rawfd($self) : $self)->SUPER::sysread(@_);
+    }
 }
 
 sub peek {
     my $self = shift;
-    ${*$self}{_SSL_object} && return _generic_read( $self,
-	\&Net::SSLeay::peek, @_ );
+    my $rc = ${*$self}{_SSL_read_closed} || 0;
+    if (my $ssl = !$rc && ${*$self}{_SSL_object}) {
+	return _generic_read( $self, $ssl, 1, \&Net::SSLeay::peek, @_ );
+    }
+
+    return _handle_read_closed_unack($self) if $rc<0;
 
     # fall back to plain peek if we are not required to use SSL yet
-    # emulate peek with recv(...,MS_PEEK) - peek(buf,len,offset)
-    return if ! defined recv($self,my $buf,$_[1],MSG_PEEK);
+    my $fd = ${*$self}{_SSL_bio_socket};
+    return $fd->peek(@_) if $fd && UNIVERSAL::can($fd,'peek');
+    $fd ||= $self;
+    # emulate peek with recv(...,MSG_PEEK) - peek(buf,len,offset)
+    return if ! defined recv($fd,my $buf,$_[1],MSG_PEEK);
     $_[0] = $_[2] ? substr($_[0],0,$_[2]).$buf : $buf;
     return length($buf);
 }
 
 
 sub _generic_write {
-    my ($self, $write_all, undef, $length, $offset) = @_;
-
-    my $ssl =  ${*$self}{_SSL_object} || return;
-    my $buffer = \$_[2];
+    my ($self, $ssl, $write_all, undef, $length, $offset) = @_;
+    my $buffer = \$_[3];
 
     my $buf_len = length($$buffer);
     $length ||= $buf_len;
@@ -1201,8 +1485,9 @@ sub _generic_write {
 	if $offset>$buf_len;
     return 0 if ($offset == $buf_len);
 
-    $SSL_ERROR = $! = undef;
     my $written;
+  retry_after_dobio:
+    $SSL_ERROR = $! = undef;
     if ( $write_all ) {
 	my $data = $length < $buf_len-$offset ? substr($$buffer, $offset, $length) : $$buffer;
 	($written, my $errs) = Net::SSLeay::ssl_write_all($ssl, $data);
@@ -1211,7 +1496,7 @@ sub _generic_write {
     } else {
 	$written = Net::SSLeay::write_partial( $ssl,$offset,$length,$$buffer );
 	# write_partial does SSL_write which returns -1 on error
-	$written = undef if $written < 0;
+	$written = undef if $written <= 0;
     }
     if ( !defined($written) ) {
 	if ( my $err = $self->_skip_rw_error( $ssl,-1 )) {
@@ -1219,9 +1504,21 @@ sub _generic_write {
 	    $! ||= EPIPE if $err == $Net_SSLeay_ERROR_SYSCALL;
 	    $self->error("SSL write error ($err)");
 	}
-	return;
     }
 
+    if (my $dobio = ${*$self}{_SSL_bio_sub}) {
+	# write new data to underlying BIO, retry a both written is undef and
+	# now BIO was successfully read or written (dobio returns 2)
+	my $wr = !defined($written) && ($SSL_ERROR == SSL_WANT_READ) && 2;
+	my $err;
+	goto retry_after_dobio if
+	    $dobio->($self,$wr,!defined($written) ? 2:1,\$err) >=2;
+	if ($err) {
+	    # error handling similar to above with !defined $written
+	    $! ||= EPIPE;
+	    $self->error("SSL write error ($err)");
+	}
+    }
     return $written;
 }
 
@@ -1229,21 +1526,46 @@ sub _generic_write {
 # if all data are written
 sub write {
     my $self = shift;
-    ${*$self}{_SSL_object} && return _generic_write( $self,
-	scalar($self->blocking),@_ );
+    my $wc = ${*$self}{_SSL_write_closed} || 0;
+    if (my $ssl = !$wc && ${*$self}{_SSL_object}) {
+	return _generic_write( $self, $ssl, scalar($self->blocking),@_ );
+    }
+
+    # don't write plain after automtic SSL shutdown
+    if ($wc<0) {
+	$! = EPERM;
+	return;
+    }
 
     # fall back to plain write if we are not required to use SSL yet
-    return $self->SUPER::write(@_);
+    if (my $biosock = ${*$self}{_SSL_bio_socket}) {
+	return $biosock->write(@_);
+    } else {
+	return ($wc ? _rawfd($self) : $self)->SUPER::write(@_);
+    }
 }
 
 # contrary to write syswrite() returns already if only
 # a part of the data is written
 sub syswrite {
     my $self = shift;
-    ${*$self}{_SSL_object} && return _generic_write($self,0,@_);
+    my $wc = ${*$self}{_SSL_write_closed} || 0;
+    if (my $ssl = !$wc && ${*$self}{_SSL_object}) {
+	return _generic_write($self,$ssl,0,@_);
+    }
+
+    # don't write plain after automtic SSL shutdown
+    if ($wc<0) {
+	$! = EPERM;
+	return;
+    }
 
     # fall back to plain syswrite if we are not required to use SSL yet
-    return $self->SUPER::syswrite(@_);
+    if (my $biosock = ${*$self}{_SSL_bio_socket}) {
+	return $biosock->syswrite(@_);
+    } else {
+	return ($wc ? _rawfd($self) : $self)->SUPER::syswrite(@_);
+    }
 }
 
 sub print {
@@ -1322,7 +1644,9 @@ sub readline {
     while (1) {
 
 	# wait until we have more data or eof
-	my $poke = Net::SSLeay::peek($ssl,1);
+
+	# use $self->peek to also fill ssl pending from BIO
+	$self->peek(my $poke,1);
 	if ( ! defined $poke or $poke eq '' ) {
 	    next if $! == EINTR;
 	}
@@ -1330,6 +1654,8 @@ sub readline {
 	my $skip = 0;
 
 	# peek into available data w/o reading
+	# use directly Net::SSLeay::{pending,peek} to only get what is inside
+	# current SSL object
 	my $pending = Net::SSLeay::pending($ssl);
 	if ( $pending and
 	    ( my $pb = Net::SSLeay::peek( $ssl,$pending )) ne '' ) {
@@ -1384,22 +1710,25 @@ sub close {
     );
 
     if ( ! $close_args->{_SSL_in_DESTROY} ) {
-	untie( *$self );
-	undef ${*$self}{_SSL_fileno};
-	return $self->SUPER::close;
+	my $biosock = ${*$self}{_SSL_bio_socket};
+	_cleanup_ssl($self,\%all_my_conn_keys);
+	return ($biosock||$self)->SUPER::close;
     }
     return 1;
 }
 
 sub is_SSL {
     my $self = pop;
-    return ${*$self}{_SSL_object} && 1
+    return if !${*$self}{_SSL_object};
+    return (${*$self}{_SSL_read_closed} ? '':'r') .
+	(${*$self}{_SSL_write_closed} ? '':'w');
 }
 
 sub stop_SSL {
     my $self = shift || return _invalid_object();
     my $stop_args = (ref($_[0]) eq 'HASH') ? $_[0] : {@_};
     $stop_args->{SSL_no_shutdown} = 1 if ! ${*$self}{_SSL_opened};
+    my $dobio = ${*$self}{_SSL_bio_sub};
 
     if (my $ssl = ${*$self}{'_SSL_object'}) {
 	if (delete ${*$self}{'_SSL_opening'}) {
@@ -1432,11 +1761,26 @@ sub stop_SSL {
 
 		# initiate or complete shutdown
 		local $SIG{PIPE} = 'IGNORE';
+
+	      retry_after_dobio:
+		$SSL_ERROR = $! = undef;
 		my $rv = Net::SSLeay::shutdown($ssl);
+		$dobio->($self,0,0,\(my $err)) if $dobio; # flush writes
 		if ( $rv < 0 ) {
 		    # non-blocking socket?
 		    if ( ! $timeout ) {
-			$self->_skip_rw_error( $ssl,$rv );
+			my $err = $self->_skip_rw_error( $ssl,$rv );
+			if (!$err && $dobio) {
+			    goto retry_after_dobio if $dobio->($self,
+				$SSL_ERROR == SSL_WANT_READ,
+				$SSL_ERROR == SSL_WANT_WRITE,
+				\$err);
+			}
+			if ($err) {
+			    # if $! is not set with ERROR_SYSCALL then report as EPIPE
+			    $! ||= EPIPE if $err == $Net_SSLeay_ERROR_SYSCALL;
+			    $self->error("SSL shutdown error ($err)");
+			}
 			# need to try again
 			return;
 		    }
@@ -1449,9 +1793,14 @@ sub stop_SSL {
 		    my $err = Net::SSLeay::get_error($ssl,$rv);
 		    if ( $err == $Net_SSLeay_ERROR_WANT_READ) {
 			select($vec,undef,undef,$wait)
-		    } elsif ( $err == $Net_SSLeay_ERROR_WANT_READ) {
+		    } elsif ( $err == $Net_SSLeay_ERROR_WANT_WRITE) {
 			select(undef,$vec,undef,$wait)
 		    } else {
+			if ($err) {
+			    # if $! is not set with ERROR_SYSCALL then report as EPIPE
+			    $! ||= EPIPE if $err == $Net_SSLeay_ERROR_SYSCALL;
+			    $self->error("SSL shutdown error ($err)");
+			}
 			last;
 		    }
 		}
@@ -1460,30 +1809,27 @@ sub stop_SSL {
 		$status |= SSL_RECEIVED_SHUTDOWN if $rv>0;
 	    }
 	    $self->blocking(1) if $timeout;
+	    if (not($status & SSL_RECEIVED_SHUTDOWN)) {
+		# not yet fully closed, mark only write as closed
+		${*$self}{_SSL_write_closed} = 1;
+		return $self;
+	    }
 	}
-
-	# destroy allocated objects for SSL and untie
-	# do not destroy CTX unless explicitly specified
-	Net::SSLeay::free($ssl);
-	if (my $cert = delete ${*$self}{'_SSL_certificate'}) {
-	    Net::SSLeay::X509_free($cert);
-	}
-	delete ${*$self}{_SSL_object};
-	${*$self}{'_SSL_opened'} = 0;
-	delete $SSL_OBJECT{$ssl};
-	delete $CREATED_IN_THIS_THREAD{$ssl};
-	untie(*$self);
     }
 
-    if ($stop_args->{'SSL_ctx_free'}) {
-	my $ctx = delete ${*$self}{'_SSL_ctx'};
-	$ctx && $ctx->DESTROY();
+    my $original_socket = ${*$self}{_SSL_bio_socket} || $self;
+
+    # FIXME this is fragile
+    # FIXME There might still be data inside dobio.wbuf
+    _cleanup_ssl($self, \%all_my_conn_and_cert_keys, '_SSL_bio_socket');
+    if ($stop_args->{'SSL_ctx_free'} and
+	my $ctx = delete ${*$self}{_SSL_ctx}) {
+	$ctx->DESTROY();
     }
 
 
     if ( ! $stop_args->{_SSL_in_DESTROY} ) {
-
-	my $downgrade = $stop_args->{_SSL_ioclass_downgrade};
+	my $downgrade = $dobio ? 0: $stop_args->{_SSL_ioclass_downgrade};
 	if ( $downgrade || ! defined $downgrade ) {
 	    # rebless to original class from start_SSL
 	    if ( my $orig_class = delete ${*$self}{'_SSL_ioclass_upgraded'} ) {
@@ -1491,30 +1837,75 @@ sub stop_SSL {
 		# FIXME: if original class was tied too we need to restore the tie
 		# remove all _SSL related from *$self
 		my @sslkeys = grep { m{^_?SSL_} } keys %{*$self};
-		delete @{*$self}{@sslkeys} if @sslkeys;
+		_cleanup_ssl($self,{map { $_ => 1 } @sslkeys}) if @sslkeys;
 	    }
 	}
     }
-    return 1;
+    return $original_socket;
 }
+
+sub _cleanup_ssl {
+    my ($self,$keys,@except) = @_;
+    $keys ||= \%all_my_keys;
+    if (@except) {
+	$keys = { %$keys };
+	delete @{$keys}{@except};
+    }
+
+    # if we have BIO socket we don't untie on removing _SSL_object but need to
+    # untie later if we remove _SSL_bio_socket
+    my $untie;
+    if (${*$self}{_SSL_bio_socket}) {
+	$keys = { %$keys } if ! @except;
+	if (!$keys->{_SSL_bio_socket}) {
+	    # if existing _SSL_bio_socket should not be deleted, then don't
+	    # delete _SSL_fileno either
+	    delete $keys->{_SSL_fileno};
+	} else {
+	    $untie = 1; # deferred untie on BIO delete
+	    $keys->{_SSL_fileno} = 1; # deferred remove of _SSL_fileno
+	}
+    };
+    if ($keys->{_SSL_object} and my $ssl = ${*$self}{_SSL_object}) {
+	Net::SSLeay::free($ssl);
+	delete $SSL_OBJECT{$ssl};
+	delete $CREATED_IN_THIS_THREAD{$ssl};
+	$untie = 1;
+    }
+
+    if ($keys->{_SSL_certificate} and
+	my $cert = delete ${*$self}{_SSL_certificate}) {
+	Net::SSLeay::X509_free($cert);
+    }
+
+    # don't cleanup _SSL_ctx here, will only be explicitly done when stop_SSL is
+    # used with SSL_ctx_free
+
+    delete @{*$self}{keys %$keys};
+    ${*$self}{_SSL_opened} = 0 if exists ${*$self}{_SSL_opened};
+
+    # keep tied in case of kept BIO since we cannot IO on the untied filehandle
+    untie(*$self) if $untie && !${*$self}{_SSL_bio_socket};
+}
+
 
 
 sub fileno {
     my $self = shift;
     my $fn = ${*$self}{'_SSL_fileno'};
-	return defined($fn) ? $fn : $self->SUPER::fileno();
+    return defined($fn) ? $fn : $self->SUPER::fileno();
 }
 
 
 ####### IO::Socket::SSL specific functions #######
-# _get_ssl_object is for internal use ONLY!
+# get access to SSL handle for use with Net::SSLeay. Use with caution!
 sub _get_ssl_object {
     my $self = shift;
     return ${*$self}{'_SSL_object'} ||
 	IO::Socket::SSL->_internal_error("Undefined SSL object",9);
 }
 
-# _get_ctx_object is for internal use ONLY!
+# get access to SSL handle for use with Net::SSLeay. Use with caution!
 sub _get_ctx_object {
     my $self = shift;
     my $ctx_object = ${*$self}{_SSL_ctx};
@@ -1528,28 +1919,38 @@ sub _invalid_object {
 
 
 sub pending {
-    my $ssl = shift()->_get_ssl_object || return;
-    return Net::SSLeay::pending($ssl);
+    my $self = shift;
+    my $rv = Net::SSLeay::pending(${*$self}{_SSL_object} || return);
+    if (my $outer = ${*$self}{_SSL_bio_socket}) {
+	$rv += $outer->pending if UNIVERSAL::can($outer,'pending');
+    }
+    return $rv;
 }
 
 sub start_SSL {
     my ($class,$socket) = (shift,shift);
-    return $class->_internal_error("Not a socket",9) if ! ref($socket);
+    return $class->_internal_error("Not a socket",9) if ! ref($socket); # glob or object
     my $arg_hash = @_ == 1 ? $_[0] : {@_};
     my %to = exists $arg_hash->{Timeout} ? ( Timeout => delete $arg_hash->{Timeout} ) :();
-    my $original_class = ref($socket);
-    if ( ! $original_class ) {
-	$socket = ($original_class = $ISA[0])->new_from_fd($socket,'<+')
-	    or return $class->_internal_error(
-	    "creating $original_class from file handle failed",9);
-    }
+    my $original_class = blessed($socket);
+
+    my $usebio = $arg_hash->{SSL_usebio};
     my $original_fileno = (UNIVERSAL::can($socket, "fileno"))
 	? $socket->fileno : CORE::fileno($socket);
     return $class->_internal_error("Socket has no fileno",9)
-	if ! defined $original_fileno;
+	if !$usebio && ! defined $original_fileno;
 
-    bless $socket, $class;
-    $socket->configure_SSL($arg_hash) or bless($socket, $original_class) && return;
+    if ($usebio) {
+	$socket = _bio_wrap_socket($class,$socket);
+	$original_class = undef;
+    } else {
+	bless $socket, $class;
+    }
+
+    if (!$socket->configure_SSL($arg_hash)) {
+	bless($socket, $original_class) if $original_class;
+	return;
+    }
 
     ${*$socket}{'_SSL_fileno'} = $original_fileno;
     ${*$socket}{'_SSL_ioclass_upgraded'} = $original_class
@@ -1563,23 +1964,18 @@ sub start_SSL {
 	my $result = ${*$socket}{'_SSL_arguments'}{SSL_server}
 	    ? $socket->accept_SSL(%to)
 	    : $socket->connect_SSL(%to);
+	$socket->blocking(0) if ! $was_blocking;
 	if ( $result ) {
-	    $socket->blocking(0) if ! $was_blocking;
 	    return $socket;
 	} else {
 	    # upgrade to SSL failed, downgrade socket to original class
-	    if ( $original_class ) {
-		bless($socket,$original_class);
-		$socket->blocking(0) if ! $was_blocking
-		    && $socket->can('blocking');
-	    }
+	    bless($socket,$original_class) if $original_class;
 	    return;
 	}
     } else {
 	$DEBUG>=2 && DEBUG( "don't start handshake: $socket" );
 	return $socket; # just return upgraded socket
     }
-
 }
 
 sub new_from_fd {
@@ -1907,7 +2303,7 @@ sub get_servername {
 
 sub get_fingerprint_bin {
     my ($self,$algo,$cert,$key_only) = @_;
-    $cert ||= $self->peer_certificate;
+    $cert ||= $self->peer_certificate or return;
     return $key_only
 	? Net::SSLeay::X509_pubkey_digest($cert, $algo2digest->($algo || 'sha256'))
 	: Net::SSLeay::X509_digest($cert, $algo2digest->($algo || 'sha256'));
@@ -1976,6 +2372,7 @@ sub fatal_ssl_error {
     my $self = shift;
     my $error_trap = ${*$self}{'_SSL_arguments'}->{'SSL_error_trap'};
     $@ = $self->errstr;
+    my $saved_error = $SSL_ERROR;
     if (defined $error_trap and ref($error_trap) eq 'CODE') {
 	$error_trap->($self, $self->errstr()."\n".$self->get_ssleay_error());
     } elsif ( ${*$self}{'_SSL_ioclass_upgraded'}
@@ -1987,6 +2384,7 @@ sub fatal_ssl_error {
 	# kill socket
 	$self->close
     }
+    $SSL_ERROR = $saved_error if $saved_error;
     return;
 }
 
@@ -2061,6 +2459,14 @@ sub can_ocsp       { return $can_ocsp }
 sub can_ticket_keycb { return $can_tckt_keycb }
 sub can_pha        { return $can_pha }
 sub can_partial_chain { return $check_partial_chain && 1 }
+sub can_ciphersuites { return $can_ciphersuites }
+sub can_psk {
+    my %can;
+    $can{client}=1 if $can_client_psk;
+    $can{server}=1 if $can_server_psk;
+    return %can ? \%can : undef
+}
+sub can_nested_ssl { return { SSL_usebio => 1 } }
 
 sub DESTROY {
     my $self = shift or return;
@@ -2070,7 +2476,7 @@ sub DESTROY {
 	    $self->close(_SSL_in_DESTROY => 1, SSL_no_shutdown => 1);
 	}
     }
-    delete @{*$self}{@all_my_keys};
+    delete @{*$self}{keys %all_my_keys};
 }
 
 
@@ -2246,6 +2652,10 @@ my $DEFAULT_SSL_OP = &Net::SSLeay::OP_ALL
     | &Net::SSLeay::OP_SINGLE_DH_USE
     | ($can_ecdh ? &Net::SSLeay::OP_SINGLE_ECDH_USE : 0);
 
+
+# get access to SSL handle for use with Net::SSLeay. Use with caution!
+sub _get_ctx_object { shift->{context} }
+
 # Note that the final object will actually be a reference to the scalar
 # (C-style pointer) returned by Net::SSLeay::CTX_*_new() so that
 # it can be blessed.
@@ -2266,13 +2676,13 @@ sub new {
     %$arg_hash = ( %defaults, %$arg_hash ) if %defaults;
 
     if (my $ctx = $arg_hash->{'SSL_reuse_ctx'}) {
-	if ($ctx->isa('IO::Socket::SSL::SSL_Context') and
-	    $ctx->{context}) {
-	    # valid context
-	} elsif ( $ctx = ${*$ctx}{_SSL_ctx} ) {
+	if ($ctx->isa('IO::Socket::SSL::SSL_Context')) {
+	    return $ctx if $ctx->{context};
+	} elsif (eval { $ctx = ${*$ctx}{_SSL_ctx} }) {
 	    # reuse context from existing SSL object
+	    return $ctx;
 	}
-	return $ctx
+	die "invalid context to reuse: $ctx";
     }
 
     # common problem forgetting to set SSL_use_cert
@@ -2356,9 +2766,6 @@ sub new {
 		warn "Cannot determine hostname of peer for verification. ".
 		    "Disabling default hostname verification for now. ".
 		    "Please specify hostname with SSL_verifycn_name and better set SSL_verifycn_scheme too.\n";
-		return $ok;
-	    } elsif ( ! $vcn_scheme && $host =~m{^[\d.]+$|:} ) {
-		# don't try to verify IP by default
 		return $ok;
 	    }
 
@@ -2517,6 +2924,44 @@ sub new {
 	    Net::SSLeay::CTX_set_tlsext_ticket_getkey_cb($ctx,$cb,$arg);
 	}
 
+	if ($arg_hash->{SSL_psk}) {
+	    my $psk = $arg_hash->{SSL_psk};
+	    if ($arg_hash->{SSL_server}) {
+		$can_server_psk or return IO::Socket::SSL->_internal_error(
+		    "no support for server side PSK");
+		Net::SSLeay::CTX_set_psk_server_callback($ctx, sub {
+		    my ($ssl,$identity,$psklen) = @_;
+		    if (ref($psk) eq 'HASH') {
+			return $psk->{$identity} || $psk->{''} ||
+			    IO::Socket::SSL->_internal_error(
+			    "no PSK for given identity '$identity' and no default");
+		    } else {
+			return $psk;
+		    }
+		});
+	    } else {
+		$can_client_psk or return IO::Socket::SSL->_internal_error(
+		    "no support for client side PSK");
+		Net::SSLeay::CTX_set_psk_client_callback($ctx, sub {
+		    my $hint = shift;
+		    my ($i,$p);
+		    if (ref($psk) eq 'HASH') {
+			$hint = '' if ! defined $hint;
+			$p = $psk->{$hint} or return IO::Socket::SSL->_internal_error(
+			    "no PSK for given hint '$hint'");
+			$i = $hint;
+		    } elsif (ref($psk)) { # [identity,psk]
+			($i,$p) = @$psk;
+		    } else {
+			($i,$p) = ('io_socket_ssl', $psk)
+		    }
+		    # for some reason this expects the PSK in hex whereas the server
+		    # side function expects the PSK in binary
+		    return ($i, unpack("H*",$p));
+		});
+	    }
+	}
+
 	# Try to apply SSL_ca even if SSL_verify_mode is 0, so that they can be
 	# used to verify OCSP responses.
 	# If applying fails complain only if verify_mode != VERIFY_NONE.
@@ -2637,8 +3082,11 @@ sub new {
 		    # documented but given the age of this function we'll assume
 		    # that this will stay this way in the future.
 		    while (my $ca = pop @chain) {
-			Net::SSLeay::CTX_add_extra_chain_cert($ctx,$ca)
-			    or last PKCS12;
+			next if Net::SSLeay::CTX_add_extra_chain_cert($ctx,$ca);
+			# failed - free everything not added yet and exit loop
+			Net::SSLeay::X509_free($ca);
+			Net::SSLeay::X509_free($_) for @chain;
+			last PKCS12;
 		    }
 		    last if $key && ! Net::SSLeay::CTX_use_PrivateKey($ctx,$key);
 		    $havecert = 'PKCS12';
@@ -2774,6 +3222,7 @@ sub new {
     }
     my $verify_fingerprint = @accept_fp && do {
 	my $fail;
+	my $force = $arg_hash->{SSL_force_fingerprint};
 	sub {
 	    my ($ok,$cert,$depth) = @_;
 	    $fail = 1 if ! $ok;
@@ -2787,7 +3236,7 @@ sub new {
 		next if $fp ne $_->[2];
 		return 1;
 	    }
-	    return ! $fail;
+	    return $force ? 0 : ! $fail;
 	}
     };
     my $verify_callback = ( $verify_cb || @accept_fp ) && sub {
@@ -2847,7 +3296,13 @@ sub new {
 		return 1;
 	    }
 
-	    # default callback does verification
+	    # Default callback does verification.
+	    # _SSL_ocsp_verify is only written when a staple is received AND fully
+	    # verified (good status, valid signature, cert status retrieved).
+	    # Returning 1 here without writing _SSL_ocsp_verify means the staple
+	    # is treated the same as if no staple was provided: with
+	    # SSL_OCSP_TRY_STAPLE the connection continues; with
+	    # SSL_OCSP_MUST_STAPLE the post-handshake check will reject it.
 	    if ( ! $resp ) {
 		$DEBUG>=3 && DEBUG("did not get stapled OCSP response");
 		return 1;
@@ -2855,11 +3310,13 @@ sub new {
 	    $DEBUG>=3 && DEBUG("got stapled OCSP response");
 	    my $status = Net::SSLeay::OCSP_response_status($resp);
 	    if ($status != Net::SSLeay::OCSP_RESPONSE_STATUS_SUCCESSFUL()) {
+		# Treat a broken staple the same as no staple (see comment above).
 		$DEBUG>=3 && DEBUG("bad status of stapled OCSP response: ".
 		    Net::SSLeay::OCSP_response_status_str($status));
 		return 1;
 	    }
 	    if (!eval { Net::SSLeay::OCSP_response_verify($ssl,$resp) }) {
+		# Treat an unverifiable staple the same as no staple (see comment above).
 		$DEBUG>=3 && DEBUG("verify of stapled OCSP response failed");
 		return 1;
 	    }
@@ -3027,22 +3484,30 @@ sub DESTROY {
 
 package IO::Socket::SSL::Session_Cache;
 *DEBUG = *IO::Socket::SSL::DEBUG;
+
+# The cache is consisting of one list which contains all sessions and then
+# for each session key another list containing all sessions for same key.
+# The order of the list is by use, i.e. last used are put on top.
+# self.ghead points to the top of the global list while
+# self.shead{key} to the top of the session key specific list
+# All lists are cyclic
+# Each element in the list consists of an array with slots for ...
 use constant {
-    SESSION => 0,
-    KEY     => 1,
-    GNEXT   => 2,
-    GPREV   => 3,
-    SNEXT   => 4,
-    SPREV   => 5,
+    SESSION => 0,  # session object
+    KEY     => 1,  # key for object
+    GNEXT   => 2,  # next element in global list
+    GPREV   => 3,  # previous element in global list
+    SNEXT   => 4,  # next element for same session key
+    SPREV   => 5,  # previous element for same session key
 };
 
 sub new {
     my ($class, $size) = @_;
     $size>0 or return;
     return bless {
-	room  => $size,
-	ghead => undef,
-	shead => {},
+	room  => $size,  # free space regarding to max size
+	ghead => undef,  # top of global list
+	shead => {},     # top of key specific list
     }, $class;
 }
 
@@ -3065,6 +3530,9 @@ sub replace_session {
 
 sub del_session {
     my ($self, $key, $session) = @_;
+
+    # find all sessions which match given key and session and add to @del
+    # if key is given scan only sessions for the key, else all sessions
     my ($head,$inext) = $key
 	? ($self->{shead}{$key},SNEXT) : ($self->{ghead},GNEXT);
     my $v = $head;
@@ -3086,12 +3554,16 @@ sub del_session {
     for (@del) {
 	_del_entry($self,$_);
 	Net::SSLeay::SESSION_free($_->[SESSION]) if $_->[SESSION];
+	@$_ = ();
     }
     return ~~@del;
 }
 
 sub get_session {
     my ($self, $key, $session) = @_;
+
+    # find first session for key
+    # if $session is given further look for this specific one
     my $v = $self->{shead}{$key};
     if ($session) {
 	my $shead = $v;
@@ -3102,10 +3574,10 @@ sub get_session {
 	    $v = undef if $v == $shead; # session not found
 	}
     }
-    if ($v) {
-	_del_entry($self, $v); # remove
-	_add_entry($self, $v); # and add back on top
-    }
+
+    # mark as recent by moving to top so that it gets expired last
+    _touch_entry($self,$v) if $v;
+
     $DEBUG>=3 && DEBUG("get_session($key"
 	. ( $session ? ",$session) -> " : ") -> ")
 	. ($v? $v->[SESSION]:"none"));
@@ -3114,20 +3586,25 @@ sub get_session {
 
 sub _add_entry {
     my ($self,$v) = @_;
+
+    # If there are already sessions for same key add to this list else create
+    # a new sublist for this key. Similar for global list.
     for(
 	[ SNEXT, SPREV, \$self->{shead}{$v->[KEY]} ],
 	[ GNEXT, GPREV, \$self->{ghead} ],
     ) {
 	my ($inext,$iprev,$rhead) = @$_;
 	if ($$rhead) {
+	    # add on top of list
 	    $v->[$inext] = $$rhead;
 	    $v->[$iprev] = ${$rhead}->[$iprev];
 	    ${$rhead}->[$iprev][$inext] = $v;
 	    ${$rhead}->[$iprev] = $v;
+	    $$rhead = $v;
 	} else {
-	    $v->[$inext] = $v->[$iprev] = $v;
+	    # create a new list
+	    $$rhead = $v->[$inext] = $v->[$iprev] = $v;
 	}
-	$$rhead = $v;
     }
 
     $self->{room}--;
@@ -3137,11 +3614,14 @@ sub _add_entry {
 	my $l = $self->{ghead}[GPREV];
 	_del_entry($self,$l);
 	Net::SSLeay::SESSION_free($l->[SESSION]) if $l->[SESSION];
+	@$l = ();
     }
 }
 
 sub _del_entry {
     my ($self,$v) = @_;
+    # Remove element from both key specific list and global list
+    # If key specific list is then empty drop it from self.shead
     for(
 	[ SNEXT, SPREV, \$self->{shead}{$v->[KEY]} ],
 	[ GNEXT, GPREV, \$self->{ghead} ],
@@ -3165,6 +3645,32 @@ sub _del_entry {
 	}
     }
     $self->{room}++;
+}
+
+sub _touch_entry {
+    my ($self,$v) = @_;
+
+    # Put element on top of both global list and key specific list
+    # so that it gets expired last when making space in the cache
+    for(
+	[ SNEXT, SPREV, \$self->{shead}{$v->[KEY]} ],
+	[ GNEXT, GPREV, \$self->{ghead} ],
+    ) {
+	my ($inext,$iprev,$rhead) = @$_;
+	$$rhead or die "entry not in list ($inext)"; # should not happen
+	next if $$rhead == $v; # already at top
+
+	# remove from current position - like _del_entry
+	$v->[$inext][$iprev] = $v->[$iprev];
+	$v->[$iprev][$inext] = $v->[$inext];
+
+	# add on top - like _add_entry
+	$v->[$inext] = $$rhead;
+	$v->[$iprev] = ${$rhead}->[$iprev];
+	${$rhead}->[$iprev][$inext] = $v;
+	${$rhead}->[$iprev] = $v;
+	$$rhead = $v;
+    }
 }
 
 sub _dump {
@@ -3292,8 +3798,9 @@ sub new {
     }
     while ( my($uri,$v) = each %todo) {
 	my $ids = $v->{ids};
-	$v->{req} = Net::SSLeay::i2d_OCSP_REQUEST(
-	    Net::SSLeay::OCSP_ids2req(@$ids));
+	my $oreq = Net::SSLeay::OCSP_ids2req(@$ids);
+	$v->{req} = Net::SSLeay::i2d_OCSP_REQUEST($oreq);
+	Net::SSLeay::OCSP_REQUEST_free($oreq);
     }
     $hard_error ||= '' if ! %todo;
     return bless {
@@ -3319,19 +3826,19 @@ sub requests {
 
 # add new response
 sub add_response {
-    my ($self,$uri,$resp) = @_;
+    my ($self,$uri,$resp_d) = @_;
     my $todo = delete $self->{todo}{$uri};
     return $self->{error} if ! $todo || $self->{error};
 
-    my ($req,@soft_error,@hard_error);
+    my ($req,$resp,@soft_error,@hard_error);
 
     # do we have a response
-    if (!$resp) {
+    if (!$resp_d) {
 	@soft_error = "http request for OCSP failed; subject: ".
 	    join("; ",@{$todo->{subj}});
 
     # is it a valid OCSP_RESPONSE
-    } elsif ( ! eval { $resp = Net::SSLeay::d2i_OCSP_RESPONSE($resp) }) {
+    } elsif ( ! eval { $resp = Net::SSLeay::d2i_OCSP_RESPONSE($resp_d) }) {
 	@soft_error = "invalid response (no OCSP_RESPONSE); subject: ".
 	    join("; ",@{$todo->{subj}});
 	# hopefully short-time error
@@ -3409,8 +3916,9 @@ sub add_response {
 	    # try again
 	    $self->{todo}{$uri} = $todo;
 	    $todo->{ids} = \@miss;
-	    $todo->{req} = Net::SSLeay::i2d_OCSP_REQUEST(
-		Net::SSLeay::OCSP_ids2req(@miss));
+	    my $oreq = Net::SSLeay::OCSP_ids2req(@miss);
+	    $todo->{req} = Net::SSLeay::i2d_OCSP_REQUEST($oreq);
+	    Net::SSLeay::OCSP_REQUEST_free($oreq);
 	    $DEBUG>=2 && DEBUG("$uri just answered ".@found." of ".(@found+@miss)." requests");
 	}
     } else {
@@ -3423,6 +3931,7 @@ sub add_response {
 	}) for (@{$todo->{ids}});
     }
 
+    Net::SSLeay::OCSP_RESPONSE_free($resp) if $resp;
     Net::SSLeay::OCSP_REQUEST_free($req) if $req;
     if ($self->{failhard}) {
 	push @hard_error,@soft_error;
@@ -3463,6 +3972,189 @@ sub resolve_blocking {
     $DEBUG>=2 && DEBUG("no more open OCSP requests");
     return $self->{hard_error};
 }
+
+package IO::Socket::SSL::Trace;
+*DEBUG = *IO::Socket::SSL::DEBUG;
+
+# Exhaustive list of constants we need for tracing
+my %trace_constants = map { $_ => eval { Net::SSLeay->$_ } || -1 } qw(
+    SSL2_VERSION
+    SSL3_VERSION
+    TLS1_VERSION
+    TLS1_1_VERSION
+    TLS1_2_VERSION
+    TLS1_3_VERSION
+    DTLS1_VERSION
+    DTLS1_2_VERSION
+    DTLS1_BAD_VER
+    SSL3_RT_INNER_CONTENT_TYPE
+    SSL3_RT_CHANGE_CIPHER_SPEC
+    SSL3_RT_ALERT
+    SSL3_RT_HEADER
+    SSL3_RT_HANDSHAKE
+    SSL3_RT_APPLICATION_DATA
+    SSL2_MT_ERROR
+    SSL2_MT_CLIENT_HELLO
+    SSL2_MT_CLIENT_MASTER_KEY
+    SSL2_MT_CLIENT_FINISHED
+    SSL2_MT_SERVER_HELLO
+    SSL2_MT_SERVER_VERIFY
+    SSL2_MT_SERVER_FINISHED
+    SSL2_MT_REQUEST_CERTIFICATE
+    SSL2_MT_CLIENT_CERTIFICATE
+    SSL3_MT_HELLO_REQUEST
+    SSL3_MT_CLIENT_HELLO
+    SSL3_MT_SERVER_HELLO
+    SSL3_MT_NEWSESSION_TICKET
+    SSL3_MT_CERTIFICATE
+    SSL3_MT_SERVER_KEY_EXCHANGE
+    SSL3_MT_CLIENT_KEY_EXCHANGE
+    SSL3_MT_CERTIFICATE_REQUEST
+    SSL3_MT_SERVER_DONE
+    SSL3_MT_CERTIFICATE_VERIFY
+    SSL3_MT_FINISHED
+    SSL3_MT_CERTIFICATE_STATUS
+    SSL3_MT_ENCRYPTED_EXTENSIONS
+    SSL3_MT_SUPPLEMENTAL_DATA
+    SSL3_MT_END_OF_EARLY_DATA
+    SSL3_MT_KEY_UPDATE
+    SSL3_MT_NEXT_PROTO
+    SSL3_MT_MESSAGE_HASH
+);
+
+#
+# Major versions
+#
+$trace_constants{SSL2_VERSION_MAJOR} = $trace_constants{SSL2_VERSION} >> 8;
+$trace_constants{SSL3_VERSION_MAJOR} = $trace_constants{SSL3_VERSION} >> 8;
+
+#
+# Mapping between trace constant and version string
+#
+my %tc_ver2s;
+for (
+    [ SSL2_VERSION    => "SSLv2" ],
+    [ SSL2_VERSION    => "SSLv2" ],
+    [ SSL3_VERSION    => "SSLv3" ],
+    [ TLS1_VERSION    => "TLSv1.0" ],
+    [ TLS1_1_VERSION  => "TLSv1.1" ],
+    [ TLS1_2_VERSION  => "TLSv1.2" ],
+    [ TLS1_3_VERSION  => "TLSv1.3" ],
+    [ DTLS1_VERSION   => "DTLSv1.0" ],
+    [ DTLS1_2_VERSION => "DTLSv1.2" ],
+    [ DTLS1_BAD_VER   => "DTLSv1.0 (bad)" ]
+) {
+    next if $trace_constants{$_->[0]} == -1;
+    $tc_ver2s{$trace_constants{$_->[0]}} = $_->[1];
+}
+
+my %tc_type2s;
+for (
+    [ SSL3_RT_HEADER             => "TLS header" ],
+    [ SSL3_RT_CHANGE_CIPHER_SPEC => "TLS change cipher" ],
+    [ SSL3_RT_ALERT              => "TLS alert" ],
+    [ SSL3_RT_HANDSHAKE          => "TLS handshake" ],
+    [ SSL3_RT_APPLICATION_DATA   => "TLS app data" ]
+) {
+    next if $trace_constants{$_->[0]} == -1;
+    $tc_type2s{$trace_constants{$_->[0]}} = $_->[1];
+}
+
+my %tc_msgtype2s;
+for(
+    [ SSL2_MT_ERROR               => "Error" ],
+    [ SSL2_MT_CLIENT_HELLO        => "Client hello" ],
+    [ SSL2_MT_CLIENT_MASTER_KEY   => "Client key" ],
+    [ SSL2_MT_CLIENT_FINISHED     => "Client finished" ],
+    [ SSL2_MT_SERVER_HELLO        => "Server hello" ],
+    [ SSL2_MT_SERVER_VERIFY       => "Server verify" ],
+    [ SSL2_MT_SERVER_FINISHED     => "Server finished" ],
+    [ SSL2_MT_REQUEST_CERTIFICATE => "Request CERT" ],
+    [ SSL2_MT_REQUEST_CERTIFICATE => "Client CERT" ]
+) {
+    next if $trace_constants{$_->[0]} == -1;
+    $tc_msgtype2s{$trace_constants{SSL2_VERSION_MAJOR}, $trace_constants{$_->[0]}} = $_->[1];
+}
+for(
+    [ SSL3_MT_HELLO_REQUEST        => "Hello request" ],
+    [ SSL3_MT_CLIENT_HELLO         => "Client hello" ],
+    [ SSL3_MT_SERVER_HELLO         => "Server hello" ],
+    [ SSL3_MT_NEWSESSION_TICKET    => "Newsession Ticket" ],
+    [ SSL3_MT_CERTIFICATE          => "Certificate" ],
+    [ SSL3_MT_SERVER_KEY_EXCHANGE  => "Server key exchange" ],
+    [ SSL3_MT_CLIENT_KEY_EXCHANGE  => "Client key exchange" ],
+    [ SSL3_MT_CERTIFICATE_REQUEST  => "Request CERT" ],
+    [ SSL3_MT_SERVER_DONE          => "Server finished" ],
+    [ SSL3_MT_CERTIFICATE_VERIFY   => "CERT verify" ],
+    [ SSL3_MT_FINISHED             => "Finished" ],
+    [ SSL3_MT_CERTIFICATE_STATUS   => "Certificate Status" ],
+    [ SSL3_MT_ENCRYPTED_EXTENSIONS => "Encrypted Extensions" ],
+    [ SSL3_MT_SUPPLEMENTAL_DATA    => "Supplemental data" ],
+    [ SSL3_MT_END_OF_EARLY_DATA    => "End of early data" ],
+    [ SSL3_MT_KEY_UPDATE           => "Key update" ],
+    [ SSL3_MT_NEXT_PROTO           => "Next protocol" ],
+    [ SSL3_MT_MESSAGE_HASH         => "Message hash" ]
+) {
+    next if $trace_constants{$_->[0]} == -1;
+    $tc_msgtype2s{$trace_constants{SSL3_VERSION_MAJOR}, $trace_constants{$_->[0]}} = $_->[1];
+}
+
+#
+# Translation of curl ossl_trace
+#
+
+sub ossl_trace {
+    $DEBUG>=2 or return;
+    my ($direction, $ssl_ver, $content_type, $buf, $len, $ssl) = @_;
+
+    # Restore original $! value on return
+    local $!;
+
+    my $verstr = $tc_ver2s{$ssl_ver} || "(version=$ssl_ver)";
+
+    # Log progress for interesting records only (like Handshake or Alert), skip
+    # all raw record headers (content_type == SSL3_RT_HEADER or ssl_ver == 0).
+    # For TLS 1.3, skip notification of the decrypted inner Content-Type.
+
+    if ($ssl_ver
+	&& ($content_type != $trace_constants{SSL3_RT_HEADER})
+	&& ($content_type != $trace_constants{SSL3_RT_INNER_CONTENT_TYPE})
+    ) {
+
+        # the info given when the version is zero is not that useful for us
+        $ssl_ver >>= 8;  # check the upper 8 bits only below */
+
+        # SSLv2 doesn't seem to have TLS record-type headers, so OpenSSL
+        # always pass-up content-type as 0. But the interesting message-type
+        # is at 'buf[0]'.
+
+	my $tls_rt_name = ($ssl_ver == $trace_constants{SSL3_VERSION_MAJOR} && $content_type)
+	    ? $tc_type2s{$content_type} || "TLS Unknown (type=$content_type)"
+	    : "";
+
+        my $msg_type;
+        my $msg_name;
+        if ($content_type == $trace_constants{SSL3_RT_CHANGE_CIPHER_SPEC}) {
+            $msg_type = unpack('c1', $buf);
+            $msg_name = "Change cipher spec";
+        } elsif ($content_type == $trace_constants{SSL3_RT_ALERT}) {
+            my @c = unpack('c2', $buf);
+            $msg_type = ($c[0] << 8) + $c[1];
+            $msg_name = eval { Net::SSLeay::alert_desc_string_long($msg_type) } || "Unknown alert";
+        } else {
+            $msg_type = unpack('c1', $buf);
+	    $msg_name = $tc_msgtype2s{$ssl_ver, $msg_type} || "Unknown (ssl_ver=$ssl_ver, msg=$msg_type)";
+        }
+	DEBUG(sprintf("* %s (%s), %s, %s (%d)",
+	    $verstr, $direction ? "OUT" : "IN", $tls_rt_name, $msg_name, $msg_type));
+    }
+
+    #
+    # Here one might want to hexdump $buf (?)
+    #
+    # $DEBUG>=4 && printf STDERR "%s", hexdump($buf);
+}
+
 
 1;
 

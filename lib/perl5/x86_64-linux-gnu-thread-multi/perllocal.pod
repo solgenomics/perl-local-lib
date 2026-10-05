@@ -7434,3 +7434,69 @@ C<EXE_FILES: >
 
 =back
 
+=head2 Mon Oct  5 18:57:14 2026: C<Module> L<Net::SSLeay|Net::SSLeay>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.96>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Mon Oct  5 18:58:16 2026: C<Module> L<IO::Socket::SSL|IO::Socket::SSL>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 2.099>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Mon Oct  5 18:58:37 2026: C<Module> L<LWP::Protocol::https|LWP::Protocol::https>
+
+=over 4
+
+=item *
+
+C<installed into: /home/production/cxgn/local-lib/lib/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 6.17>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
